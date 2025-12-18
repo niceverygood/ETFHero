@@ -7,6 +7,7 @@ import { DisclaimerBar, Header, CharacterAvatar, WatchlistButton, StockSearchMod
 import { CharacterDetailModal } from '@/components/CharacterDetailModal';
 import { CHARACTERS, CharacterInfo } from '@/lib/characters';
 import { useDebateHistory } from '@/lib/hooks';
+import { findETFByTicker, ALL_ETFS } from '@/lib/data/etf-list';
 import type { CharacterType } from '@/lib/types';
 
 interface Message {
@@ -80,31 +81,34 @@ interface TargetInfo {
   targetDate: string;
 }
 
-const ETF_MAP: Record<string, { name: string; sector: string; price: number }> = {
-  '069500': { name: 'KODEX 200', sector: 'Market Index', price: 35000 },
-  '102110': { name: 'TIGER 200', sector: 'Market Index', price: 37500 },
-  '360750': { name: 'TIGER 미국S&P500', sector: 'Foreign Index', price: 18500 },
-  '133690': { name: 'TIGER 미국나스닥100', sector: 'Foreign Index', price: 96000 },
-  '091160': { name: 'KODEX 반도체', sector: 'Theme/Sector', price: 42000 },
-  '305720': { name: 'KODEX 2차전지산업', sector: 'Theme/Sector', price: 15800 },
-  '379800': { name: 'KODEX 미국S&P500TR', sector: 'Foreign Index', price: 15200 },
-  '161510': { name: 'ARIRANG 고배당주', sector: 'Dividend/Value', price: 14500 },
-  '148070': { name: 'KOSEF 국고채10년', sector: 'Bond', price: 102000 },
-  '364980': { name: 'TIGER AI반도체핵심공정', sector: 'Theme/Sector', price: 15300 },
-  '381170': { name: 'TIGER 미국테크TOP10', sector: 'Foreign Theme', price: 16200 },
-  '453810': { name: 'TIGER 미국AI빅테크10', sector: 'Foreign Theme', price: 12800 },
-  '266160': { name: 'KODEX 배당가치', sector: 'Dividend/Value', price: 12800 },
-  'SPY': { name: 'SPDR S&P 500 ETF', sector: 'US Market Index', price: 450 },
-  'QQQ': { name: 'Invesco QQQ Trust', sector: 'US Tech', price: 380 },
-};
+// etf-list.ts에서 ETF 정보를 가져오는 함수
+function getETFInfo(ticker: string): { name: string; nameKo: string; sector: string; price: number; issuer?: string; expenseRatio?: number; description?: string } {
+  const etf = findETFByTicker(ticker);
+  if (etf) {
+    return {
+      name: etf.name,
+      nameKo: etf.nameKo,
+      sector: etf.category,
+      price: 0, // 실시간 가격으로 대체될 예정
+      issuer: etf.issuer,
+      expenseRatio: etf.expenseRatio,
+      description: etf.description,
+    };
+  }
+  // 기본값 반환
+  return { name: ticker, nameKo: ticker, sector: 'ETF', price: 0 };
+}
 
-interface RealTimeStockInfo {
+interface RealTimeETFInfo {
   name: string;
   sector: string;
   price: number;
   change: number;
   changePercent: number;
   isRealTime: boolean;
+  issuer?: string;
+  expenseRatio?: number;
+  description?: string;
 }
 
 function ChatBubble({ 
@@ -512,7 +516,15 @@ function FinalConsensusSummary({
 export default function BattlePage() {
   const params = useParams();
   const symbol = params.symbol as string;
-  const baseSymbolInfo = ETF_MAP[symbol] || { name: symbol, sector: 'Unknown', price: 70000 };
+  const etfInfo = getETFInfo(symbol);
+  const baseSymbolInfo = { 
+    name: etfInfo.nameKo || etfInfo.name, 
+    sector: etfInfo.sector, 
+    price: etfInfo.price,
+    issuer: etfInfo.issuer,
+    expenseRatio: etfInfo.expenseRatio,
+    description: etfInfo.description,
+  };
   const { recordDebateView } = useDebateHistory();
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -526,7 +538,7 @@ export default function BattlePage() {
   const [selectedCharacter, setSelectedCharacter] = useState<CharacterInfo | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [targets, setTargets] = useState<TargetInfo[]>([]);
-  const [realTimeInfo, setRealTimeInfo] = useState<RealTimeStockInfo | null>(null);
+  const [realTimeInfo, setRealTimeInfo] = useState<RealTimeETFInfo | null>(null);
   const [isStockSearchOpen, setIsStockSearchOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const processedMessageIds = useRef<Set<string>>(new Set()); // 이미 처리된 메시지 ID 추적
@@ -540,7 +552,7 @@ export default function BattlePage() {
     isRealTime: false,
   };
 
-  // 실시간 주가 조회
+  // 실시간 가격 조회
   useEffect(() => {
     async function fetchRealTimePrice() {
       try {
@@ -555,14 +567,42 @@ export default function BattlePage() {
           setRealTimeInfo({
             name: isValidName ? apiName : baseSymbolInfo.name,
             sector: baseSymbolInfo.sector,
-            price: data.data.price,
+            price: data.data.price || 0,
             change: data.data.change || 0,
             changePercent: data.data.changePercent || 0,
             isRealTime: data.source === 'kis',
+            issuer: baseSymbolInfo.issuer,
+            expenseRatio: baseSymbolInfo.expenseRatio,
+            description: baseSymbolInfo.description,
+          });
+        } else {
+          // API 실패 시 기본 정보만 사용
+          setRealTimeInfo({
+            name: baseSymbolInfo.name,
+            sector: baseSymbolInfo.sector,
+            price: 0,
+            change: 0,
+            changePercent: 0,
+            isRealTime: false,
+            issuer: baseSymbolInfo.issuer,
+            expenseRatio: baseSymbolInfo.expenseRatio,
+            description: baseSymbolInfo.description,
           });
         }
       } catch (error) {
         console.error('Failed to fetch real-time price:', error);
+        // 에러 시 기본 정보 사용
+        setRealTimeInfo({
+          name: baseSymbolInfo.name,
+          sector: baseSymbolInfo.sector,
+          price: 0,
+          change: 0,
+          changePercent: 0,
+          isRealTime: false,
+          issuer: baseSymbolInfo.issuer,
+          expenseRatio: baseSymbolInfo.expenseRatio,
+          description: baseSymbolInfo.description,
+        });
       }
     }
     
@@ -571,7 +611,7 @@ export default function BattlePage() {
     // 30초마다 갱신
     const interval = setInterval(fetchRealTimePrice, 30000);
     return () => clearInterval(interval);
-  }, [symbol, baseSymbolInfo.name, baseSymbolInfo.sector]);
+  }, [symbol, baseSymbolInfo.name, baseSymbolInfo.sector, baseSymbolInfo.issuer, baseSymbolInfo.expenseRatio, baseSymbolInfo.description]);
 
   // 다음 메시지 표시 처리
   const processNextMessage = useCallback(() => {
@@ -770,65 +810,100 @@ export default function BattlePage() {
           <div className="grid lg:grid-cols-4 gap-8">
             {/* Main Chat Area */}
             <div className="lg:col-span-3">
-              {/* Stock Header */}
+              {/* ETF Header */}
               <div className="card mb-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    {/* 종목 검색 버튼 */}
-                    <button
-                      onClick={() => setIsStockSearchOpen(true)}
-                      className="w-12 h-12 rounded-xl bg-dark-800 hover:bg-dark-700 border border-dark-700 hover:border-brand-500/50 flex items-center justify-center transition-all group"
-                      title="종목 검색"
-                    >
-                      <svg className="w-5 h-5 text-dark-400 group-hover:text-brand-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </button>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h1 className="text-xl font-bold text-dark-50">{symbolInfo.name}</h1>
-                        <button
-                          onClick={() => setIsStockSearchOpen(true)}
-                          className="px-2 py-1 text-xs text-dark-500 hover:text-brand-400 hover:bg-dark-800 rounded transition-colors"
-                        >
-                          변경
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm flex-wrap">
-                        <span className="text-dark-500 font-mono">{symbol}</span>
-                        <span className="text-dark-600">|</span>
-                        <span className="text-dark-500">{symbolInfo.sector}</span>
-                        <span className="text-dark-600">|</span>
-                        <span className="text-brand-400 font-semibold">{symbolInfo.price.toLocaleString()}원</span>
-                        {symbolInfo.change !== 0 && (
-                          <span className={`font-medium ${symbolInfo.change > 0 ? 'text-red-400' : 'text-blue-400'}`}>
-                            {symbolInfo.change > 0 ? '▲' : '▼'} {Math.abs(symbolInfo.changePercent).toFixed(2)}%
-                          </span>
-                        )}
-                        {symbolInfo.isRealTime && (
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                            실시간
-                          </span>
-                        )}
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      {/* 종목 검색 버튼 */}
+                      <button
+                        onClick={() => setIsStockSearchOpen(true)}
+                        className="w-12 h-12 rounded-xl bg-dark-800 hover:bg-dark-700 border border-dark-700 hover:border-brand-500/50 flex items-center justify-center transition-all group"
+                        title="ETF 검색"
+                      >
+                        <svg className="w-5 h-5 text-dark-400 group-hover:text-brand-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </button>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h1 className="text-xl font-bold text-dark-50">{symbolInfo.name}</h1>
+                          <button
+                            onClick={() => setIsStockSearchOpen(true)}
+                            className="px-2 py-1 text-xs text-dark-500 hover:text-brand-400 hover:bg-dark-800 rounded transition-colors"
+                          >
+                            변경
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm flex-wrap">
+                          <span className="text-dark-500 font-mono">{symbol}</span>
+                          <span className="text-dark-600">|</span>
+                          <span className="text-dark-500">{symbolInfo.sector}</span>
+                          {symbolInfo.price > 0 && (
+                            <>
+                              <span className="text-dark-600">|</span>
+                              <span className="text-brand-400 font-semibold">{symbolInfo.price.toLocaleString()}원</span>
+                              {symbolInfo.change !== 0 && (
+                                <span className={`font-medium ${symbolInfo.change > 0 ? 'text-red-400' : 'text-blue-400'}`}>
+                                  {symbolInfo.change > 0 ? '▲' : '▼'} {Math.abs(symbolInfo.changePercent).toFixed(2)}%
+                                </span>
+                              )}
+                            </>
+                          )}
+                          {symbolInfo.isRealTime && (
+                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                              실시간
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {/* Watchlist Button */}
-                    <WatchlistButton
-                      symbolCode={symbol}
-                      symbolName={symbolInfo.name}
-                      size="md"
-                      showLabel
-                    />
-                    {round > 0 && (
-                      <div className="flex items-center gap-2">
-                        <span className="badge-brand">Round {round}/4</span>
-                        {isComplete && <span className="badge-success">Complete</span>}
-                      </div>
+                    <div className="flex items-center gap-3">
+                      {/* Watchlist Button */}
+                      <WatchlistButton
+                        symbolCode={symbol}
+                        symbolName={symbolInfo.name}
+                        size="md"
+                        showLabel
+                      />
+                      {round > 0 && (
+                        <div className="flex items-center gap-2">
+                          <span className="badge-brand">Round {round}/4</span>
+                          {isComplete && <span className="badge-success">Complete</span>}
+                        </div>
                     )}
                   </div>
+                </div>
+                
+                {/* ETF 상세 정보 */}
+                {(symbolInfo.issuer || symbolInfo.description || symbolInfo.expenseRatio) && (
+                  <div className="mt-4 pt-4 border-t border-dark-700/50">
+                    {symbolInfo.description && (
+                      <p className="text-sm text-dark-400 mb-3">{symbolInfo.description}</p>
+                    )}
+                    <div className="flex flex-wrap gap-3">
+                      {symbolInfo.issuer && (
+                        <div className="px-3 py-1.5 rounded-lg bg-dark-800/50 text-xs">
+                          <span className="text-dark-500">운용사</span>
+                          <span className="text-dark-300 ml-2 font-medium">{symbolInfo.issuer}</span>
+                        </div>
+                      )}
+                      {symbolInfo.expenseRatio !== undefined && (
+                        <div className="px-3 py-1.5 rounded-lg bg-dark-800/50 text-xs">
+                          <span className="text-dark-500">총보수</span>
+                          <span className="text-dark-300 ml-2 font-medium">{symbolInfo.expenseRatio.toFixed(2)}%</span>
+                        </div>
+                      )}
+                      {symbolInfo.sector && (
+                        <div className="px-3 py-1.5 rounded-lg bg-dark-800/50 text-xs">
+                          <span className="text-dark-500">카테고리</span>
+                          <span className="text-dark-300 ml-2 font-medium">{symbolInfo.sector}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 </div>
               </div>
 
