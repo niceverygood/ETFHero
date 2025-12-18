@@ -84,7 +84,7 @@ export default function HomePage() {
               {(['claude', 'gemini', 'gpt'] as const).map((charId) => {
                 const char = CHARACTERS[charId];
                 return (
-                  <div key={charId} className="card-interactive group">
+                  <div key={charId} className="card-interactive group h-full flex flex-col">
                     <div className="flex items-center gap-4 mb-6">
                       <CharacterAvatar character={charId} size="xl" />
                       <div>
@@ -92,7 +92,7 @@ export default function HomePage() {
                         <p className="text-sm text-dark-500">{char.roleKo}</p>
                       </div>
                     </div>
-                    <p className="text-dark-400 text-sm leading-relaxed mb-4">
+                    <p className="text-dark-400 text-sm leading-relaxed mb-4 flex-1">
                       {char.description}
                     </p>
                     <div className="flex flex-wrap gap-2 mb-4">
@@ -105,7 +105,7 @@ export default function HomePage() {
                     {/* Consultation Button */}
                     <button
                       onClick={() => setConsultCharacter(charId)}
-                      className={`w-full py-2.5 px-4 rounded-xl bg-gradient-to-r ${char.gradient} text-white text-sm font-medium flex items-center justify-center gap-2 opacity-90 hover:opacity-100 transition-opacity`}
+                      className={`w-full py-2.5 px-4 rounded-xl bg-gradient-to-r ${char.gradient} text-white text-sm font-medium flex items-center justify-center gap-2 opacity-90 hover:opacity-100 transition-opacity mt-auto`}
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
