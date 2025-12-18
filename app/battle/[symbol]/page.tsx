@@ -49,16 +49,18 @@ function useTypingAnimation(
       return;
     }
 
-    setDisplayedText('');
-    indexRef.current = 0;
+    // 첫 글자부터 바로 표시
+    indexRef.current = 1;
+    setDisplayedText(text.substring(0, 1));
     setIsTyping(true);
 
     const interval = setInterval(() => {
       if (indexRef.current < text.length) {
-        // 한 번에 1-2글자씩 추가 (더 천천히)
+        // 한 번에 1-2글자씩 추가
         const charsToAdd = Math.min(2, text.length - indexRef.current);
-        setDisplayedText(prev => prev + text.slice(indexRef.current, indexRef.current + charsToAdd));
         indexRef.current += charsToAdd;
+        // 직접 substring으로 전체 텍스트에서 잘라서 설정 (동기화 문제 해결)
+        setDisplayedText(text.substring(0, indexRef.current));
       } else {
         clearInterval(interval);
         setIsTyping(false);
