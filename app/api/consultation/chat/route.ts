@@ -332,6 +332,103 @@ async function chatWithGemini(systemPrompt: string, messages: ChatMessage[]): Pr
   }
 }
 
+// AI 기반 추천 질문 생성
+async function generateSuggestedQuestions(
+  characterType: CharacterType,
+  messages: ChatMessage[],
+  stockData?: StockData
+): Promise<string[]> {
+  const characterNames: Record<CharacterType, string> = {
+    claude: '클로드 리 (ETF 밸류에이션 분석가)',
+    gemini: '제미나인 (테마 ETF 전략가)',
+    gpt: 'G.P. 테일러 (자산배분 리스크 총괄)',
+  };
+
+  const characterFocus: Record<CharacterType, string> = {
+    claude: '비용 분석, 추적 오차, 운용 효율성, 밸류에이션',
+    gemini: '테마 ETF, 성장 섹터, 트렌드 분석, 신흥 기술',
+    gpt: '자산 배분, 리스크 관리, 포트폴리오 전략, 거시경제',
+  };
+
+  // 최근 대화 내용 요약
+  const recentContext = messages
+    .slice(-4)
+    .map(m => `${m.role === 'user' ? '사용자' : 'AI'}: ${m.content.slice(0, 100)}...`)
+    .join('\n');
+
+  const stockContext = stockData 
+    ? `\n현재 상담 중인 ETF: ${stockData.name} (${stockData.symbol}), 현재가 ${stockData.currentPrice.toLocaleString()}원` 
+    : '';
+
+  const prompt = `당신은 ${characterNames[characterType]}입니다.
+아래 대화 맥락을 바탕으로, 사용자가 다음에 물어볼 만한 후속 질문 4개를 생성해주세요.
+
+## 당신의 전문 분야
+${characterFocus[characterType]}
+
+## 최근 대화 맥락
+${recentContext}
+${stockContext}
+
+## 생성 규칙
+1. 대화 흐름에 자연스럽게 이어지는 질문
+2. 당신의 전문 분야와 관련된 깊이 있는 질문
+3. ETF 투자에 실제로 도움이 되는 실용적인 질문
+4. 각 질문은 30자 이내로 간결하게
+5. 반드시 한국어로 작성
+
+## 출력 형식
+JSON 배열로만 응답하세요. 설명 없이 배열만:
+["질문1", "질문2", "질문3", "질문4"]`;
+
+  try {
+    // 빠른 응답을 위해 GPT-4o-mini 사용
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 256,
+      temperature: 0.8,
+    });
+
+    const content = response.choices[0]?.message?.content || '';
+    
+    // JSON 파싱 시도
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      const questions = JSON.parse(jsonMatch[0]);
+      if (Array.isArray(questions) && questions.length > 0) {
+        return questions.slice(0, 4);
+      }
+    }
+  } catch (error) {
+    console.error('Failed to generate suggested questions:', error);
+  }
+
+  // 폴백: 캐릭터별 기본 질문
+  const fallbackQuestions: Record<CharacterType, string[]> = {
+    claude: [
+      '이 ETF의 총 보수 비용은 어떤가요?',
+      '추적 오차가 큰 편인가요?',
+      '비슷한 ETF와 비교해주세요',
+      '장기 투자에 적합할까요?',
+    ],
+    gemini: [
+      '관련 테마 ETF 추천해주세요',
+      '이 섹터의 성장 전망은?',
+      '언제 진입하면 좋을까요?',
+      '다른 테마 ETF와 비교하면?',
+    ],
+    gpt: [
+      '포트폴리오 비중을 얼마나?',
+      '리스크 관리는 어떻게?',
+      '채권 ETF와 함께 보유하면?',
+      '환헤지 상품을 써야 할까요?',
+    ],
+  };
+
+  return fallbackQuestions[characterType];
+}
+
 async function chatWithGPT(systemPrompt: string, messages: ChatMessage[]): Promise<string> {
   try {
     const contextHint = buildConversationContext(messages);
@@ -578,12 +675,20 @@ This is where it gets interesting! 성장주 관점에서 보면, 미래 성장 
       responseContent = getFallbackResponse(characterType, lastUserMessage?.content || '', stockData, isInitialAnalysis);
     }
 
+    // 추천 질문 생성 (대화 맥락 기반)
+    const suggestedQuestions = await generateSuggestedQuestions(
+      characterType, 
+      conversationMessages, 
+      stockData
+    );
+
     return NextResponse.json({
       success: true,
       data: {
         content: responseContent,
         characterType,
         timestamp: new Date().toISOString(),
+        suggestedQuestions,
       },
     });
   } catch (error) {

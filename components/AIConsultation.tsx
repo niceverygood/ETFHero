@@ -6,26 +6,26 @@ import { CHARACTERS } from '@/lib/characters';
 import { AI_PERSONAS } from '@/lib/ai-personas';
 import type { CharacterType } from '@/lib/llm/types';
 
-// 캐릭터별 맞춤 추천 질문
-function getSuggestedQuestions(characterType: CharacterType): string[] {
+// 캐릭터별 초기 추천 질문 (AI 생성 전 기본값)
+function getDefaultQuestions(characterType: CharacterType): string[] {
   const questions: Record<CharacterType, string[]> = {
     claude: [
-      'KODEX 200과 TIGER 200 중에서 어떤 게 더 좋을까요? 운용보수 비교해주세요.',
-      '시장지수 ETF를 기본으로 깔고, 테마 ETF 비중은 어느 정도가 적당할까요?',
-      '배당 ETF 투자를 고려 중인데, ARIRANG 고배당주와 KODEX 배당가치 중 뭐가 좋을까요?',
-      'ETF 자동 리밸런싱 주기는 보통 어느 정도로 하나요?',
+      '이 ETF의 총 보수 비용은 어떤가요?',
+      '추적 오차가 큰 편인가요?',
+      '비슷한 ETF와 비교해주세요',
+      '장기 투자에 적합할까요?',
     ],
     gemini: [
-      '요즘 AI 관련 ETF 중에서 가장 유망한 것이 뭐라고 생각하세요?',
-      'TIGER 미국테크TOP10과 TIGER AI반도체핵심공정 중에 어떤 게 더 좋을까요?',
-      '2차전지 ETF 전망이 어떤가요? KODEX 2차전지산업 아직 유효할까요?',
-      '테마 ETF 분산 투자 vs 집중 투자, 어떤 전략이 더 좋을까요?',
+      '관련 테마 ETF 추천해주세요',
+      '이 섹터의 성장 전망은?',
+      '언제 진입하면 좋을까요?',
+      '다른 테마 ETF와 비교하면?',
     ],
     gpt: [
-      '채권 ETF와 주식 ETF 비중을 어떻게 조절해야 할까요?',
-      '포트폴리오에서 현금 비중을 얼마나 유지해야 할까요?',
-      '미국 경기침체 가능성, 어떻게 보시나요? ETF 포트폴리오 대비 전략이 궁금해요.',
-      '달러 환율이 계속 오르는데, 해외 ETF 환헤지 상품을 써야 할까요?',
+      '포트폴리오 비중을 얼마나?',
+      '리스크 관리는 어떻게?',
+      '채권 ETF와 함께 보유하면?',
+      '환헤지 상품을 써야 할까요?',
     ],
   };
   return questions[characterType] || questions.claude;
@@ -87,6 +87,8 @@ export function AIConsultation({ characterType, holdings = [], stockData, onClos
   const [isTypingGreeting, setIsTypingGreeting] = useState(true);
   const [displayedGreeting, setDisplayedGreeting] = useState('');
   const [hasInitialAnalysis, setHasInitialAnalysis] = useState(false);
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>(getDefaultQuestions(characterType));
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -136,6 +138,11 @@ export function AIConsultation({ characterType, holdings = [], stockData, onClos
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, analysisMessage]);
+        
+        // AI 생성 추천 질문 업데이트
+        if (data.data.suggestedQuestions && Array.isArray(data.data.suggestedQuestions)) {
+          setSuggestedQuestions(data.data.suggestedQuestions);
+        }
       }
     } catch (error) {
       console.error('Initial analysis error:', error);
@@ -220,6 +227,11 @@ export function AIConsultation({ characterType, holdings = [], stockData, onClos
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, assistantMessage]);
+        
+        // AI 생성 추천 질문 업데이트
+        if (data.data.suggestedQuestions && Array.isArray(data.data.suggestedQuestions)) {
+          setSuggestedQuestions(data.data.suggestedQuestions);
+        }
       } else {
         throw new Error(data.error || 'Failed to get response');
       }
@@ -372,16 +384,19 @@ export function AIConsultation({ characterType, holdings = [], stockData, onClos
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested Questions - Character specific */}
-      {messages.length === 1 && !isTypingGreeting && (
+      {/* Suggested Questions - AI 생성 */}
+      {!isTypingGreeting && !isLoading && suggestedQuestions.length > 0 && (
         <div className="px-4 pb-2">
-          <div className="text-xs text-dark-500 mb-2">추천 질문</div>
+          <div className="text-xs text-dark-500 mb-2 flex items-center gap-1">
+            <span>추천 질문</span>
+            <span className="text-dark-600">• AI 생성</span>
+          </div>
           <div className="flex flex-wrap gap-2">
-            {getSuggestedQuestions(characterType).map((q, i) => (
+            {suggestedQuestions.map((q, i) => (
               <button
-                key={i}
+                key={`${i}-${q}`}
                 onClick={() => setInput(q)}
-                className="px-3 py-1.5 rounded-full bg-dark-800/50 text-xs text-dark-400 hover:bg-dark-800 hover:text-dark-300 transition-colors"
+                className="px-3 py-1.5 rounded-full bg-dark-800/50 text-xs text-dark-400 hover:bg-dark-800 hover:text-dark-300 transition-colors border border-dark-700/50"
               >
                 {q}
               </button>
