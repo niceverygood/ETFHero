@@ -8,15 +8,18 @@ import type { CharacterType } from '@/lib/llm/types';
 interface Top5Item {
   rank: number;
   symbolId: string;
-  symbol: string;
-  name: string;
+  symbol: string;       // ETF 티커 (예: 069500)
+  name: string;         // ETF 이름 (예: KODEX 200)
+  category: string;     // ETF 카테고리
   avgScore: number;
   rationale: string;
   unanimous: boolean;
   currentPrice: number;
   change: number;
   changePercent: number;
-  // AI별 개별 점수 (API에서 제공)
+  nav?: number;         // 순자산가치
+  totalAssets?: number; // 순자산총액 (억원)
+  // AI별 개별 점수
   scores?: {
     claude: number;
     gemini: number;
@@ -32,14 +35,27 @@ interface VerdictData {
   unanimousCount: number;
   rationale: string;
   top5: Top5Item[];
+  totalETFs?: number;
 }
 
 // AI 캐릭터 정보
-const AI_CHARACTERS: { type: CharacterType; name: string; nameKo: string; color: string }[] = [
-  { type: 'claude', name: 'Claude Lee', nameKo: '클로드 리', color: 'text-amber-400' },
-  { type: 'gemini', name: 'Gemi Nine', nameKo: '제미 나인', color: 'text-emerald-400' },
-  { type: 'gpt', name: 'G.P. Taylor', nameKo: '쥐피 테일러', color: 'text-blue-400' },
+const AI_CHARACTERS: { type: CharacterType; name: string; nameKo: string; color: string; role: string }[] = [
+  { type: 'claude', name: 'Claude Lee', nameKo: '클로드 리', color: 'text-amber-400', role: 'ETF 밸류에이션 분석' },
+  { type: 'gemini', name: 'Gemi Nine', nameKo: '제미 나인', color: 'text-emerald-400', role: '테마 ETF 전략' },
+  { type: 'gpt', name: 'G.P. Taylor', nameKo: '지피 테일러', color: 'text-violet-400', role: '자산배분 리스크' },
 ];
+
+// 카테고리 아이콘
+const CATEGORY_ICONS: Record<string, string> = {
+  '시장지수': '📊',
+  '해외주식': '🌍',
+  '배당': '💰',
+  '섹터': '🏭',
+  '테마': '💡',
+  '채권': '📜',
+  '원자재': '🛢️',
+  '기타': '📈',
+};
 
 function RankBadge({ rank }: { rank: number }) {
   const styles: Record<number, string> = {
@@ -76,6 +92,16 @@ function PriceChange({ change, changePercent }: { change: number; changePercent:
   return (
     <span className={`text-xs sm:text-sm font-medium ${isUp ? 'text-red-400' : 'text-blue-400'}`}>
       {isUp ? '▲' : '▼'} {Math.abs(changePercent).toFixed(2)}%
+    </span>
+  );
+}
+
+function CategoryBadge({ category }: { category: string }) {
+  const icon = CATEGORY_ICONS[category] || '📈';
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-dark-700/50 text-dark-400 text-xs">
+      <span>{icon}</span>
+      <span>{category}</span>
     </span>
   );
 }
@@ -138,12 +164,12 @@ export default function VerdictPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="text-lg sm:text-xl font-bold text-white">합의 완료</h2>
+                      <h2 className="text-lg sm:text-xl font-bold text-white">ETF 합의 완료</h2>
                       <span className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">
                         Consensus
                       </span>
                     </div>
-                    <p className="text-sm text-dark-400 mt-0.5">3명의 AI 전문가가 오늘의 Top 5를 선정했습니다</p>
+                    <p className="text-sm text-dark-400 mt-0.5">3명의 AI ETF 전문가가 오늘의 Top 5를 선정했습니다</p>
                   </div>
                 </div>
 
@@ -154,6 +180,11 @@ export default function VerdictPage() {
                       <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
                         <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                         실시간
+                      </span>
+                    )}
+                    {data?.totalETFs && (
+                      <span className="text-xs text-dark-500">
+                        {data.totalETFs}개 ETF 분석
                       </span>
                     )}
                   </div>
@@ -175,7 +206,7 @@ export default function VerdictPage() {
             </div>
 
             {/* Page Title */}
-            <h1 className="text-2xl sm:text-3xl font-bold text-dark-50">Today&apos;s Top 5</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-dark-50">Today&apos;s Top 5 ETF</h1>
           </div>
 
           {loading ? (
@@ -184,11 +215,11 @@ export default function VerdictPage() {
             <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
               <div className="lg:col-span-2 space-y-3 sm:space-y-4">
                 {data.top5.map((item, index) => {
-                  // AI별 점수 (API에서 없으면 평균점수 기반으로 랜덤 생성)
+                  // AI별 점수
                   const aiScores = item.scores || {
-                    claude: Math.min(5, Math.max(3, item.avgScore + (Math.random() - 0.5) * 0.8)),
-                    gemini: Math.min(5, Math.max(3, item.avgScore + (Math.random() - 0.5) * 0.8)),
-                    gpt: Math.min(5, Math.max(3, item.avgScore + (Math.random() - 0.5) * 0.8)),
+                    claude: item.avgScore,
+                    gemini: item.avgScore,
+                    gpt: item.avgScore,
                   };
                   
                   return (
@@ -198,7 +229,7 @@ export default function VerdictPage() {
                           {/* Rank Badge */}
                           <RankBadge rank={index + 1} />
                           
-                          {/* Stock Info */}
+                          {/* ETF Info */}
                           <div className="flex-1 min-w-0 overflow-hidden">
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mb-1.5 sm:mb-2">
                               <span className="text-base sm:text-lg font-semibold text-dark-100 group-hover:text-white transition-colors truncate max-w-full">
@@ -210,15 +241,23 @@ export default function VerdictPage() {
                               )}
                             </div>
                             
-                            {/* Price Info */}
-                            {item.currentPrice > 0 && (
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-white font-medium">
-                                  {item.currentPrice.toLocaleString()}원
+                            {/* Category & Price Info */}
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <CategoryBadge category={item.category} />
+                              {item.currentPrice > 0 && (
+                                <>
+                                  <span className="text-white font-medium">
+                                    {item.currentPrice.toLocaleString()}원
+                                  </span>
+                                  <PriceChange change={item.change} changePercent={item.changePercent} />
+                                </>
+                              )}
+                              {item.totalAssets && item.totalAssets > 0 && (
+                                <span className="text-xs text-dark-500">
+                                  순자산 {(item.totalAssets / 10000).toFixed(1)}조원
                                 </span>
-                                <PriceChange change={item.change} changePercent={item.changePercent} />
-                              </div>
-                            )}
+                              )}
+                            </div>
                             
                             {/* AI Scores */}
                             <div className="flex items-center gap-3 mb-2">
@@ -257,7 +296,7 @@ export default function VerdictPage() {
                 <div className="flex items-center gap-6 pt-4 border-t border-dark-800">
                   <div className="flex items-center gap-2">
                     <span className="badge-success text-xs">Unanimous</span>
-                    <span className="text-sm text-dark-400">= 만장일치 ({data.unanimousCount}개 종목)</span>
+                    <span className="text-sm text-dark-400">= 만장일치 ({data.unanimousCount}개 ETF)</span>
                   </div>
                 </div>
               </div>
@@ -266,7 +305,7 @@ export default function VerdictPage() {
               <div className="space-y-4 sm:space-y-6">
                 {/* Summary Card */}
                 <div className="card p-4 sm:p-6">
-                  <h3 className="font-semibold text-dark-200 mb-3 sm:mb-4">오늘의 분석 요약</h3>
+                  <h3 className="font-semibold text-dark-200 mb-3 sm:mb-4">오늘의 ETF 분석 요약</h3>
                   <p className="text-sm text-dark-400 leading-relaxed">
                     {data.rationale}
                   </p>
@@ -274,18 +313,14 @@ export default function VerdictPage() {
 
                 {/* AI Analysts */}
                 <div className="card p-4 sm:p-6">
-                  <h3 className="font-semibold text-dark-200 mb-3 sm:mb-4">참여 애널리스트</h3>
+                  <h3 className="font-semibold text-dark-200 mb-3 sm:mb-4">ETF 분석팀</h3>
                   <div className="space-y-3">
                     {AI_CHARACTERS.map((char) => (
                       <div key={char.type} className="flex items-center gap-3 p-2 rounded-lg bg-dark-800/50">
                         <CharacterAvatar character={char.type} size="md" />
                         <div className="flex-1">
                           <p className={`font-medium text-sm ${char.color}`}>{char.nameKo}</p>
-                          <p className="text-xs text-dark-500">
-                            {char.type === 'claude' && '펀더멘털 분석'}
-                            {char.type === 'gemini' && '성장성 분석'}
-                            {char.type === 'gpt' && '리스크 분석'}
-                          </p>
+                          <p className="text-xs text-dark-500">{char.role}</p>
                         </div>
                         <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
                           <svg className="w-3.5 h-3.5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
@@ -299,25 +334,25 @@ export default function VerdictPage() {
 
                 {/* Methodology */}
                 <div className="card p-4 sm:p-6">
-                  <h3 className="font-semibold text-dark-200 mb-3 sm:mb-4">평가 방법론</h3>
+                  <h3 className="font-semibold text-dark-200 mb-3 sm:mb-4">ETF 평가 기준</h3>
                   <ul className="space-y-2 sm:space-y-3 text-sm text-dark-400">
                     <li className="flex items-start gap-2">
                       <span className="text-brand-400 mt-1">•</span>
-                      <span>3개 AI의 개별 분석 점수 평균</span>
+                      <span>순자산총액(AUM) 기준 상위 ETF 선정</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-brand-400 mt-1">•</span>
-                      <span>1~5점 척도, 소수점 첫째 자리까지 표시</span>
+                      <span>3개 AI의 비용효율성, 추적오차, 테마성장성 분석</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-brand-400 mt-1">•</span>
-                      <span>만장일치(Unanimous)는 3개 AI 모두 4점 이상 부여 시</span>
+                      <span>만장일치(Unanimous)는 3개 AI 모두 4점 이상</span>
                     </li>
                   </ul>
                 </div>
 
                 {/* CTA */}
-                <Link href="/battle/005930" className="block">
+                <Link href="/battle/069500" className="block">
                   <div className="card-interactive p-4 sm:p-6">
                     <div className="flex items-center justify-center gap-2 mb-3">
                       {AI_CHARACTERS.map((char, idx) => (
@@ -326,7 +361,7 @@ export default function VerdictPage() {
                         </div>
                       ))}
                     </div>
-                    <p className="text-sm text-dark-400 mb-2 text-center">AI들의 열띤 토론을 직접 확인하세요</p>
+                    <p className="text-sm text-dark-400 mb-2 text-center">AI들의 ETF 토론을 직접 확인하세요</p>
                     <span className="text-brand-400 font-semibold block text-center">토론 보러가기 →</span>
                   </div>
                 </Link>
