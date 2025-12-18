@@ -14,8 +14,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: 'StockHero | AI Stock Analysis',
-  description: 'Watch Claude, Gemini, and GPT debate stocks in real-time. Entertainment-focused financial content.',
+  title: 'ETFHero | AI ETF Analysis',
+  description: 'Watch Claude, Gemini, and GPT analyze and recommend ETFs in real-time. Entertainment-focused financial content.',
 };
 
 export default function RootLayout({
