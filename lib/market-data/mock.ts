@@ -13,38 +13,38 @@ function seededRandom(seed: string): () => number {
   };
 }
 
-const MOCK_STOCKS: Record<string, { name: string; sector: string; basePrice: number }> = {
-  '005930': { name: '삼성전자', sector: '반도체', basePrice: 72000 },
-  '000660': { name: 'SK하이닉스', sector: '반도체', basePrice: 178000 },
-  '373220': { name: 'LG에너지솔루션', sector: '2차전지', basePrice: 420000 },
-  '207940': { name: '삼성바이오로직스', sector: '바이오', basePrice: 780000 },
-  '005380': { name: '현대차', sector: '자동차', basePrice: 215000 },
-  '006400': { name: '삼성SDI', sector: '2차전지', basePrice: 380000 },
-  '035720': { name: '카카오', sector: 'IT서비스', basePrice: 45000 },
-  '035420': { name: 'NAVER', sector: 'IT서비스', basePrice: 195000 },
-  '051910': { name: 'LG화학', sector: '화학', basePrice: 420000 },
-  '068270': { name: '셀트리온', sector: '바이오', basePrice: 185000 },
-  '028260': { name: '삼성물산', sector: '지주', basePrice: 145000 },
-  '105560': { name: 'KB금융', sector: '금융', basePrice: 68000 },
-  '055550': { name: '신한지주', sector: '금융', basePrice: 48000 },
-  '066570': { name: 'LG전자', sector: '가전', basePrice: 98000 },
-  '003550': { name: 'LG', sector: '지주', basePrice: 85000 },
-  '012330': { name: '현대모비스', sector: '자동차부품', basePrice: 235000 },
-  '096770': { name: 'SK이노베이션', sector: '에너지', basePrice: 112000 },
-  '034730': { name: 'SK', sector: '지주', basePrice: 165000 },
-  '003670': { name: '포스코홀딩스', sector: '철강', basePrice: 385000 },
-  '000270': { name: '기아', sector: '자동차', basePrice: 92000 },
+const MOCK_ETFS: Record<string, { name: string; sector: string; basePrice: number }> = {
+  '069500': { name: 'KODEX 200', sector: '시장지수', basePrice: 35000 },
+  '102110': { name: 'TIGER 200', sector: '시장지수', basePrice: 37500 },
+  '360750': { name: 'TIGER 미국S&P500', sector: '해외지수', basePrice: 18500 },
+  '133690': { name: 'TIGER 미국나스닥100', sector: '해외지수', basePrice: 96000 },
+  '091160': { name: 'KODEX 반도체', sector: '테마/섹터', basePrice: 42000 },
+  '305720': { name: 'KODEX 2차전지산업', sector: '테마/섹터', basePrice: 15800 },
+  '379800': { name: 'KODEX 미국S&P500TR', sector: '해외지수', basePrice: 15200 },
+  '161510': { name: 'ARIRANG 고배당주', sector: '배당/가치', basePrice: 14500 },
+  '148070': { name: 'KOSEF 국고채10년', sector: '채권', basePrice: 102000 },
+  '364980': { name: 'TIGER AI반도체핵심공정', sector: '테마/섹터', basePrice: 15300 },
+  '381170': { name: 'TIGER 미국테크TOP10', sector: '해외테마', basePrice: 16200 },
+  '453810': { name: 'TIGER 미국AI빅테크10', sector: '해외테마', basePrice: 12800 },
+  '266160': { name: 'KODEX 배당가치', sector: '배당/가치', basePrice: 12800 },
+  '329200': { name: 'TIGER CD금리투자KIS', sector: '채권', basePrice: 52500 },
+  '371460': { name: 'TIGER 차이나전기차SOLACTIVE', sector: '해외테마', basePrice: 8200 },
+  '143850': { name: 'TIGER 200IT', sector: '테마/섹터', basePrice: 25800 },
+  '157450': { name: 'TIGER 모멘텀', sector: '전략/스마트베타', basePrice: 32500 },
+  '395170': { name: 'KBSTAR 미국S&P500', sector: '해외지수', basePrice: 14200 },
+  '292150': { name: 'TIGER TOP10', sector: '시장지수', basePrice: 13200 },
+  '411060': { name: 'ACE 미국빅테크TOP7 Plus', sector: '해외테마', basePrice: 18500 },
 };
 
 const NEWS_TEMPLATES = [
-  { title: '{name}, 분기 실적 발표 임박... 시장 기대감 고조', sentiment: 'positive' as const },
-  { title: '{name}, 신규 사업 확장 계획 발표', sentiment: 'positive' as const },
-  { title: '{name}, 글로벌 시장 점유율 확대', sentiment: 'positive' as const },
+  { title: '{name}, 순자산 증가세 지속... 투자자 관심 고조', sentiment: 'positive' as const },
+  { title: '{name}, 추종 지수 상승에 수익률 개선', sentiment: 'positive' as const },
+  { title: '{name}, 거래량 급증... 자금 유입 확대', sentiment: 'positive' as const },
   { title: '{name}, 외국인 순매수 지속', sentiment: 'positive' as const },
-  { title: '{name}, 업황 불확실성에 주가 변동성 확대', sentiment: 'neutral' as const },
+  { title: '{name}, 시장 변동성에 괴리율 확대', sentiment: 'neutral' as const },
   { title: '{name}, 업계 전반 조정 국면 진입', sentiment: 'neutral' as const },
-  { title: '{name}, 원자재 가격 상승 영향 주시', sentiment: 'negative' as const },
-  { title: '{name}, 경쟁 심화로 마진 압박 우려', sentiment: 'negative' as const },
+  { title: '{name}, 추종 지수 하락에 따른 조정', sentiment: 'negative' as const },
+  { title: '{name}, 유동성 감소로 거래량 부진', sentiment: 'negative' as const },
 ];
 
 export class MockMarketDataProvider implements MarketDataProvider {
@@ -55,33 +55,33 @@ export class MockMarketDataProvider implements MarketDataProvider {
   }
 
   async getQuote(symbol: string): Promise<StockQuote> {
-    const stock = MOCK_STOCKS[symbol];
-    if (!stock) {
+    const etf = MOCK_ETFS[symbol];
+    if (!etf) {
       throw new Error(`Unknown symbol: ${symbol}`);
     }
 
     const random = seededRandom(`${symbol}-${this.dateKey}`);
     const changePercent = (random() - 0.5) * 6; // -3% to +3%
-    const change = Math.round(stock.basePrice * changePercent / 100);
-    const price = stock.basePrice + change;
+    const change = Math.round(etf.basePrice * changePercent / 100);
+    const price = etf.basePrice + change;
 
     return {
       symbol,
-      name: stock.name,
+      name: etf.name,
       price,
       change,
       changePercent: Math.round(changePercent * 100) / 100,
       volume: Math.round(random() * 10000000) + 1000000,
       marketCap: price * (Math.round(random() * 100000000) + 50000000),
-      high52Week: Math.round(stock.basePrice * 1.3),
-      low52Week: Math.round(stock.basePrice * 0.7),
+      high52Week: Math.round(etf.basePrice * 1.3),
+      low52Week: Math.round(etf.basePrice * 0.7),
       updatedAt: new Date(),
     };
   }
 
   async getFinancials(symbol: string): Promise<StockFinancials> {
-    const stock = MOCK_STOCKS[symbol];
-    if (!stock) {
+    const etf = MOCK_ETFS[symbol];
+    if (!etf) {
       throw new Error(`Unknown symbol: ${symbol}`);
     }
 
@@ -89,7 +89,7 @@ export class MockMarketDataProvider implements MarketDataProvider {
 
     return {
       symbol,
-      revenue: Math.round(random() * 100000) + 50000, // 억원
+      revenue: Math.round(random() * 100000) + 50000, // 억원 (순자산)
       revenueGrowth: (random() - 0.3) * 30, // -9% to +21%
       operatingIncome: Math.round(random() * 20000) + 5000,
       operatingMargin: random() * 20 + 5, // 5% to 25%
@@ -105,13 +105,13 @@ export class MockMarketDataProvider implements MarketDataProvider {
   }
 
   async getNews(symbol: string, limit = 5): Promise<StockNews[]> {
-    const stock = MOCK_STOCKS[symbol];
-    if (!stock) {
+    const etf = MOCK_ETFS[symbol];
+    if (!etf) {
       throw new Error(`Unknown symbol: ${symbol}`);
     }
 
     const random = seededRandom(`${symbol}-news-${this.dateKey}`);
-    const sources = ['경제뉴스', '증권일보', '한국경제', '매일경제', '서울경제'];
+    const sources = ['경제뉴스', '증권일보', '한국경제', '매일경제', 'ETF뉴스'];
     const news: StockNews[] = [];
 
     for (let i = 0; i < limit; i++) {
@@ -121,8 +121,8 @@ export class MockMarketDataProvider implements MarketDataProvider {
       news.push({
         id: `${symbol}-news-${i}`,
         symbol,
-        title: template.title.replace('{name}', stock.name),
-        summary: `${stock.name}(${symbol})에 대한 시장 동향 및 분석 기사입니다.`,
+        title: template.title.replace('{name}', etf.name),
+        summary: `${etf.name}(${symbol})에 대한 시장 동향 및 분석 기사입니다.`,
         source: sources[Math.floor(random() * sources.length)],
         publishedAt: new Date(Date.now() - hoursAgo * 60 * 60 * 1000),
         sentiment: template.sentiment,
@@ -133,7 +133,7 @@ export class MockMarketDataProvider implements MarketDataProvider {
   }
 
   async getCandidateSymbols(count = 20): Promise<string[]> {
-    const symbols = Object.keys(MOCK_STOCKS);
+    const symbols = Object.keys(MOCK_ETFS);
     const random = seededRandom(this.dateKey);
     
     // Shuffle and take count

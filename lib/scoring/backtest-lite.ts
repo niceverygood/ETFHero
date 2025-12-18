@@ -121,11 +121,11 @@ function seededRandom(seed: number): () => number {
 export function generateMockPredictions(days: number): PredictionRecord[] {
   const predictions: PredictionRecord[] = [];
   const symbols = [
-    { symbol: '005930', name: '삼성전자' },
-    { symbol: '000660', name: 'SK하이닉스' },
-    { symbol: '373220', name: 'LG에너지솔루션' },
-    { symbol: '035720', name: '카카오' },
-    { symbol: '068270', name: '셀트리온' },
+    { symbol: '069500', name: 'KODEX 200' },
+    { symbol: '360750', name: 'TIGER 미국S&P500' },
+    { symbol: '091160', name: 'KODEX 반도체' },
+    { symbol: '133690', name: 'TIGER 미국나스닥100' },
+    { symbol: '161510', name: 'ARIRANG 고배당주' },
   ];
   
   const today = new Date();

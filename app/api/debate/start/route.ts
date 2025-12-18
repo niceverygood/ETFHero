@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createDebateSession, getSymbolByCode } from '@/lib/supabase';
 
-// Fallback symbol lookup
-const MOCK_SYMBOLS: Record<string, { name: string; sector: string }> = {
-  '005930': { name: '삼성전자', sector: '반도체' },
-  '000660': { name: 'SK하이닉스', sector: '반도체' },
-  '373220': { name: 'LG에너지솔루션', sector: '2차전지' },
-  '207940': { name: '삼성바이오로직스', sector: '바이오' },
-  '005380': { name: '현대차', sector: '자동차' },
-  '006400': { name: '삼성SDI', sector: '2차전지' },
-  '035720': { name: '카카오', sector: 'IT서비스' },
-  '035420': { name: 'NAVER', sector: 'IT서비스' },
+// Fallback ETF lookup
+const MOCK_ETFS: Record<string, { name: string; sector: string }> = {
+  '069500': { name: 'KODEX 200', sector: '시장지수' },
+  '102110': { name: 'TIGER 200', sector: '시장지수' },
+  '360750': { name: 'TIGER 미국S&P500', sector: '해외지수' },
+  '133690': { name: 'TIGER 미국나스닥100', sector: '해외지수' },
+  '091160': { name: 'KODEX 반도체', sector: '테마/섹터' },
+  '305720': { name: 'KODEX 2차전지산업', sector: '테마/섹터' },
+  '161510': { name: 'ARIRANG 고배당주', sector: '배당/가치' },
+  '364980': { name: 'TIGER AI반도체핵심공정', sector: '테마/섹터' },
+  'SPY': { name: 'SPDR S&P 500 ETF', sector: 'US Market' },
+  'QQQ': { name: 'Invesco QQQ Trust', sector: 'US Tech' },
 };
 
 export async function POST(request: NextRequest) {
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest) {
     
     // Fallback to mock data
     if (!symbolInfo) {
-      symbolInfo = MOCK_SYMBOLS[symbol];
+      symbolInfo = MOCK_ETFS[symbol];
     }
 
     if (!symbolInfo) {

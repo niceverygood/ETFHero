@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Mock debate history data
+// Mock debate history data for ETFs
 function generateMockDebateHistory(symbol: string, date: string) {
-  const SYMBOL_MAP: Record<string, { name: string; sector: string }> = {
-    '005930': { name: '삼성전자', sector: 'Semiconductor' },
-    '000660': { name: 'SK하이닉스', sector: 'Semiconductor' },
-    '373220': { name: 'LG에너지솔루션', sector: 'Battery' },
-    '207940': { name: '삼성바이오로직스', sector: 'Bio' },
-    '005380': { name: '현대차', sector: 'Auto' },
-    '006400': { name: '삼성SDI', sector: 'Battery' },
-    '035720': { name: '카카오', sector: 'IT Service' },
-    '035420': { name: 'NAVER', sector: 'IT Service' },
-    '051910': { name: 'LG화학', sector: 'Chemical' },
-    '000270': { name: '기아', sector: 'Auto' },
-    '105560': { name: 'KB금융', sector: 'Finance' },
-    '055550': { name: '신한지주', sector: 'Finance' },
-    '068270': { name: '셀트리온', sector: 'Bio' },
+  const ETF_MAP: Record<string, { name: string; sector: string }> = {
+    '069500': { name: 'KODEX 200', sector: 'Market Index' },
+    '102110': { name: 'TIGER 200', sector: 'Market Index' },
+    '360750': { name: 'TIGER 미국S&P500', sector: 'Foreign Index' },
+    '133690': { name: 'TIGER 미국나스닥100', sector: 'Foreign Index' },
+    '091160': { name: 'KODEX 반도체', sector: 'Theme/Sector' },
+    '305720': { name: 'KODEX 2차전지산업', sector: 'Theme/Sector' },
+    '379800': { name: 'KODEX 미국S&P500TR', sector: 'Foreign Index' },
+    '161510': { name: 'ARIRANG 고배당주', sector: 'Dividend/Value' },
+    '148070': { name: 'KOSEF 국고채10년', sector: 'Bond' },
+    '364980': { name: 'TIGER AI반도체핵심공정', sector: 'Theme/Sector' },
+    '381170': { name: 'TIGER 미국테크TOP10', sector: 'Foreign Theme' },
+    '453810': { name: 'TIGER 미국AI빅테크10', sector: 'Foreign Theme' },
+    '266160': { name: 'KODEX 배당가치', sector: 'Dividend/Value' },
   };
 
-  const symbolInfo = SYMBOL_MAP[symbol] || { name: symbol, sector: 'Unknown' };
+  const symbolInfo = ETF_MAP[symbol] || { name: symbol, sector: 'Unknown' };
   const basePrice = 70000 + (parseInt(symbol) % 100) * 1000;
 
   const messages = [

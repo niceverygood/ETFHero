@@ -10,22 +10,22 @@ import type { CharacterType } from '@/lib/llm/types';
 function getSuggestedQuestions(characterType: CharacterType): string[] {
   const questions: Record<CharacterType, string[]> = {
     claude: [
-      '삼성전자 현재 밸류에이션이 어떤가요? PER, PBR 기준으로요.',
-      'SK하이닉스의 재무제표 분석 부탁드려요. 부채비율이 걱정되는데...',
-      '지금 반도체 섹터에 투자해도 괜찮을까요? 실적 전망이 궁금해요.',
-      '배당주 포트폴리오를 구성하고 싶어요. 어떤 기업들이 좋을까요?',
+      'KODEX 200과 TIGER 200 중에서 어떤 게 더 좋을까요? 운용보수 비교해주세요.',
+      '시장지수 ETF를 기본으로 깔고, 테마 ETF 비중은 어느 정도가 적당할까요?',
+      '배당 ETF 투자를 고려 중인데, ARIRANG 고배당주와 KODEX 배당가치 중 뭐가 좋을까요?',
+      'ETF 자동 리밸런싱 주기는 보통 어느 정도로 하나요?',
     ],
     gemini: [
-      '요즘 AI 관련주 중에서 가장 유망한 종목이 뭐라고 생각하세요?',
-      '엔비디아 말고 AI 수혜주로 눈여겨볼 만한 한국 기업이 있나요?',
-      '2차전지 섹터 전망이 어떤가요? LG에너지솔루션 vs 삼성SDI?',
-      '테슬라 경쟁사들 중에서 장기적으로 유망한 기업은요?',
+      '요즘 AI 관련 ETF 중에서 가장 유망한 것이 뭐라고 생각하세요?',
+      'TIGER 미국테크TOP10과 TIGER AI반도체핵심공정 중에 어떤 게 더 좋을까요?',
+      '2차전지 ETF 전망이 어떤가요? KODEX 2차전지산업 아직 유효할까요?',
+      '테마 ETF 분산 투자 vs 집중 투자, 어떤 전략이 더 좋을까요?',
     ],
     gpt: [
-      '지금 금리 상황에서 어떤 섹터가 유리할까요?',
+      '채권 ETF와 주식 ETF 비중을 어떻게 조절해야 할까요?',
       '포트폴리오에서 현금 비중을 얼마나 유지해야 할까요?',
-      '미국 경기침체 가능성, 어떻게 보시나요? 대비 전략이 궁금해요.',
-      '달러 환율이 계속 오르는데, 환헤지를 해야 할까요?',
+      '미국 경기침체 가능성, 어떻게 보시나요? ETF 포트폴리오 대비 전략이 궁금해요.',
+      '달러 환율이 계속 오르는데, 해외 ETF 환헤지 상품을 써야 할까요?',
     ],
   };
   return questions[characterType] || questions.claude;
@@ -45,7 +45,7 @@ interface Holding {
   currentPrice: number;
 }
 
-interface StockData {
+interface ETFData {
   symbol: string;
   name: string;
   currentPrice: number;
@@ -56,7 +56,7 @@ interface StockData {
 interface AIConsultationProps {
   characterType: CharacterType;
   holdings?: Holding[];
-  stockData?: StockData;  // 실시간 주식 데이터
+  stockData?: ETFData;  // 실시간 ETF 데이터
   onClose?: () => void;
   onViewDebate?: () => void;
   showDebateButton?: boolean;
@@ -290,7 +290,7 @@ export function AIConsultation({ characterType, holdings = [], stockData, onClos
       {/* Holdings Info */}
       {holdings.length > 0 && (
         <div className="p-3 bg-dark-900/50 border-b border-dark-800">
-          <div className="text-xs text-dark-500 mb-2">연동된 보유 종목</div>
+          <div className="text-xs text-dark-500 mb-2">연동된 보유 ETF</div>
           <div className="flex flex-wrap gap-2">
             {holdings.map((h, i) => {
               const profitPercent = ((h.currentPrice - h.avgPrice) / h.avgPrice * 100);
@@ -447,7 +447,7 @@ interface AIConsultationModalProps {
   onClose: () => void;
   characterType: CharacterType;
   holdings?: Holding[];
-  stockData?: StockData;  // 실시간 주식 데이터
+  stockData?: ETFData;  // 실시간 ETF 데이터
   onViewDebate?: () => void;
   showDebateButton?: boolean;
 }

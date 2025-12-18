@@ -78,20 +78,22 @@ interface TargetInfo {
   targetDate: string;
 }
 
-const SYMBOL_MAP: Record<string, { name: string; sector: string; price: number }> = {
-  '005930': { name: '삼성전자', sector: 'Semiconductor', price: 71500 },
-  '000660': { name: 'SK하이닉스', sector: 'Semiconductor', price: 178000 },
-  '373220': { name: 'LG에너지솔루션', sector: 'Battery', price: 385000 },
-  '207940': { name: '삼성바이오로직스', sector: 'Bio', price: 782000 },
-  '005380': { name: '현대차', sector: 'Auto', price: 242000 },
-  '006400': { name: '삼성SDI', sector: 'Battery', price: 352000 },
-  '035720': { name: '카카오', sector: 'IT Service', price: 42500 },
-  '035420': { name: 'NAVER', sector: 'IT Service', price: 192000 },
-  '051910': { name: 'LG화학', sector: 'Chemical', price: 298000 },
-  '000270': { name: '기아', sector: 'Auto', price: 94800 },
-  '105560': { name: 'KB금융', sector: 'Finance', price: 78500 },
-  '017670': { name: 'SK텔레콤', sector: 'Telecom', price: 53200 },
-  '068270': { name: '셀트리온', sector: 'Bio', price: 178500 },
+const ETF_MAP: Record<string, { name: string; sector: string; price: number }> = {
+  '069500': { name: 'KODEX 200', sector: 'Market Index', price: 35000 },
+  '102110': { name: 'TIGER 200', sector: 'Market Index', price: 37500 },
+  '360750': { name: 'TIGER 미국S&P500', sector: 'Foreign Index', price: 18500 },
+  '133690': { name: 'TIGER 미국나스닥100', sector: 'Foreign Index', price: 96000 },
+  '091160': { name: 'KODEX 반도체', sector: 'Theme/Sector', price: 42000 },
+  '305720': { name: 'KODEX 2차전지산업', sector: 'Theme/Sector', price: 15800 },
+  '379800': { name: 'KODEX 미국S&P500TR', sector: 'Foreign Index', price: 15200 },
+  '161510': { name: 'ARIRANG 고배당주', sector: 'Dividend/Value', price: 14500 },
+  '148070': { name: 'KOSEF 국고채10년', sector: 'Bond', price: 102000 },
+  '364980': { name: 'TIGER AI반도체핵심공정', sector: 'Theme/Sector', price: 15300 },
+  '381170': { name: 'TIGER 미국테크TOP10', sector: 'Foreign Theme', price: 16200 },
+  '453810': { name: 'TIGER 미국AI빅테크10', sector: 'Foreign Theme', price: 12800 },
+  '266160': { name: 'KODEX 배당가치', sector: 'Dividend/Value', price: 12800 },
+  'SPY': { name: 'SPDR S&P 500 ETF', sector: 'US Market Index', price: 450 },
+  'QQQ': { name: 'Invesco QQQ Trust', sector: 'US Tech', price: 380 },
 };
 
 interface RealTimeStockInfo {
@@ -508,7 +510,7 @@ function FinalConsensusSummary({
 export default function BattlePage() {
   const params = useParams();
   const symbol = params.symbol as string;
-  const baseSymbolInfo = SYMBOL_MAP[symbol] || { name: symbol, sector: 'Unknown', price: 70000 };
+  const baseSymbolInfo = ETF_MAP[symbol] || { name: symbol, sector: 'Unknown', price: 70000 };
   const { recordDebateView } = useDebateHistory();
 
   const [messages, setMessages] = useState<Message[]>([]);

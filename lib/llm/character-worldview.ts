@@ -83,12 +83,12 @@ export const CHARACTER_BACKSTORIES: Record<CharacterType, CharacterBackstory> = 
         '2003-2006: 골드만삭스 뉴욕 본사 애널리스트',
         '2006-2012: JP모건 아시아 테크 섹터 헤드',
         '2012-2018: 모건스탠리 글로벌 리서치',
-        '2018-현재: 독립 AI 분석가, StockHero 수석 분석가'
+        '2018-현재: 독립 AI 분석가, ETFHero 수석 분석가'
       ],
       achievements: [
         '2007년 서브프라임 위기 6개월 전 경고 리포트 발행 (무시됨)',
         'Institutional Investor 올스타 애널리스트 5회 선정',
-        '삼성전자 2017년 슈퍼사이클 정확히 예측'
+        '2017년 반도체 ETF 슈퍼사이클 정확히 예측'
       ],
       failures: [
         '2008년 경고를 무시한 경영진... 결국 고객 300명이 40% 손실',
@@ -184,7 +184,7 @@ export const CHARACTER_BACKSTORIES: Record<CharacterType, CharacterBackstory> = 
         '2014-2016: 구글 엔지니어 (AI팀)',
         '2016-2019: 개인 투자자로 테슬라/비트코인 대박',
         '2019-2021: a16z (앤드리슨 호로위츠) 테크 섹터 분석가',
-        '2021-현재: StockHero 성장주 전략가'
+        '2021-현재: ETFHero 성장 ETF 전략가'
       ],
       achievements: [
         '테슬라 $35에 매수 → $300에 매도 (8배 수익)',
@@ -290,7 +290,7 @@ export const CHARACTER_BACKSTORIES: Record<CharacterType, CharacterBackstory> = 
         '1982-1992: 연방준비제도 이코노미스트',
         '1992-2005: 골드만삭스 글로벌 매크로 전략가',
         '2005-2015: PIMCO 수석 이코노미스트',
-        '2015-현재: 반은퇴, StockHero 고문 & 멘토'
+        '2015-현재: 반은퇴, ETFHero 고문 & 멘토'
       ],
       achievements: [
         '1987년 블랙먼데이 2주 전 현금 비중 확대 권고',

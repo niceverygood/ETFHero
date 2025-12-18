@@ -2,22 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getOrCreateSession } from '@/lib/llm';
 import { createDebateMessage, updateDebateSession } from '@/lib/supabase';
 
-// Mock current prices for stocks
-const STOCK_PRICES: Record<string, number> = {
-  '005930': 71500, // 삼성전자
-  '000660': 178000, // SK하이닉스
-  '373220': 385000, // LG에너지솔루션
-  '207940': 782000, // 삼성바이오로직스
-  '005380': 242000, // 현대차
-  '006400': 352000, // 삼성SDI
-  '035720': 42500, // 카카오
-  '035420': 192000, // NAVER
-  '051910': 298000, // LG화학
-  '000270': 94800, // 기아
-  '105560': 82400, // KB금융
-  '055550': 51200, // 신한지주
-  '068270': 178500, // 셀트리온
-  '003670': 298000, // 포스코홀딩스
+// Mock current prices for ETFs
+const ETF_PRICES: Record<string, number> = {
+  '069500': 35000, // KODEX 200
+  '102110': 37500, // TIGER 200
+  '360750': 18500, // TIGER 미국S&P500
+  '133690': 96000, // TIGER 미국나스닥100
+  '091160': 42000, // KODEX 반도체
+  '305720': 15800, // KODEX 2차전지산업
+  '379800': 15200, // KODEX 미국S&P500TR
+  '161510': 14500, // ARIRANG 고배당주
+  '148070': 102000, // KOSEF 국고채10년
+  '364980': 15300, // TIGER AI반도체핵심공정
+  '381170': 16200, // TIGER 미국테크TOP10
+  '453810': 12800, // TIGER 미국AI빅테크10
+  '266160': 12800, // KODEX 배당가치
+  '329200': 52500, // TIGER CD금리투자KIS
 };
 
 export async function POST(request: NextRequest) {
@@ -43,9 +43,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const finalSymbol = symbol || '005930';
-    const finalSymbolName = symbolName || '삼성전자';
-    const finalCurrentPrice = currentPrice || STOCK_PRICES[finalSymbol] || 70000;
+    const finalSymbol = symbol || '069500';
+    const finalSymbolName = symbolName || 'KODEX 200';
+    const finalCurrentPrice = currentPrice || ETF_PRICES[finalSymbol] || 35000;
 
     console.log(`Generating round ${round} for ${finalSymbol} (${finalSymbolName}) at price ${finalCurrentPrice}`);
 
