@@ -105,6 +105,8 @@ interface RealTimeETFInfo {
   price: number;
   change: number;
   changePercent: number;
+  currency?: string;
+  exchange?: string;
   isRealTime: boolean;
   issuer?: string;
   expenseRatio?: number;
@@ -565,20 +567,23 @@ export default function BattlePage() {
         const data = await res.json();
         
         if (data.success && data.data) {
-          // API에서 심볼 코드가 반환되면 baseSymbolInfo.name 사용
+          // API에서 심볼 코드가 반환되면 사용, 아니면 baseSymbolInfo.name 사용
           const apiName = data.data.name;
           const isValidName = apiName && !/^\d+$/.test(apiName); // 숫자로만 이루어진 이름은 무효
           
+          // API에서 반환된 정보가 있으면 사용, 없으면 기본 정보 사용
           setRealTimeInfo({
             name: isValidName ? apiName : baseSymbolInfo.name,
-            sector: baseSymbolInfo.sector,
+            sector: data.data.sector || baseSymbolInfo.sector,
             price: data.data.price || 0,
             change: data.data.change || 0,
             changePercent: data.data.changePercent || 0,
-            isRealTime: data.source === 'kis',
-            issuer: baseSymbolInfo.issuer,
-            expenseRatio: baseSymbolInfo.expenseRatio,
-            description: baseSymbolInfo.description,
+            isRealTime: data.isRealTime || false,
+            issuer: data.data.issuer || baseSymbolInfo.issuer,
+            expenseRatio: data.data.expenseRatio ?? baseSymbolInfo.expenseRatio,
+            description: data.data.description || baseSymbolInfo.description,
+            currency: data.data.currency,
+            exchange: data.data.exchange,
           });
         } else {
           // API 실패 시 기본 정보만 사용
@@ -847,7 +852,9 @@ export default function BattlePage() {
                           {symbolInfo.price > 0 && (
                             <>
                               <span className="text-dark-600">|</span>
-                              <span className="text-brand-400 font-semibold">{symbolInfo.price.toLocaleString()}원</span>
+                              <span className="text-brand-400 font-semibold">
+                                {symbolInfo.currency === 'USD' ? '$' : ''}{symbolInfo.price.toLocaleString()}{symbolInfo.currency !== 'USD' ? '원' : ''}
+                              </span>
                               {symbolInfo.change !== 0 && (
                                 <span className={`font-medium ${symbolInfo.change > 0 ? 'text-red-400' : 'text-blue-400'}`}>
                                   {symbolInfo.change > 0 ? '▲' : '▼'} {Math.abs(symbolInfo.changePercent).toFixed(2)}%
