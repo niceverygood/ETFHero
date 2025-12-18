@@ -89,7 +89,7 @@ interface HeroData {
   date: string;
   time?: string;
   isRealTime?: boolean;
-  stocks: Stock[];
+  stocks: ETFItem[];
 }
 
 export default function HeroDetailPage() {
@@ -107,7 +107,7 @@ export default function HeroDetailPage() {
   const meta = HERO_META[heroId as keyof typeof HERO_META];
 
   // AI 의견 가져오기
-  const fetchAIOpinion = async (stock: Stock, isMore: boolean = false) => {
+  const fetchAIOpinion = async (stock: ETFItem, isMore: boolean = false) => {
     const stockKey = stock.symbol;
     const currentState = stockOpinions[stockKey];
     const currentTurn = isMore ? (currentState?.turn || 0) + 1 : 1;
@@ -200,7 +200,7 @@ export default function HeroDetailPage() {
   };
 
   // 의견 접기/펼치기
-  const toggleOpinion = (stock: Stock) => {
+  const toggleOpinion = (stock: ETFItem) => {
     const stockKey = stock.symbol;
     const currentState = stockOpinions[stockKey];
 
