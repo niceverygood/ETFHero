@@ -77,7 +77,7 @@ function PortfolioChart({ data }: { data: PortfolioSnapshot[] }) {
       <div className="flex items-center gap-6 mb-4">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-brand-500" />
-          <span className="text-sm text-dark-300">StockHero Portfolio</span>
+          <span className="text-sm text-dark-300">ETFHero Portfolio</span>
           <span className={`text-sm font-semibold ${latestReturn >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
             {latestReturn >= 0 ? '+' : ''}{latestReturn.toFixed(1)}%
           </span>
@@ -280,7 +280,7 @@ function InvestmentSimulator({ range }: { range: TimeRange }) {
       
       <div className="grid grid-cols-2 gap-4 p-4 bg-dark-800/50 rounded-xl">
         <div>
-          <div className="text-xs text-dark-500 mb-1">StockHero 포트폴리오</div>
+          <div className="text-xs text-dark-500 mb-1">ETFHero 포트폴리오</div>
           <div className="text-xl font-bold text-dark-100">
             {result.finalValue.toLocaleString()}원
           </div>
@@ -363,13 +363,13 @@ function RecentPicks({ range }: { range: TimeRange }) {
   
   return (
     <div className="card">
-      <h3 className="font-semibold text-dark-100 mb-4">Recent Picks Performance</h3>
+      <h3 className="font-semibold text-dark-100 mb-4">Recent ETF Picks Performance</h3>
       
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="text-left text-xs text-dark-500 border-b border-dark-800">
-              <th className="pb-3 font-medium">Stock</th>
+              <th className="pb-3 font-medium">ETF</th>
               <th className="pb-3 font-medium">Entry</th>
               <th className="pb-3 font-medium">Current</th>
               <th className="pb-3 font-medium">Return</th>

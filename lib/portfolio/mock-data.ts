@@ -53,31 +53,32 @@ export function generatePortfolioHistory(range: TimeRange): PortfolioSnapshot[] 
 
 export function generatePickPerformances(range: TimeRange): PickPerformance[] {
   const random = seededRandom(123);
-  const stocks = [
-    { symbol: '005930', name: '삼성전자' },
-    { symbol: '000660', name: 'SK하이닉스' },
-    { symbol: '373220', name: 'LG에너지솔루션' },
-    { symbol: '005380', name: '현대차' },
-    { symbol: '035720', name: '카카오' },
-    { symbol: '035420', name: 'NAVER' },
-    { symbol: '006400', name: '삼성SDI' },
-    { symbol: '051910', name: 'LG화학' },
-    { symbol: '068270', name: '셀트리온' },
-    { symbol: '028260', name: '삼성물산' },
-    { symbol: '012330', name: '현대모비스' },
-    { symbol: '066570', name: 'LG전자' },
-    { symbol: '003550', name: 'LG' },
-    { symbol: '105560', name: 'KB금융' },
-    { symbol: '055550', name: '신한지주' },
+  // ETF 데이터로 변경
+  const etfs = [
+    { symbol: '069500', name: 'KODEX 200' },
+    { symbol: '102110', name: 'TIGER 200' },
+    { symbol: '360750', name: 'TIGER 미국S&P500' },
+    { symbol: '133690', name: 'TIGER 미국나스닥100' },
+    { symbol: '091160', name: 'KODEX 반도체' },
+    { symbol: '305720', name: 'KODEX 2차전지산업' },
+    { symbol: '379800', name: 'KODEX 미국S&P500TR' },
+    { symbol: '161510', name: 'ARIRANG 고배당주' },
+    { symbol: '148070', name: 'KOSEF 국고채10년' },
+    { symbol: '364980', name: 'TIGER AI반도체핵심공정' },
+    { symbol: '371460', name: 'TIGER 차이나전기차SOLACTIVE' },
+    { symbol: '143850', name: 'TIGER 200IT' },
+    { symbol: '117700', name: 'KODEX 건설' },
+    { symbol: '266160', name: 'KODEX 배당가치' },
+    { symbol: '329200', name: 'TIGER CD금리투자KIS' },
   ];
   
   const days = range === '1w' ? 7 : range === '1m' ? 30 : range === '3m' ? 90 : 180;
-  const numPicks = Math.min(Math.floor(days / 2), stocks.length);
+  const numPicks = Math.min(Math.floor(days / 2), etfs.length);
   
   const characters: ('claude' | 'gemini' | 'gpt')[] = ['claude', 'gemini', 'gpt'];
   
-  return stocks.slice(0, numPicks).map((stock, i) => {
-    const entryPrice = 50000 + random() * 200000;
+  return etfs.slice(0, numPicks).map((etf, i) => {
+    const entryPrice = 10000 + random() * 150000;
     const returnPct = (random() - 0.4) * 30;
     const currentPrice = entryPrice * (1 + returnPct / 100);
     const holdingDays = Math.floor(random() * days) + 1;
@@ -89,8 +90,8 @@ export function generatePickPerformances(range: TimeRange): PickPerformance[] {
     date.setDate(date.getDate() - holdingDays);
     
     return {
-      symbol: stock.symbol,
-      name: stock.name,
+      symbol: etf.symbol,
+      name: etf.name,
       entryDate: date.toISOString().split('T')[0],
       entryPrice: Math.round(entryPrice),
       currentPrice: Math.round(currentPrice),
@@ -111,8 +112,8 @@ export function generateAIPerformances(): AIPerformance[] {
       winRate: 68.1,
       avgReturn: 4.2,
       totalReturn: 23.8,
-      bestSector: '기술/성장주',
-      worstSector: '금융',
+      bestSector: '테마/성장 ETF',
+      worstSector: '채권 ETF',
       streak: 5,
       rank: 1,
     },
@@ -123,8 +124,8 @@ export function generateAIPerformances(): AIPerformance[] {
       winRate: 63.5,
       avgReturn: 3.1,
       totalReturn: 18.2,
-      bestSector: '반도체',
-      worstSector: '바이오',
+      bestSector: '시장지수 ETF',
+      worstSector: '원자재 ETF',
       streak: 3,
       rank: 2,
     },
@@ -135,8 +136,8 @@ export function generateAIPerformances(): AIPerformance[] {
       winRate: 59.1,
       avgReturn: 2.8,
       totalReturn: 15.6,
-      bestSector: '에너지/소재',
-      worstSector: '기술주',
+      bestSector: '배당 ETF',
+      worstSector: '테마 ETF',
       streak: 2,
       rank: 3,
     },
@@ -164,11 +165,11 @@ export function generatePortfolioMetrics(range: TimeRange): PortfolioMetrics {
 
 export function generateHallOfFame(): HallOfFameEntry[] {
   return [
-    { rank: 1, symbol: '000660', name: 'SK하이닉스', returnPct: 34.2, date: '2024-11-15', pickedBy: ['claude', 'gemini', 'gpt'] },
-    { rank: 2, symbol: '373220', name: 'LG에너지솔루션', returnPct: 28.7, date: '2024-10-22', pickedBy: ['gemini', 'gpt'] },
-    { rank: 3, symbol: '005930', name: '삼성전자', returnPct: 24.1, date: '2024-12-01', pickedBy: ['claude', 'gemini'] },
-    { rank: 4, symbol: '035720', name: '카카오', returnPct: 21.5, date: '2024-11-28', pickedBy: ['gemini'] },
-    { rank: 5, symbol: '068270', name: '셀트리온', returnPct: 19.8, date: '2024-10-30', pickedBy: ['claude', 'gpt'] },
+    { rank: 1, symbol: '091160', name: 'KODEX 반도체', returnPct: 34.2, date: '2024-11-15', pickedBy: ['claude', 'gemini', 'gpt'] },
+    { rank: 2, symbol: '305720', name: 'KODEX 2차전지산업', returnPct: 28.7, date: '2024-10-22', pickedBy: ['gemini', 'gpt'] },
+    { rank: 3, symbol: '360750', name: 'TIGER 미국S&P500', returnPct: 24.1, date: '2024-12-01', pickedBy: ['claude', 'gemini'] },
+    { rank: 4, symbol: '133690', name: 'TIGER 미국나스닥100', returnPct: 21.5, date: '2024-11-28', pickedBy: ['gemini'] },
+    { rank: 5, symbol: '364980', name: 'TIGER AI반도체핵심공정', returnPct: 19.8, date: '2024-10-30', pickedBy: ['claude', 'gpt'] },
   ];
 }
 
@@ -191,5 +192,3 @@ export function simulateInvestment(amount: number, range: TimeRange): {
     benchmarkProfit: Math.round(benchmarkFinal - amount),
   };
 }
-
-
