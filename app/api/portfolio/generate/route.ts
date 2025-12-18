@@ -8,28 +8,28 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
 
-// 한국 주식 목록과 현재가 (실제로는 실시간 데이터를 가져와야 함)
-const AVAILABLE_STOCKS = [
-  { code: '005930', name: '삼성전자', sector: '반도체', price: 55800 },
-  { code: '000660', name: 'SK하이닉스', sector: '반도체', price: 178000 },
-  { code: '373220', name: 'LG에너지솔루션', sector: '2차전지', price: 385000 },
-  { code: '207940', name: '삼성바이오로직스', sector: '바이오', price: 782000 },
-  { code: '005380', name: '현대차', sector: '자동차', price: 208000 },
-  { code: '006400', name: '삼성SDI', sector: '2차전지', price: 272000 },
-  { code: '035720', name: '카카오', sector: 'IT서비스', price: 42500 },
-  { code: '035420', name: 'NAVER', sector: 'IT서비스', price: 192000 },
-  { code: '051910', name: 'LG화학', sector: '화학', price: 298000 },
-  { code: '000270', name: '기아', sector: '자동차', price: 94800 },
-  { code: '105560', name: 'KB금융', sector: '금융', price: 82400 },
-  { code: '055550', name: '신한지주', sector: '금융', price: 51200 },
-  { code: '068270', name: '셀트리온', sector: '바이오', price: 178500 },
-  { code: '003670', name: '포스코홀딩스', sector: '철강', price: 298000 },
-  { code: '066570', name: 'LG전자', sector: '가전', price: 98500 },
-  { code: '028260', name: '삼성물산', sector: '건설', price: 125000 },
-  { code: '012330', name: '현대모비스', sector: '자동차부품', price: 245000 },
-  { code: '096770', name: 'SK이노베이션', sector: '에너지', price: 115000 },
-  { code: '034730', name: 'SK', sector: '지주', price: 175000 },
-  { code: '003550', name: 'LG', sector: '지주', price: 78000 },
+// 한국 ETF 목록과 현재가
+const AVAILABLE_ETFS = [
+  { code: '069500', name: 'KODEX 200', sector: '시장지수', price: 35000 },
+  { code: '102110', name: 'TIGER 200', sector: '시장지수', price: 37500 },
+  { code: '360750', name: 'TIGER 미국S&P500', sector: '해외지수', price: 18500 },
+  { code: '133690', name: 'TIGER 미국나스닥100', sector: '해외지수', price: 96000 },
+  { code: '091160', name: 'KODEX 반도체', sector: '테마/섹터', price: 42000 },
+  { code: '305720', name: 'KODEX 2차전지산업', sector: '테마/섹터', price: 15800 },
+  { code: '379800', name: 'KODEX 미국S&P500TR', sector: '해외지수', price: 15200 },
+  { code: '161510', name: 'ARIRANG 고배당주', sector: '배당/가치', price: 14500 },
+  { code: '148070', name: 'KOSEF 국고채10년', sector: '채권', price: 102000 },
+  { code: '364980', name: 'TIGER AI반도체핵심공정', sector: '테마/섹터', price: 15300 },
+  { code: '371460', name: 'TIGER 차이나전기차SOLACTIVE', sector: '해외테마', price: 8200 },
+  { code: '143850', name: 'TIGER 200IT', sector: '테마/섹터', price: 25800 },
+  { code: '266160', name: 'KODEX 배당가치', sector: '배당/가치', price: 12800 },
+  { code: '329200', name: 'TIGER CD금리투자KIS', sector: '채권', price: 52500 },
+  { code: '381170', name: 'TIGER 미국테크TOP10', sector: '해외테마', price: 16200 },
+  { code: '453810', name: 'TIGER 미국AI빅테크10', sector: '해외테마', price: 12800 },
+  { code: '411060', name: 'ACE 미국빅테크TOP7 Plus', sector: '해외테마', price: 18500 },
+  { code: '395170', name: 'KBSTAR 미국S&P500', sector: '해외지수', price: 14200 },
+  { code: '292150', name: 'TIGER TOP10', sector: '시장지수', price: 13200 },
+  { code: '157450', name: 'TIGER 모멘텀', sector: '전략/스마트베타', price: 32500 },
 ];
 
 interface PortfolioItem {
@@ -59,24 +59,24 @@ interface AIPortfolio {
   strategyDetail: string;
 }
 
-const PORTFOLIO_PROMPT = (amount: number) => `당신은 전문 투자 포트폴리오 매니저입니다. 
-투자금 ${amount.toLocaleString()}원으로 한국 주식 포트폴리오를 구성해주세요.
+const PORTFOLIO_PROMPT = (amount: number) => `당신은 전문 ETF 포트폴리오 매니저입니다. 
+투자금 ${amount.toLocaleString()}원으로 한국 상장 ETF 포트폴리오를 구성해주세요.
 
-사용 가능한 종목 목록 (종목명, 섹터, 현재가):
-${AVAILABLE_STOCKS.map(s => `- ${s.name} (${s.sector}): ${s.price.toLocaleString()}원`).join('\n')}
+사용 가능한 ETF 목록 (ETF명, 카테고리, 현재가):
+${AVAILABLE_ETFS.map(s => `- ${s.name} (${s.sector}): ${s.price.toLocaleString()}원`).join('\n')}
 
 다음 JSON 형식으로만 응답해주세요. 다른 텍스트 없이 JSON만 출력:
 {
   "strategy": "전체 투자 전략과 시장 전망을 포함한 설명 (3-4문장으로 상세하게)",
-  "strategyDetail": "포트폴리오 구성의 핵심 원칙과 섹터 배분 전략 (2-3문장)",
+  "strategyDetail": "ETF 포트폴리오 구성의 핵심 원칙과 자산배분 전략 (2-3문장)",
   "riskLevel": "conservative" 또는 "balanced" 또는 "aggressive",
   "cashWeight": 현금 비중 (0-30 사이 숫자),
   "cashReason": "현금 비중을 이렇게 설정한 이유 (1-2문장)",
   "holdings": [
     {
-      "name": "종목명",
+      "name": "ETF명",
       "weight": 비중 (숫자),
-      "rationale": "이 종목을 선정한 이유 - 펀더멘털, 밸류에이션, 성장성 등 구체적으로 (2-3문장)",
+      "rationale": "이 ETF를 선정한 이유 - 추종지수, 수수료, 분산효과 등 구체적으로 (2-3문장)",
       "weightReason": "이 비중으로 설정한 이유 - 리스크, 기대수익률, 포트폴리오 내 역할 등 (1-2문장)",
       "riskFactors": "주요 리스크 요인 (1문장)",
       "targetReturn": "기대 수익률 (예: +15~20%)"
@@ -85,32 +85,32 @@ ${AVAILABLE_STOCKS.map(s => `- ${s.name} (${s.sector}): ${s.price.toLocaleString
 }
 
 주의사항:
-1. 반드시 위 목록에 있는 종목만 선택하세요
-2. 종목은 4-6개 선택하세요
+1. 반드시 위 목록에 있는 ETF만 선택하세요
+2. ETF는 4-6개 선택하세요
 3. 비중 합계 + 현금비중 = 100이 되어야 합니다
-4. 각 종목의 선정 이유와 비중 결정 이유를 구체적이고 전문적으로 작성하세요
-5. 실제 애널리스트처럼 밸류에이션, 성장성, 리스크를 분석해주세요`;
+4. 각 ETF의 선정 이유와 비중 결정 이유를 구체적이고 전문적으로 작성하세요
+5. 실제 자산배분 전문가처럼 분산효과, 상관관계, 비용효율성을 분석해주세요`;
 
-const CLAUDE_SYSTEM = `당신은 클로드 리(Claude Lee), 월가에서 15년간 활동한 베테랑 펀더멘털 애널리스트입니다.
-- 가치투자와 펀더멘털 분석을 기반으로 종목을 선정합니다
-- PER, PBR, ROE 등 밸류에이션 지표를 중시합니다
+const CLAUDE_SYSTEM = `당신은 클로드 리(Claude Lee), 월가에서 15년간 활동한 베테랑 ETF 밸류에이션 애널리스트입니다.
+- 시장지수 ETF와 배당/가치 ETF를 기반으로 안정적인 포트폴리오를 구성합니다
+- 운용보수, 추적오차, 거래량을 중시합니다
 - 균형 잡힌 포트폴리오를 선호합니다 (balanced)
 - 현금 비중은 10-15% 정도 유지합니다
-- 대형 우량주 중심으로 안정적인 수익을 추구합니다`;
+- 대형 인덱스 ETF 중심으로 장기 투자를 추구합니다`;
 
-const GEMINI_SYSTEM = `당신은 게미 나인(Gemi Nine), 실리콘밸리 출신의 테크 투자 전문가입니다.
-- 성장주와 혁신 기업에 집중 투자합니다
-- AI, 반도체, 2차전지, 바이오 등 미래 산업에 관심이 많습니다
+const GEMINI_SYSTEM = `당신은 게미 나인(Gemi Nine), 실리콘밸리 출신의 테마 ETF 전문가입니다.
+- 테마/섹터 ETF와 해외 성장 ETF에 집중 투자합니다
+- AI, 반도체, 2차전지, 전기차 등 미래 산업 ETF에 관심이 많습니다
 - 공격적인 포트폴리오를 선호합니다 (aggressive)
 - 현금 비중은 5-10% 정도로 낮게 유지합니다
-- 높은 성장 잠재력을 가진 종목을 과감하게 담습니다`;
+- 높은 성장 잠재력을 가진 테마 ETF를 과감하게 담습니다`;
 
-const GPT_SYSTEM = `당신은 G.P. 테일러(G.P. Taylor), 40년 경력의 베테랑 매크로 전략가입니다.
-- 거시경제와 리스크 관리를 최우선으로 생각합니다
+const GPT_SYSTEM = `당신은 G.P. 테일러(G.P. Taylor), 40년 경력의 베테랑 자산배분 전략가입니다.
+- 채권 ETF와 배당 ETF를 통한 리스크 관리를 최우선으로 생각합니다
 - 보수적인 포트폴리오를 선호합니다 (conservative)
 - 현금 비중은 20-30% 정도로 높게 유지합니다
-- 배당주와 방어적인 대형주를 선호합니다
-- 시장 변동성에 대비한 안전마진을 중시합니다`;
+- 고배당 ETF와 채권 ETF를 선호합니다
+- 자산 간 상관관계를 고려한 분산투자를 중시합니다`;
 
 async function generateClaudePortfolio(amount: number): Promise<AIPortfolio | null> {
   try {
@@ -212,12 +212,12 @@ function buildPortfolio(
   }));
 
   const holdings: PortfolioItem[] = normalizedHoldings.map(holding => {
-    const stock = AVAILABLE_STOCKS.find(s => s.name === holding.name);
-    if (!stock) {
-      // 종목을 찾지 못한 경우 삼성전자로 대체
-      const fallback = AVAILABLE_STOCKS[0];
-      const stockAmount = Math.floor(investAmount * (holding.weight / (100 - cashWeight)));
-      const shares = Math.floor(stockAmount / fallback.price);
+    const etf = AVAILABLE_ETFS.find(s => s.name === holding.name);
+    if (!etf) {
+      // ETF를 찾지 못한 경우 KODEX 200으로 대체
+      const fallback = AVAILABLE_ETFS[0];
+      const etfAmount = Math.floor(investAmount * (holding.weight / (100 - cashWeight)));
+      const shares = Math.floor(etfAmount / fallback.price);
       return {
         code: fallback.code,
         name: fallback.name,
@@ -233,23 +233,23 @@ function buildPortfolio(
       };
     }
 
-    const stockAmount = Math.floor(investAmount * (holding.weight / (100 - cashWeight)));
-    const shares = Math.floor(stockAmount / stock.price);
+    const etfAmount = Math.floor(investAmount * (holding.weight / (100 - cashWeight)));
+    const shares = Math.floor(etfAmount / etf.price);
     
     return {
-      code: stock.code,
-      name: stock.name,
-      sector: stock.sector,
+      code: etf.code,
+      name: etf.name,
+      sector: etf.sector,
       weight: Number(holding.weight.toFixed(1)),
-      amount: shares * stock.price,
+      amount: shares * etf.price,
       shares,
-      price: stock.price,
+      price: etf.price,
       rationale: holding.rationale,
       weightReason: holding.weightReason || '포트폴리오 균형을 위한 적정 비중',
       riskFactors: holding.riskFactors || '시장 변동성에 따른 리스크',
       targetReturn: holding.targetReturn || '+10~15%',
     };
-  }).filter(h => h.shares > 0); // 주식 수가 0인 경우 제외
+  }).filter(h => h.shares > 0); // 좌수가 0인 경우 제외
 
   return {
     character,
@@ -276,121 +276,121 @@ function generateFallbackPortfolio(
       cashWeight: 12,
       cashReason: '시장 조정 시 추가 매수 여력을 확보하고, 변동성에 대비한 적정 현금 비중입니다.',
       riskLevel: 'balanced' as const,
-      stocks: ['삼성전자', 'SK하이닉스', 'KB금융', '현대차', 'LG화학'],
-      strategy: '밸류에이션 기반의 분산 투자 전략. 대형 우량주 중심으로 안정적인 수익을 추구합니다.',
-      strategyDetail: 'PER, PBR 등 밸류에이션 지표가 매력적인 종목 위주로 선별하며, 섹터 간 분산을 통해 리스크를 관리합니다.',
+      etfs: ['KODEX 200', 'TIGER 미국S&P500', 'ARIRANG 고배당주', 'TIGER CD금리투자KIS', 'KODEX 배당가치'],
+      strategy: 'ETF 기반의 균형 잡힌 자산배분 전략. 시장지수 ETF와 배당 ETF를 중심으로 안정적인 수익을 추구합니다.',
+      strategyDetail: '운용보수가 낮은 인덱스 ETF를 중심으로 선별하며, 자산군 간 분산을 통해 리스크를 관리합니다.',
     },
     gemini: {
       cashWeight: 7,
-      cashReason: '성장 기회를 최대한 활용하기 위해 현금 비중을 최소화했습니다. 상승장에서 수익 극대화를 추구합니다.',
+      cashReason: '성장 기회를 최대한 활용하기 위해 현금 비중을 최소화했습니다. 테마 ETF로 수익 극대화를 추구합니다.',
       riskLevel: 'aggressive' as const,
-      stocks: ['SK하이닉스', 'LG에너지솔루션', '삼성SDI', '삼성바이오로직스', 'NAVER'],
-      strategy: '성장주 집중 투자 전략. AI, 2차전지, 바이오 등 메가트렌드 수혜 종목에 과감하게 배팅합니다.',
-      strategyDetail: '미래 산업을 주도할 혁신 기업에 집중하며, 단기 변동성보다 장기 성장 잠재력에 주목합니다.',
+      etfs: ['KODEX 반도체', 'TIGER AI반도체핵심공정', 'TIGER 미국나스닥100', 'TIGER 미국테크TOP10', 'KODEX 2차전지산업'],
+      strategy: '테마 ETF 집중 투자 전략. AI, 반도체, 빅테크 등 메가트렌드 수혜 ETF에 과감하게 배팅합니다.',
+      strategyDetail: '미래 산업을 추종하는 테마 ETF에 집중하며, 단기 변동성보다 장기 성장 잠재력에 주목합니다.',
     },
     gpt: {
       cashWeight: 22,
       cashReason: '현재 거시경제 불확실성이 높은 시점에서 충분한 현금을 확보하여 리스크를 관리합니다.',
       riskLevel: 'conservative' as const,
-      stocks: ['삼성전자', 'KB금융', '신한지주', '현대차', '포스코홀딩스'],
-      strategy: '리스크 관리 중심의 보수적 전략. 높은 현금 비중으로 시장 변동성에 대비합니다.',
-      strategyDetail: '배당 수익률이 높은 금융주와 대형 가치주 중심으로 안정적인 포트폴리오를 구성합니다.',
+      etfs: ['KODEX 200', 'KOSEF 국고채10년', 'TIGER CD금리투자KIS', 'ARIRANG 고배당주', 'KODEX 배당가치'],
+      strategy: '리스크 관리 중심의 보수적 전략. 채권 ETF와 배당 ETF로 시장 변동성에 대비합니다.',
+      strategyDetail: '채권 ETF로 안정성을 확보하고, 배당 ETF로 꾸준한 현금흐름을 추구합니다.',
     },
   };
 
   const config = configs[character];
   const cashAmount = Math.floor(amount * (config.cashWeight / 100));
   const investAmount = amount - cashAmount;
-  const weightPerStock = (100 - config.cashWeight) / config.stocks.length;
+  const weightPerETF = (100 - config.cashWeight) / config.etfs.length;
 
   const fallbackRationales: Record<string, { rationale: string; weightReason: string; riskFactors: string; targetReturn: string }> = {
-    '삼성전자': { 
-      rationale: 'PBR 1배 미만의 역사적 저평가 상태. 반도체 업황 회복 시 강한 실적 개선이 기대됩니다.',
-      weightReason: '대형주로서 포트폴리오 안정성을 제공하며, 배당 수익도 기대할 수 있습니다.',
-      riskFactors: '반도체 업황 부진 지속, 중국 경쟁 심화',
-      targetReturn: '+15~25%'
+    'KODEX 200': { 
+      rationale: '국내 대표 지수인 KOSPI200을 추종하는 ETF. 운용보수 0.15%로 저렴하고 거래량이 풍부합니다.',
+      weightReason: '포트폴리오 핵심 자산으로 시장 평균 수익률을 안정적으로 추구합니다.',
+      riskFactors: '국내 증시 전반 하락 리스크',
+      targetReturn: '+8~12%'
     },
-    'SK하이닉스': {
-      rationale: 'HBM 시장 점유율 1위. AI 서버 수요 증가로 실적 성장이 기대됩니다.',
-      weightReason: 'AI 테마의 핵심 수혜주로 높은 성장 잠재력을 반영한 비중입니다.',
-      riskFactors: 'AI 투자 둔화, 메모리 가격 하락',
-      targetReturn: '+20~35%'
-    },
-    'KB금융': {
-      rationale: '국내 1위 금융지주. 안정적인 배당(5%+)과 낮은 PBR(0.4배)이 매력적입니다.',
-      weightReason: '방어적 성격과 배당 수익으로 포트폴리오 안정성을 높입니다.',
-      riskFactors: '금리 인하 시 NIM 축소, 부동산 리스크',
+    'TIGER 미국S&P500': {
+      rationale: '미국 S&P500 지수를 추종. 글로벌 분산 투자와 달러 자산 확보 효과가 있습니다.',
+      weightReason: '해외 자산 비중을 통해 국내 시장과의 상관관계를 낮춥니다.',
+      riskFactors: '환율 변동, 미국 증시 조정',
       targetReturn: '+10~15%'
     },
-    '현대차': {
-      rationale: '글로벌 전기차 시장 점유율 확대 중. 밸류에이션 대비 성장성이 우수합니다.',
-      weightReason: '전통 자동차와 전기차 전환의 균형을 갖춘 안정적 성장주입니다.',
-      riskFactors: '전기차 경쟁 심화, 환율 변동',
-      targetReturn: '+15~20%'
+    'ARIRANG 고배당주': {
+      rationale: '국내 고배당주에 투자하는 ETF. 연 4%+ 배당수익률로 안정적인 현금흐름을 제공합니다.',
+      weightReason: '배당 수익으로 포트폴리오 수익의 안정성을 높입니다.',
+      riskFactors: '배당 컷, 저성장 리스크',
+      targetReturn: '+6~10%'
     },
-    'LG화학': {
-      rationale: '양극재 사업 성장과 화학 부문 실적 개선이 기대됩니다.',
-      weightReason: '2차전지 소재주로서 성장성과 방어력을 동시에 제공합니다.',
-      riskFactors: '2차전지 수요 둔화, 원자재 가격 변동',
+    'TIGER CD금리투자KIS': {
+      rationale: 'CD금리에 연동되는 초단기 채권 ETF. 예금 대비 높은 수익과 안정성을 제공합니다.',
+      weightReason: '포트폴리오의 안전 자산 역할로 변동성을 줄입니다.',
+      riskFactors: '금리 하락 시 수익률 감소',
+      targetReturn: '+3~4%'
+    },
+    'KODEX 배당가치': {
+      rationale: '배당수익률과 가치지표가 우수한 종목에 투자. 가치+배당 전략으로 안정적 수익 추구.',
+      weightReason: '방어적 성격으로 하락장에서 포트폴리오를 보호합니다.',
+      riskFactors: '가치주 약세 지속',
+      targetReturn: '+7~12%'
+    },
+    'KODEX 반도체': {
+      rationale: '국내 반도체 섹터에 집중 투자. 삼성전자, SK하이닉스 등 핵심 종목 편입.',
+      weightReason: 'AI/HBM 성장 수혜 섹터로 높은 수익을 기대합니다.',
+      riskFactors: '반도체 업황 둔화, 섹터 집중 리스크',
       targetReturn: '+15~25%'
     },
-    'LG에너지솔루션': {
-      rationale: '글로벌 배터리 시장 Top 3. IRA 보조금 수혜로 북미 시장 확대 중입니다.',
-      weightReason: '2차전지 핵심 기업으로 높은 성장 잠재력을 반영했습니다.',
-      riskFactors: '전기차 수요 둔화, 중국 업체 경쟁',
-      targetReturn: '+20~30%'
+    'TIGER AI반도체핵심공정': {
+      rationale: 'AI 반도체 핵심 공정 기업에 투자. 글로벌 AI 인프라 확대 수혜.',
+      weightReason: 'AI 테마의 핵심 수혜 ETF로 높은 성장 잠재력을 반영했습니다.',
+      riskFactors: 'AI 투자 둔화, 변동성 확대',
+      targetReturn: '+20~35%'
     },
-    '삼성SDI': {
-      rationale: '전고체 배터리 기술 리더십. BMW, 리비안 등 프리미엄 고객 보유.',
-      weightReason: '기술 경쟁력 기반의 장기 성장주로 적정 비중을 배분했습니다.',
-      riskFactors: '기술 개발 지연, 고객사 수요 변동',
+    'TIGER 미국나스닥100': {
+      rationale: '미국 나스닥100 지수 추종. 애플, 엔비디아 등 빅테크 기업에 투자.',
+      weightReason: '글로벌 기술 성장에 참여하는 핵심 ETF입니다.',
+      riskFactors: '기술주 조정, 환율 리스크',
       targetReturn: '+15~25%'
     },
-    '삼성바이오로직스': {
-      rationale: 'CMO 시장 성장과 바이오시밀러 확대. 글로벌 제약사 수주 증가 중입니다.',
-      weightReason: '바이오 섹터 대표주로 성장성과 방어력을 동시에 갖추고 있습니다.',
-      riskFactors: 'CMO 경쟁 심화, 수주 불확실성',
-      targetReturn: '+10~20%'
+    'TIGER 미국테크TOP10': {
+      rationale: '미국 빅테크 Top 10 기업에 집중 투자. 엔비디아, 애플, 마이크로소프트 등.',
+      weightReason: '빅테크 집중으로 기술 섹터 상승에 레버리지 효과.',
+      riskFactors: '기술주 밸류에이션 부담',
+      targetReturn: '+18~30%'
     },
-    'NAVER': {
-      rationale: '국내 1위 플랫폼. 글로벌 AI 서비스 확장과 광고 매출 성장이 기대됩니다.',
-      weightReason: 'IT 플랫폼 대표주로 포트폴리오 다각화에 기여합니다.',
-      riskFactors: 'AI 경쟁 심화, 광고 경기 둔화',
-      targetReturn: '+15~25%'
+    'KODEX 2차전지산업': {
+      rationale: '2차전지 밸류체인 전반에 투자. LG에너지솔루션, 삼성SDI 등 핵심 종목.',
+      weightReason: '전기차 성장 수혜 섹터에 대한 익스포저 확보.',
+      riskFactors: '2차전지 수요 둔화',
+      targetReturn: '+12~20%'
     },
-    '신한지주': {
-      rationale: '안정적 자산 건전성과 꾸준한 배당 정책. PBR 0.4배로 저평가 상태입니다.',
-      weightReason: '배당주로서 안정적인 현금흐름을 제공합니다.',
-      riskFactors: '금리 인하, 부동산 익스포저',
-      targetReturn: '+8~15%'
-    },
-    '포스코홀딩스': {
-      rationale: '철강 본업 개선과 2차전지 소재(리튬/니켈) 사업 다각화 진행 중입니다.',
-      weightReason: '경기 민감주이지만 소재 사업 확장으로 성장성을 갖추고 있습니다.',
-      riskFactors: '철강 경기 둔화, 원자재 가격 변동',
-      targetReturn: '+10~20%'
+    'KOSEF 국고채10년': {
+      rationale: '한국 국고채 10년물에 투자. 금리 하락 시 자본차익 기대.',
+      weightReason: '채권 ETF로 주식과 음의 상관관계를 제공합니다.',
+      riskFactors: '금리 상승 시 가격 하락',
+      targetReturn: '+3~6%'
     },
   };
 
-  const holdings: PortfolioItem[] = config.stocks.map(name => {
-    const stock = AVAILABLE_STOCKS.find(s => s.name === name)!;
-    const stockAmount = Math.floor(investAmount / config.stocks.length);
-    const shares = Math.floor(stockAmount / stock.price);
+  const holdings: PortfolioItem[] = config.etfs.map(name => {
+    const etf = AVAILABLE_ETFS.find(s => s.name === name)!;
+    const etfAmount = Math.floor(investAmount / config.etfs.length);
+    const shares = Math.floor(etfAmount / etf.price);
     const details = fallbackRationales[name] || {
-      rationale: `${stock.sector} 섹터 대표 종목으로 선정했습니다.`,
+      rationale: `${etf.sector} 카테고리 대표 ETF로 선정했습니다.`,
       weightReason: '포트폴리오 균형을 위한 적정 비중입니다.',
       riskFactors: '시장 변동성 리스크',
       targetReturn: '+10~15%'
     };
     
     return {
-      code: stock.code,
-      name: stock.name,
-      sector: stock.sector,
-      weight: Number(weightPerStock.toFixed(1)),
-      amount: shares * stock.price,
+      code: etf.code,
+      name: etf.name,
+      sector: etf.sector,
+      weight: Number(weightPerETF.toFixed(1)),
+      amount: shares * etf.price,
       shares,
-      price: stock.price,
+      price: etf.price,
       rationale: details.rationale,
       weightReason: details.weightReason,
       riskFactors: details.riskFactors,

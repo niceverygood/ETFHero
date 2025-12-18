@@ -135,7 +135,7 @@ function PortfolioCard({ portfolio, index }: { portfolio: AIPortfolio; index: nu
           
           {/* Holdings Table */}
           <div className="space-y-3">
-            <div className="text-xs text-dark-500 font-medium">📈 종목별 상세 분석</div>
+            <div className="text-xs text-dark-500 font-medium">📈 ETF별 상세 분석</div>
             <div className="space-y-3">
               {portfolio.holdings.map((holding, i) => (
                 <div
