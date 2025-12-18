@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchMultipleStockPrices } from '@/lib/market-data/kis';
+import { fetchNaverETFList, type NaverETFItem } from '@/lib/external/naver-etf';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -9,138 +9,124 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
 
-// 분석 대상 종목 목록 (실시간 데이터와 기본 정보)
-const ANALYSIS_STOCKS = [
-  { symbol: '005930', name: '삼성전자', sector: '반도체', per: 15.2, pbr: 1.1, roe: 8.5, dividend: 1.8, growth: 10.5 },
-  { symbol: '000660', name: 'SK하이닉스', sector: '반도체', per: 8.5, pbr: 1.8, roe: 22.1, dividend: 0.5, growth: 45.2 },
-  { symbol: '373220', name: 'LG에너지솔루션', sector: '2차전지', per: 45.0, pbr: 3.5, roe: 15.0, dividend: 0.3, growth: 35.5 },
-  { symbol: '207940', name: '삼성바이오로직스', sector: '바이오', per: 60.0, pbr: 5.0, roe: 10.0, dividend: 0.1, growth: 20.0 },
-  { symbol: '005380', name: '현대차', sector: '자동차', per: 7.0, pbr: 0.7, roe: 12.0, dividend: 3.0, growth: 8.0 },
-  { symbol: '006400', name: '삼성SDI', sector: '2차전지', per: 30.0, pbr: 2.0, roe: 13.0, dividend: 0.4, growth: 28.0 },
-  { symbol: '035720', name: '카카오', sector: 'IT서비스', per: 28.0, pbr: 1.5, roe: 7.0, dividend: 0.2, growth: 18.0 },
-  { symbol: '035420', name: 'NAVER', sector: 'IT서비스', per: 22.0, pbr: 1.2, roe: 9.0, dividend: 0.3, growth: 15.0 },
-  { symbol: '051910', name: 'LG화학', sector: '화학', per: 18.0, pbr: 1.0, roe: 11.0, dividend: 1.5, growth: 12.0 },
-  { symbol: '000270', name: '기아', sector: '자동차', per: 6.5, pbr: 0.6, roe: 13.0, dividend: 3.5, growth: 9.0 },
-  { symbol: '105560', name: 'KB금융', sector: '금융', per: 6.2, pbr: 0.52, roe: 9.8, dividend: 5.1, growth: 5.0 },
-  { symbol: '055550', name: '신한지주', sector: '금융', per: 5.8, pbr: 0.48, roe: 9.5, dividend: 4.8, growth: 4.5 },
-  { symbol: '068270', name: '셀트리온', sector: '바이오', per: 50.0, pbr: 4.0, roe: 11.0, dividend: 0.2, growth: 18.0 },
-  { symbol: '003670', name: '포스코홀딩스', sector: '철강', per: 12.0, pbr: 0.7, roe: 7.0, dividend: 2.5, growth: 7.0 },
-  { symbol: '066570', name: 'LG전자', sector: '가전', per: 10.0, pbr: 0.8, roe: 10.0, dividend: 1.0, growth: 6.0 },
-  { symbol: '017670', name: 'SK텔레콤', sector: '통신', per: 10.5, pbr: 0.85, roe: 8.2, dividend: 4.2, growth: 3.0 },
-  { symbol: '030200', name: 'KT', sector: '통신', per: 9.0, pbr: 0.7, roe: 7.0, dividend: 4.5, growth: 2.5 },
-  { symbol: '032830', name: '삼성생명', sector: '보험', per: 7.5, pbr: 0.75, roe: 6.5, dividend: 3.8, growth: 4.0 },
-  { symbol: '086790', name: '하나금융지주', sector: '금융', per: 5.2, pbr: 0.45, roe: 10.2, dividend: 5.5, growth: 6.0 },
-  { symbol: '009150', name: '삼성전기', sector: '전자부품', per: 18.0, pbr: 1.3, roe: 12.0, dividend: 0.8, growth: 10.0 },
-];
+// ETF 카테고리 분류
+function getETFCategory(name: string): string {
+  if (name.includes('200') || name.includes('KOSPI') || name.includes('코스피')) return '시장지수';
+  if (name.includes('미국') || name.includes('S&P') || name.includes('나스닥') || name.includes('NASDAQ')) return '해외주식';
+  if (name.includes('배당') || name.includes('고배당')) return '배당';
+  if (name.includes('반도체') || name.includes('2차전지') || name.includes('바이오')) return '섹터';
+  if (name.includes('AI') || name.includes('메타버스') || name.includes('로봇')) return '테마';
+  if (name.includes('채권') || name.includes('국채') || name.includes('금리')) return '채권';
+  if (name.includes('금') || name.includes('원유')) return '원자재';
+  return '기타';
+}
 
-// 캐릭터별 세계관 및 분석 기준
+// 캐릭터별 세계관 및 분석 기준 (ETF용으로 수정)
 const CHARACTER_PROFILES = {
   claude: {
     name: 'Claude Lee',
     nameKo: '클로드 리',
-    title: '숫자의 검사',
-    criteria: '펀더멘털 기반 저평가 우량주',
-    methodology: 'PER, PBR, ROE, 현금흐름 분석',
-    systemPrompt: `당신은 "클로드 리"입니다. 숫자의 검사라 불리는 냉철한 펀더멘털 분석가입니다.
+    title: 'ETF 밸류에이션 분석가',
+    criteria: '비용 효율성 및 추적 오차 중심',
+    methodology: '총보수, NAV 괴리, 거래량, 추적오차 분석',
+    systemPrompt: `당신은 "클로드 리"입니다. ETF의 비용 효율성과 추적 정확도를 분석하는 전문가입니다.
 
 ## 당신의 투자 철학
-- "숫자는 거짓말하지 않습니다"
-- 감정을 배제한 철저한 데이터 분석
-- PER, PBR, ROE 등 밸류에이션 지표 중시
-- 저평가된 우량주 발굴에 집중
+- "낮은 비용이 장기 수익의 핵심입니다"
+- 총보수(TER)와 추적오차 중시
+- NAV 괴리율 최소화된 ETF 선호
+- 충분한 거래량과 유동성 확보
 
 ## 분석 기준 (우선순위)
-1. PER이 업종 평균 대비 낮은 종목 (저평가)
-2. PBR이 1배 미만인 종목 (자산가치 대비 저평가)
-3. ROE가 10% 이상인 종목 (수익성)
-4. 배당수익률이 높은 종목 (현금흐름)
-5. 부채비율이 낮은 종목 (재무건전성)
+1. 총보수가 낮은 ETF (비용 효율성)
+2. 추적오차가 작은 ETF (지수 추종 정확도)
+3. 순자산총액이 큰 ETF (안정성)
+4. 거래량이 충분한 ETF (유동성)
+5. NAV 괴리율이 낮은 ETF
 
 ## 응답 스타일
 - 냉철하고 논리적
-- 구체적인 수치 제시
-- "제 분석으로는...", "감정을 빼고 보시죠" 등 시그니처 표현 사용`,
+- 구체적인 비용 수치 제시
+- "비용 관점에서...", "추적오차를 보시면" 등 시그니처 표현 사용`,
   },
   gemini: {
     name: 'Gemi Nine',
     nameKo: '제미 나인',
-    title: '파괴적 혁신가',
-    criteria: '미래 성장 잠재력 극대화',
-    methodology: '기술 트렌드, TAM 분석, 혁신 역량 평가',
-    systemPrompt: `당신은 "제미 나인"입니다. 실리콘밸리 출신의 파괴적 혁신가입니다.
+    title: '테마 ETF 전략가',
+    criteria: '성장 테마 및 혁신 섹터 중심',
+    methodology: '테마 성장성, 글로벌 트렌드, 섹터 모멘텀 분석',
+    systemPrompt: `당신은 "제미 나인"입니다. 실리콘밸리 출신의 테마 ETF 전문가입니다.
 
 ## 당신의 투자 철학
-- "미래를 사는 거예요. 숫자는 과거일 뿐."
-- 기술 트렌드와 성장 잠재력 중시
-- TAM(전체시장규모) 기반 성장주 분석
-- 높은 변동성도 감수 (High risk, high return)
+- "미래를 사는 거예요. 테마가 곧 수익입니다."
+- 혁신 테마(AI, 반도체, 2차전지) 집중
+- 글로벌 성장 트렌드 추종
+- 높은 성장성 섹터 ETF 선호
 
 ## 분석 기준 (우선순위)
-1. 성장률이 높은 섹터 (반도체, 2차전지, AI, 바이오)
-2. 매출 성장률 20% 이상 기대
-3. 기술 혁신 선도 기업
-4. 글로벌 경쟁력 보유
-5. 시장 지배력 확대 가능성
+1. 성장 테마 ETF (반도체, AI, 2차전지, 클린에너지)
+2. 해외 지수 추종 ETF (미국 S&P500, 나스닥100)
+3. 섹터별 모멘텀이 강한 ETF
+4. 글로벌 트렌드 수혜 ETF
+5. 신규 상장 혁신 테마 ETF
 
 ## 응답 스타일
 - 에너지 넘치고 자신감 있음
-- 영어 표현 섞어 사용 ("This is THE play", "Huge TAM")
-- "Boring~", "Fight me" 등 도발적 표현
-- 클로드의 보수적 분석에 반박`,
+- 영어 표현 섞어 사용 ("This theme is HOT", "Future is NOW")
+- "Boring ETF는 패스~", "Growth or nothing" 등 도발적 표현`,
   },
   gpt: {
     name: 'G.P. Taylor',
     nameKo: 'G.P. 테일러',
-    title: '월가의 노장',
-    criteria: '리스크 최소화 방어주',
-    methodology: '거시경제 분석, 배당 안정성, 위기 대응력 평가',
-    systemPrompt: `당신은 "G.P. 테일러"입니다. 40년 경력의 월가 베테랑 전략가입니다.
+    title: '자산배분 리스크 총괄',
+    criteria: '분산투자 및 리스크 관리 중심',
+    methodology: '자산배분, 변동성 분석, 배당 안정성 평가',
+    systemPrompt: `당신은 "G.P. 테일러"입니다. 40년 경력의 자산배분 전문가입니다.
 
 ## 당신의 투자 철학
-- "살아남는 자가 이기는 겁니다"
+- "분산투자가 유일한 공짜 점심입니다"
 - 리스크 관리 최우선
-- 배당 안정성과 방어력 중시
-- 거시경제 변동에 강한 종목 선호
+- 배당형 ETF와 채권 ETF 선호
+- 변동성이 낮은 방어적 ETF 중시
 
 ## 분석 기준 (우선순위)
-1. 배당수익률 3% 이상 (안정적 현금흐름)
-2. 베타 1 미만 (시장 대비 낮은 변동성)
-3. 경기방어 섹터 (통신, 금융, 보험, 필수소비재)
-4. 대형주 중심 (시가총액 상위)
-5. 부채비율 낮고 현금 풍부
+1. 시장 대표 지수 ETF (KOSPI200, S&P500)
+2. 배당형 ETF (고배당, 월배당)
+3. 채권 ETF (국채, 우량 회사채)
+4. 낮은 변동성 ETF
+5. 대형 순자산 ETF (안정성)
 
 ## 응답 스타일
 - 노련하고 차분함
-- "젊은 친구...", "내가 40년간 본 바로는..." 등 경험 강조
-- 위기 사례 언급 (닷컴버블, 금융위기, FTX 등)
-- 제미의 공격적 투자에 경고`,
+- "40년간 봐온 바로는...", "젊은 친구들이 잊는 것이..." 등 경험 강조
+- 위기 사례 언급하며 방어적 ETF 권유`,
   },
 };
 
-// Claude API 호출
-async function analyzeWithClaude(stocks: typeof ANALYSIS_STOCKS, realPrices: Map<string, any>): Promise<any[]> {
+// Claude API 호출 (ETF용)
+async function analyzeWithClaude(etfs: NaverETFItem[]): Promise<any[]> {
   const profile = CHARACTER_PROFILES.claude;
   
-  const stockList = stocks.map(s => {
-    const realPrice = realPrices.get(s.symbol);
-    return `- ${s.name}(${s.symbol}): 현재가 ${realPrice?.price?.toLocaleString() || 'N/A'}원, 등락 ${realPrice?.changePercent?.toFixed(2) || 0}%, PER ${s.per}, PBR ${s.pbr}, ROE ${s.roe}%, 배당 ${s.dividend}%, 성장률 ${s.growth}%, 섹터: ${s.sector}`;
+  const etfList = etfs.map(e => {
+    const category = getETFCategory(e.name);
+    return `- ${e.name}(${e.ticker}): 현재가 ${e.price?.toLocaleString()}원, 등락 ${e.changePercent?.toFixed(2)}%, 순자산 ${((e.totalAssets || 0) / 10000).toFixed(1)}조원, 카테고리: ${category}`;
   }).join('\n');
 
-  const prompt = `아래 종목들을 당신의 펀더멘털 분석 관점에서 평가하고, Top 5를 선정해주세요.
+  const prompt = `아래 ETF들을 당신의 비용 효율성 관점에서 평가하고, Top 5를 선정해주세요.
 
-## 분석 대상 종목
-${stockList}
+## 분석 대상 ETF
+${etfList}
 
 ## 응답 형식 (JSON)
 {
   "top5": [
     {
       "rank": 1,
-      "symbol": "종목코드",
-      "name": "종목명",
+      "ticker": "ETF코드",
+      "name": "ETF명",
       "score": 4.5,
-      "targetPriceMultiplier": 1.25,
-      "reason": "선정 이유 (당신의 분석 스타일로, 구체적 수치 포함, 2-3문장)",
+      "targetReturn": 12.5,
+      "reason": "선정 이유 (당신의 분석 스타일로, 비용/추적오차 강조, 2-3문장)",
       "risks": ["리스크1", "리스크2"]
     }
   ]
@@ -167,35 +153,32 @@ ${stockList}
   return [];
 }
 
-// Gemini API 호출
-async function analyzeWithGemini(stocks: typeof ANALYSIS_STOCKS, realPrices: Map<string, any>): Promise<any[]> {
+// Gemini API 호출 (ETF용)
+async function analyzeWithGemini(etfs: NaverETFItem[]): Promise<any[]> {
   const profile = CHARACTER_PROFILES.gemini;
   
-  console.log('[Gemini] Starting analysis...');
-  console.log('[Gemini] API Key exists:', !!process.env.GOOGLE_AI_API_KEY);
-  
-  const stockList = stocks.map(s => {
-    const realPrice = realPrices.get(s.symbol);
-    return `- ${s.name}(${s.symbol}): 현재가 ${realPrice?.price?.toLocaleString() || 'N/A'}원, 등락 ${realPrice?.changePercent?.toFixed(2) || 0}%, 성장률 ${s.growth}%, 섹터: ${s.sector}, PER ${s.per}`;
+  const etfList = etfs.map(e => {
+    const category = getETFCategory(e.name);
+    return `- ${e.name}(${e.ticker}): 현재가 ${e.price?.toLocaleString()}원, 등락 ${e.changePercent?.toFixed(2)}%, 순자산 ${((e.totalAssets || 0) / 10000).toFixed(1)}조원, 카테고리: ${category}`;
   }).join('\n');
 
   const prompt = `${profile.systemPrompt}
 
-아래 종목들을 당신의 성장주 투자 관점에서 평가하고, Top 5를 선정해주세요.
+아래 ETF들을 당신의 테마 성장 관점에서 평가하고, Top 5를 선정해주세요.
 
-## 분석 대상 종목
-${stockList}
+## 분석 대상 ETF
+${etfList}
 
 ## 응답 형식 (JSON)
 {
   "top5": [
     {
       "rank": 1,
-      "symbol": "종목코드",
-      "name": "종목명",
+      "ticker": "ETF코드",
+      "name": "ETF명",
       "score": 5.0,
-      "targetPriceMultiplier": 1.45,
-      "reason": "선정 이유 (당신의 스타일로, 미래 성장성 강조, 영어 표현 섞어서, 2-3문장)",
+      "targetReturn": 25.0,
+      "reason": "선정 이유 (당신의 스타일로, 테마 성장성 강조, 영어 표현 섞어서, 2-3문장)",
       "risks": ["리스크1", "리스크2"]
     }
   ]
@@ -205,47 +188,42 @@ ${stockList}
 
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-    console.log('[Gemini] Calling API...');
     const result = await model.generateContent(prompt);
     const text = result.response.text();
-    console.log('[Gemini] API Response received, length:', text.length);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]).top5;
-      console.log('[Gemini] Successfully parsed', parsed.length, 'stocks');
-      return parsed;
+      return JSON.parse(jsonMatch[0]).top5;
     }
-    console.log('[Gemini] No JSON found in response');
   } catch (error: any) {
     console.error('[Gemini] Analysis error:', error?.message || error);
   }
   return [];
 }
 
-// GPT API 호출
-async function analyzeWithGPT(stocks: typeof ANALYSIS_STOCKS, realPrices: Map<string, any>): Promise<any[]> {
+// GPT API 호출 (ETF용)
+async function analyzeWithGPT(etfs: NaverETFItem[]): Promise<any[]> {
   const profile = CHARACTER_PROFILES.gpt;
   
-  const stockList = stocks.map(s => {
-    const realPrice = realPrices.get(s.symbol);
-    return `- ${s.name}(${s.symbol}): 현재가 ${realPrice?.price?.toLocaleString() || 'N/A'}원, 등락 ${realPrice?.changePercent?.toFixed(2) || 0}%, 배당 ${s.dividend}%, PER ${s.per}, PBR ${s.pbr}, 섹터: ${s.sector}`;
+  const etfList = etfs.map(e => {
+    const category = getETFCategory(e.name);
+    return `- ${e.name}(${e.ticker}): 현재가 ${e.price?.toLocaleString()}원, 등락 ${e.changePercent?.toFixed(2)}%, 순자산 ${((e.totalAssets || 0) / 10000).toFixed(1)}조원, 카테고리: ${category}`;
   }).join('\n');
 
-  const prompt = `아래 종목들을 당신의 리스크 관리 관점에서 평가하고, Top 5를 선정해주세요.
+  const prompt = `아래 ETF들을 당신의 자산배분 및 리스크 관리 관점에서 평가하고, Top 5를 선정해주세요.
 
-## 분석 대상 종목
-${stockList}
+## 분석 대상 ETF
+${etfList}
 
 ## 응답 형식 (JSON)
 {
   "top5": [
     {
       "rank": 1,
-      "symbol": "종목코드",
-      "name": "종목명",
+      "ticker": "ETF코드",
+      "name": "ETF명",
       "score": 4.2,
-      "targetPriceMultiplier": 1.12,
-      "reason": "선정 이유 (당신의 스타일로, 리스크와 배당 강조, 경험 언급, 2-3문장)",
+      "targetReturn": 8.0,
+      "reason": "선정 이유 (당신의 스타일로, 안정성과 분산투자 강조, 경험 언급, 2-3문장)",
       "risks": ["리스크1", "리스크2"]
     }
   ]
@@ -275,29 +253,29 @@ ${stockList}
   return [];
 }
 
-// 폴백 데이터 (AI 실패 시)
-function getFallbackRecommendations(heroId: string): any[] {
+// 폴백 ETF 데이터 (AI 실패 시)
+function getFallbackETFRecommendations(heroId: string): any[] {
   const fallbacks: Record<string, any[]> = {
     claude: [
-      { rank: 1, symbol: '005930', name: '삼성전자', score: 4.5, targetPriceMultiplier: 1.25, reason: 'PBR 역사적 저점. 메모리 업황 회복 기대. 현금 40조원 이상 보유.', risks: ['중국 리스크', '스마트폰 둔화'] },
-      { rank: 2, symbol: '000660', name: 'SK하이닉스', score: 4.3, targetPriceMultiplier: 1.20, reason: 'HBM 시장 선도. AI 수요 수혜. 영업이익률 개선 뚜렷.', risks: ['메모리 가격 변동성', '설비투자 부담'] },
-      { rank: 3, symbol: '105560', name: 'KB금융', score: 4.1, targetPriceMultiplier: 1.18, reason: 'PBR 0.5배 심각한 저평가. 배당수익률 5%+. ROE 개선 추세.', risks: ['금리 인하 영향', '가계부채'] },
-      { rank: 4, symbol: '035420', name: 'NAVER', score: 4.0, targetPriceMultiplier: 1.30, reason: '검색 독점. 커머스/핀테크 성장. PER 20배 미만 저평가.', risks: ['규제 리스크', '경쟁 심화'] },
-      { rank: 5, symbol: '017670', name: 'SK텔레콤', score: 3.9, targetPriceMultiplier: 1.15, reason: '안정적 현금 창출. AI 인프라 확대. 배당 4%+.', risks: ['통신비 인하', '5G 투자비용'] },
+      { rank: 1, ticker: '069500', name: 'KODEX 200', score: 4.5, targetReturn: 10, reason: '가장 낮은 총보수(0.015%)와 높은 유동성. 추적오차 최소화. 국내 시장 대표 ETF.', risks: ['시장 전체 하락', '환율 영향'] },
+      { rank: 2, ticker: '102110', name: 'TIGER 200', score: 4.3, targetReturn: 10, reason: '낮은 비용으로 KOSPI200 추종. 거래량 풍부. 장기투자에 적합.', risks: ['시장 변동성', '배당 수익률 낮음'] },
+      { rank: 3, ticker: '360750', name: 'TIGER 미국S&P500', score: 4.2, targetReturn: 12, reason: '미국 시장 노출에 효율적. 환헤지 없는 버전으로 장기 수익 극대화.', risks: ['환율 변동', '미국 경기 둔화'] },
+      { rank: 4, ticker: '379800', name: 'KODEX 미국S&P500TR', score: 4.1, targetReturn: 12, reason: '총수익(TR) 지수 추종으로 배당 재투자 효과. 낮은 비용.', risks: ['환율 리스크', '세금 이슈'] },
+      { rank: 5, ticker: '148070', name: 'KOSEF 국고채10년', score: 4.0, targetReturn: 4, reason: '채권 ETF 중 낮은 비용. 안정적 이자 수익. 포트폴리오 분산.', risks: ['금리 상승', '인플레이션'] },
     ],
     gemini: [
-      { rank: 1, symbol: '000660', name: 'SK하이닉스', score: 5.0, targetPriceMultiplier: 1.45, reason: 'HBM 세계 1위! AI 시대 핵심 수혜주. This is THE AI play! 🚀', risks: ['높은 변동성', '경쟁사 추격'] },
-      { rank: 2, symbol: '373220', name: 'LG에너지솔루션', score: 4.7, targetPriceMultiplier: 1.40, reason: '글로벌 배터리 톱티어. EV 전환은 Secular trend. Huge TAM!', risks: ['원자재 가격', '중국 경쟁'] },
-      { rank: 3, symbol: '035720', name: '카카오', score: 4.5, targetPriceMultiplier: 1.60, reason: '한국판 슈퍼앱. AI 적용 확대. 바닥에서 반등 시작!', risks: ['규제 불확실성', '경영 리스크'] },
-      { rank: 4, symbol: '006400', name: '삼성SDI', score: 4.3, targetPriceMultiplier: 1.35, reason: '전고체 배터리 기술 선도. BMW, 리비안 고객사 확보.', risks: ['2차전지 경쟁', '원가 부담'] },
-      { rank: 5, symbol: '035420', name: 'NAVER', score: 4.1, targetPriceMultiplier: 1.35, reason: 'AI 검색 혁신. 하이퍼클로바X. 한국의 구글 될 잠재력.', risks: ['빅테크 경쟁', '투자 비용'] },
+      { rank: 1, ticker: '091160', name: 'KODEX 반도체', score: 5.0, targetReturn: 30, reason: 'AI 시대 핵심 테마! 삼성전자, SK하이닉스 집중. This is THE semiconductor play! 🚀', risks: ['사이클 변동', '경쟁 심화'] },
+      { rank: 2, ticker: '133690', name: 'TIGER 미국나스닥100', score: 4.8, targetReturn: 25, reason: '빅테크 + AI 성장의 핵심! 애플, 엔비디아, 마이크로소프트 한번에. Future is NOW!', risks: ['밸류에이션', '금리 민감'] },
+      { rank: 3, ticker: '305720', name: 'KODEX 2차전지산업', score: 4.5, targetReturn: 28, reason: 'EV 전환은 Secular trend! 배터리 셀, 소재 모두 담았다. Huge TAM!', risks: ['경쟁 심화', '원자재 가격'] },
+      { rank: 4, ticker: '364980', name: 'TIGER AI반도체핵심공정', score: 4.4, targetReturn: 35, reason: 'AI 반도체 순수 플레이! HBM, 파운드리 핵심 기업만. Growth or nothing!', risks: ['집중 리스크', '변동성'] },
+      { rank: 5, ticker: '360750', name: 'TIGER 미국S&P500', score: 4.2, targetReturn: 15, reason: '미국 시장 전체 성장에 베팅. 장기적으로 우상향. Simple but powerful.', risks: ['환율', '미국 경기'] },
     ],
     gpt: [
-      { rank: 1, symbol: '017670', name: 'SK텔레콤', score: 4.2, targetPriceMultiplier: 1.12, reason: '경기 방어적 통신업. 배당 4%+. 40년간 봐온 결과, 위기 때 버팁니다.', risks: ['성장성 제한', '통신비 인하'] },
-      { rank: 2, symbol: '105560', name: 'KB금융', score: 4.0, targetPriceMultiplier: 1.10, reason: '국내 최대 금융지주. 배당 5%+. 살아남는 자가 이깁니다.', risks: ['금리 민감도', '가계부채'] },
-      { rank: 3, symbol: '030200', name: 'KT', score: 3.9, targetPriceMultiplier: 1.12, reason: '통신 + AI 인프라. 배당 4%+. 조급하지 말고 천천히.', risks: ['성장 정체', '경쟁 심화'] },
-      { rank: 4, symbol: '032830', name: '삼성생명', score: 3.8, targetPriceMultiplier: 1.10, reason: '보험업 선두. 금리 상승 수혜. 위기 때 보험주가 버팁니다.', risks: ['저금리 역풍', '보험 수요'] },
-      { rank: 5, symbol: '086790', name: '하나금융지주', score: 3.7, targetPriceMultiplier: 1.08, reason: 'PBR 0.45배 극심한 저평가. 배당 5.5%. 방어적 포트폴리오 핵심.', risks: ['금융 규제', '경기 민감'] },
+      { rank: 1, ticker: '069500', name: 'KODEX 200', score: 4.2, targetReturn: 8, reason: '40년간 봐온 바로는, 시장 대표 ETF가 결국 살아남습니다. 분산투자의 정석.', risks: ['시장 하락', '저성장'] },
+      { rank: 2, ticker: '161510', name: 'ARIRANG 고배당주', score: 4.1, targetReturn: 6, reason: '배당은 확실한 현금흐름. 젊은 친구들이 놓치는 안정성의 가치.', risks: ['배당 삭감', '금리 변동'] },
+      { rank: 3, ticker: '148070', name: 'KOSEF 국고채10년', score: 4.0, targetReturn: 4, reason: '채권은 포트폴리오의 안전판. 위기 때 빛나는 자산군입니다.', risks: ['금리 상승', '인플레이션'] },
+      { rank: 4, ticker: '360750', name: 'TIGER 미국S&P500', score: 3.9, targetReturn: 10, reason: '미국 시장 분산투자. 달러 자산 확보. 장기적 안정성.', risks: ['환율', '지정학 리스크'] },
+      { rank: 5, ticker: '102110', name: 'TIGER 200', score: 3.8, targetReturn: 8, reason: '국내 대형주 분산. KODEX 200과 함께 양대 산맥. 살아남는 자가 이깁니다.', risks: ['국내 경기', '인구 감소'] },
     ],
   };
   return fallbacks[heroId] || fallbacks.claude;
@@ -315,15 +293,23 @@ export async function GET(
     return NextResponse.json({ error: 'Hero not found' }, { status: 404 });
   }
   
-  // 1. 실시간 가격 조회
-  const symbols = ANALYSIS_STOCKS.map(s => s.symbol);
-  let realPrices: Map<string, any> = new Map();
-  
+  // 1. 네이버에서 ETF 데이터 가져오기
+  let allETFs: NaverETFItem[] = [];
+  let isRealTime = false;
+
   try {
-    realPrices = await fetchMultipleStockPrices(symbols);
+    allETFs = await fetchNaverETFList();
+    isRealTime = allETFs.length > 0;
+    console.log(`[${heroId}] Fetched ${allETFs.length} ETFs from Naver`);
   } catch (error) {
-    console.error('Failed to fetch real-time prices:', error);
+    console.error('Failed to fetch ETFs from Naver:', error);
   }
+
+  // 상위 30개 ETF만 분석 대상으로 (순자산 기준)
+  const analysisETFs = allETFs
+    .filter(e => e.totalAssets && e.totalAssets > 1000)
+    .sort((a, b) => (b.totalAssets || 0) - (a.totalAssets || 0))
+    .slice(0, 30);
   
   // 2. AI 분석 수행
   let top5: any[] = [];
@@ -331,13 +317,13 @@ export async function GET(
   try {
     switch (heroId) {
       case 'claude':
-        top5 = await analyzeWithClaude(ANALYSIS_STOCKS, realPrices);
+        top5 = await analyzeWithClaude(analysisETFs);
         break;
       case 'gemini':
-        top5 = await analyzeWithGemini(ANALYSIS_STOCKS, realPrices);
+        top5 = await analyzeWithGemini(analysisETFs);
         break;
       case 'gpt':
-        top5 = await analyzeWithGPT(ANALYSIS_STOCKS, realPrices);
+        top5 = await analyzeWithGPT(analysisETFs);
         break;
     }
   } catch (error) {
@@ -347,37 +333,36 @@ export async function GET(
   // 3. AI 분석 실패 시 폴백 사용
   const usedFallback = !top5 || top5.length === 0;
   if (usedFallback) {
-    console.log(`[${heroId}] Using fallback recommendations`);
-    top5 = getFallbackRecommendations(heroId);
+    console.log(`[${heroId}] Using fallback ETF recommendations`);
+    top5 = getFallbackETFRecommendations(heroId);
   } else {
-    console.log(`[${heroId}] AI analysis successful, got ${top5.length} stocks`);
+    console.log(`[${heroId}] AI analysis successful, got ${top5.length} ETFs`);
   }
   
   // 4. 실시간 가격 병합
-  const stocksWithPrices = top5.map((stock, idx) => {
-    const realPrice = realPrices.get(stock.symbol);
-    const currentPrice = realPrice?.price || 0;
-    const targetPrice = Math.round(currentPrice * (stock.targetPriceMultiplier || 1.2));
-    const stockInfo = ANALYSIS_STOCKS.find(s => s.symbol === stock.symbol);
+  const etfsWithPrices = top5.map((etf, idx) => {
+    const realETF = allETFs.find(e => e.ticker === etf.ticker);
+    const currentPrice = realETF?.price || 0;
+    const category = realETF ? getETFCategory(realETF.name) : '기타';
     
     return {
-      rank: stock.rank || idx + 1,
-      symbol: stock.symbol,
-      name: stockInfo?.name || stock.name,
+      rank: etf.rank || idx + 1,
+      symbol: etf.ticker,
+      name: realETF?.name || etf.name,
+      category,
       currentPrice,
-      targetPrice,
-      change: realPrice?.change || 0,
-      changePercent: realPrice?.changePercent || 0,
-      score: stock.score,
-      reason: stock.reason,
-      risks: stock.risks || [],
-      metrics: stockInfo ? {
-        per: stockInfo.per,
-        pbr: stockInfo.pbr,
-        roe: stockInfo.roe,
-        dividend: stockInfo.dividend,
-        growth: stockInfo.growth,
-      } : {},
+      targetPrice: Math.round(currentPrice * (1 + (etf.targetReturn || 10) / 100)),
+      change: realETF?.change || 0,
+      changePercent: realETF?.changePercent || 0,
+      score: etf.score,
+      reason: etf.reason,
+      risks: etf.risks || [],
+      metrics: {
+        '순자산': `${((realETF?.totalAssets || 0) / 10000).toFixed(1)}조원`,
+        '거래량': `${((realETF?.volume || 0) / 10000).toFixed(0)}만주`,
+        '예상수익률': `${etf.targetReturn || 10}%`,
+        '카테고리': category,
+      },
     };
   });
   
@@ -394,8 +379,8 @@ export async function GET(
     },
     date: now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }),
     time: now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-    isRealTime: realPrices.size > 0,
+    isRealTime,
     isAIGenerated: !usedFallback,
-    stocks: stocksWithPrices,
+    stocks: etfsWithPrices, // 기존 인터페이스 호환을 위해 stocks로 유지
   });
 }

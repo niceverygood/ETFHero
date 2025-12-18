@@ -13,8 +13,8 @@ interface AIOpinionMessage {
   timestamp: Date;
 }
 
-// 각 주식별 AI 의견 상태
-interface StockOpinionState {
+// 각 ETF별 AI 의견 상태
+interface ETFOpinionState {
   isOpen: boolean;
   messages: AIOpinionMessage[];
   isLoading: boolean;
@@ -22,50 +22,51 @@ interface StockOpinionState {
   turn: number;
 }
 
-// 히어로 메타 데이터
+// 히어로 메타 데이터 (ETF용)
 const HERO_META = {
   claude: {
     name: 'Claude Lee',
     nameKo: '클로드 리',
-    title: '숫자의 검사',
-    subtitle: 'Balanced Analyst',
+    title: 'ETF 밸류에이션 분석가',
+    subtitle: 'Cost & Tracking Expert',
     color: 'from-blue-500 to-indigo-600',
     bgColor: 'bg-blue-500/10',
     borderColor: 'border-blue-500/30',
     textColor: 'text-blue-400',
-    tagline: '숫자는 거짓말하지 않습니다',
-    description: '펀더멘털 분석 기반의 저평가 우량주',
+    tagline: '낮은 비용이 장기 수익의 핵심입니다',
+    description: '비용 효율성 및 추적 오차 중심 ETF',
   },
   gemini: {
     name: 'Gemi Nine',
     nameKo: '제미 나인',
-    title: '파괴적 혁신가',
-    subtitle: 'Future Trend Strategist',
+    title: '테마 ETF 전략가',
+    subtitle: 'Theme & Growth Strategist',
     color: 'from-purple-500 to-pink-600',
     bgColor: 'bg-purple-500/10',
     borderColor: 'border-purple-500/30',
     textColor: 'text-purple-400',
-    tagline: '역사는 미친 놈들이 만들어요',
-    description: '미래 성장 잠재력 극대화 종목',
+    tagline: '미래를 사는 거예요. 테마가 곧 수익입니다.',
+    description: '성장 테마 및 혁신 섹터 ETF',
   },
   gpt: {
     name: 'G.P. Taylor',
     nameKo: 'G.P. 테일러',
-    title: '월가의 노장',
-    subtitle: 'Chief Macro & Risk Officer',
+    title: '자산배분 리스크 총괄',
+    subtitle: 'Asset Allocation & Risk Officer',
     color: 'from-amber-500 to-orange-600',
     bgColor: 'bg-amber-500/10',
     borderColor: 'border-amber-500/30',
     textColor: 'text-amber-400',
-    tagline: '살아남아야 다음이 있습니다',
-    description: '리스크 최소화 방어주',
+    tagline: '분산투자가 유일한 공짜 점심입니다',
+    description: '분산투자 및 리스크 관리 ETF',
   },
 };
 
-interface Stock {
+interface ETFItem {
   rank: number;
   symbol: string;
   name: string;
+  category?: string;
   currentPrice: number;
   targetPrice: number;
   change: number;
@@ -266,7 +267,7 @@ export default function HeroDetailPage() {
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Stock Heros로 돌아가기
+          ETF Heros로 돌아가기
         </Link>
         
         {/* Hero Header */}
