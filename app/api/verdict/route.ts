@@ -189,7 +189,7 @@ export async function GET(request: NextRequest) {
     const unanimousCount = top5.filter(item => item.unanimous).length;
 
     // 분석 요약 생성
-    const categories = [...new Set(top5.map(e => e.category))];
+    const categories = Array.from(new Set(top5.map(e => e.category)));
     const rationale = `AI 분석가들이 선정한 오늘의 Top 5 ETF입니다. ${categories.join(', ')} 카테고리에서 ${unanimousCount}개 종목이 만장일치 추천을 받았습니다.`;
     
     return NextResponse.json({
