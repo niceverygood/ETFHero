@@ -7,15 +7,16 @@ import type { CharacterType } from '@/lib/types';
 
 interface Top5Item {
   rank: number;
-  symbolCode: string;
-  symbolName: string;
-  sector: string;
+  etfTicker: string;
+  etfName: string;
+  category: string;
   avgScore: number;
   claudeScore?: number;
   geminiScore?: number;
   gptScore?: number;
-  targetPrice?: number;
-  targetDate?: string;
+  targetReturn?: number;
+  timeHorizon?: string;
+  expenseRatio?: number;
 }
 
 interface DailyVerdict {
@@ -29,8 +30,8 @@ interface DebateMessage {
   character: CharacterType;
   content: string;
   score: number;
-  targetPrice?: number;
-  targetDate?: string;
+  targetReturn?: number;
+  timeHorizon?: string;
   risks: string[];
   round: number;
 }
@@ -39,33 +40,16 @@ interface CalendarProps {
   onDateSelect?: (date: string, verdict: DailyVerdict | null) => void;
 }
 
-// Sector categories
-const SECTORS = [
-  { id: 'all', name: '종합', icon: '📊' },
-  { id: 'semiconductor', name: '반도체', icon: '💾' },
-  { id: 'battery', name: '2차전지', icon: '🔋' },
-  { id: 'bio', name: '바이오', icon: '🧬' },
-  { id: 'auto', name: '자동차', icon: '🚗' },
-  { id: 'finance', name: '금융', icon: '🏦' },
-  { id: 'it', name: 'IT서비스', icon: '💻' },
+// ETF Categories
+const CATEGORIES = [
+  { id: 'all', name: '전체', icon: '📊' },
+  { id: 'US Large Cap', name: '미국 대형', icon: '🇺🇸' },
+  { id: 'Technology', name: '기술', icon: '💻' },
+  { id: 'Dividend', name: '배당', icon: '💰' },
+  { id: 'Bond', name: '채권', icon: '📜' },
+  { id: 'International', name: '해외', icon: '🌍' },
+  { id: 'Thematic', name: '테마', icon: '🎯' },
 ];
-
-const SECTOR_MAP: Record<string, string> = {
-  'Semiconductor': 'semiconductor',
-  '반도체': 'semiconductor',
-  'Battery': 'battery',
-  '2차전지': 'battery',
-  'Bio': 'bio',
-  '바이오': 'bio',
-  'Auto': 'auto',
-  '자동차': 'auto',
-  'Finance': 'finance',
-  '금융': 'finance',
-  'IT Service': 'it',
-  'IT서비스': 'it',
-  'Chemical': 'chemical',
-  '화학': 'chemical',
-};
 
 export function Calendar({ onDateSelect }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -179,7 +163,7 @@ export function Calendar({ onDateSelect }: CalendarProps) {
             {verdict.top5.slice(0, 3).map((item, i) => (
               <div key={i} className="flex items-center gap-0.5 sm:gap-1 text-2xs sm:text-xs">
                 <span className="text-dark-600 shrink-0">{i + 1}</span>
-                <span className="text-dark-400 truncate">{item.symbolName}</span>
+                <span className="text-dark-400 truncate font-mono">{item.etfTicker}</span>
               </div>
             ))}
             {verdict.top5.length > 3 && (
@@ -196,7 +180,7 @@ export function Calendar({ onDateSelect }: CalendarProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <h2 className="text-base sm:text-lg md:text-xl font-bold text-dark-100">
-          AI Pick Calendar
+          AI ETF Pick Calendar
         </h2>
         <div className="flex items-center gap-1 sm:gap-2">
           <button
@@ -271,8 +255,8 @@ interface VerdictDetailProps {
 }
 
 export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: VerdictDetailProps) {
-  const [selectedSector, setSelectedSector] = useState('all');
-  const [selectedStock, setSelectedStock] = useState<Top5Item | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedETF, setSelectedETF] = useState<Top5Item | null>(null);
   const [debateMessages, setDebateMessages] = useState<DebateMessage[]>([]);
   const [loadingDebate, setLoadingDebate] = useState(false);
 
@@ -282,18 +266,17 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
   const isToday = selectedDate.getTime() === today.getTime();
   const isFuture = selectedDate > today;
 
-  // Filter stocks by sector
-  const filteredStocks = verdict?.top5.filter(item => {
-    if (selectedSector === 'all') return true;
-    const sectorId = SECTOR_MAP[item.sector] || 'other';
-    return sectorId === selectedSector;
+  // Filter ETFs by category
+  const filteredETFs = verdict?.top5.filter(item => {
+    if (selectedCategory === 'all') return true;
+    return item.category === selectedCategory;
   }) || [];
 
-  // Fetch debate history when a stock is selected
-  async function fetchDebateHistory(symbolCode: string) {
+  // Fetch debate history when an ETF is selected
+  async function fetchDebateHistory(ticker: string) {
     setLoadingDebate(true);
     try {
-      const res = await fetch(`/api/debate/history?symbol=${symbolCode}&date=${date}`);
+      const res = await fetch(`/api/debate/history?symbol=${ticker}&date=${date}`);
       const data = await res.json();
       if (data.success && data.data) {
         setDebateMessages(data.data.messages || []);
@@ -308,13 +291,13 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
     }
   }
 
-  function handleStockClick(stock: Top5Item) {
-    setSelectedStock(stock);
-    fetchDebateHistory(stock.symbolCode);
+  function handleETFClick(etf: Top5Item) {
+    setSelectedETF(etf);
+    fetchDebateHistory(etf.etfTicker);
   }
 
   function handleBackToList() {
-    setSelectedStock(null);
+    setSelectedETF(null);
     setDebateMessages([]);
   }
 
@@ -333,11 +316,11 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
       <div className="card text-center py-12">
         <div className="text-4xl mb-4">🤖</div>
         <h3 className="text-lg font-semibold text-dark-200 mb-2">
-          {isToday ? "오늘의 Top 5 생성하기" : "데이터 없음"}
+          {isToday ? "오늘의 Top 5 ETF 생성하기" : "데이터 없음"}
         </h3>
         <p className="text-dark-500 mb-6">
           {isToday 
-            ? "AI 3대장이 오늘의 추천 종목을 선정합니다."
+            ? "AI 3대장이 오늘의 추천 ETF를 선정합니다."
             : "이 날짜의 추천 데이터가 없습니다."
           }
         </p>
@@ -347,15 +330,15 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
             disabled={isGenerating}
             className="btn-primary"
           >
-            {isGenerating ? 'AI 분석 중...' : 'Top 5 생성하기'}
+            {isGenerating ? 'AI 분석 중...' : 'Top 5 ETF 생성하기'}
           </button>
         )}
       </div>
     );
   }
 
-  // Show stock detail with debate history
-  if (selectedStock) {
+  // Show ETF detail with debate history
+  if (selectedETF) {
     return (
       <div className="card">
         {/* Back button */}
@@ -369,23 +352,23 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
           <span>목록으로 돌아가기</span>
         </button>
 
-        {/* Stock Header */}
+        {/* ETF Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-brand-500/20 to-brand-600/20 flex items-center justify-center text-2xl font-bold text-brand-400">
-              {selectedStock.symbolName.charAt(0)}
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-brand-500/20 to-brand-600/20 flex items-center justify-center text-lg font-bold text-brand-400 font-mono">
+              {selectedETF.etfTicker.slice(0, 3)}
             </div>
             <div>
-              <h3 className="text-xl font-bold text-dark-100">{selectedStock.symbolName}</h3>
+              <h3 className="text-xl font-bold text-dark-100 font-mono">{selectedETF.etfTicker}</h3>
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-dark-500 font-mono">{selectedStock.symbolCode}</span>
+                <span className="text-dark-400">{selectedETF.etfName}</span>
                 <span className="text-dark-600">|</span>
-                <span className="text-dark-500">{selectedStock.sector}</span>
+                <span className="text-dark-500">{selectedETF.category}</span>
               </div>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-brand-400">{selectedStock.avgScore.toFixed(1)}</div>
+            <div className="text-2xl font-bold text-brand-400">{selectedETF.avgScore.toFixed(1)}</div>
             <div className="text-xs text-dark-500">Average Score</div>
           </div>
         </div>
@@ -394,9 +377,9 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
         <div className="grid grid-cols-3 gap-3 mb-6">
           {(['claude', 'gemini', 'gpt'] as const).map((charId) => {
             const char = CHARACTERS[charId];
-            const score = charId === 'claude' ? selectedStock.claudeScore :
-                         charId === 'gemini' ? selectedStock.geminiScore :
-                         selectedStock.gptScore;
+            const score = charId === 'claude' ? selectedETF.claudeScore :
+                         charId === 'gemini' ? selectedETF.geminiScore :
+                         selectedETF.gptScore;
             return (
               <div key={charId} className={`p-3 rounded-xl ${char.bgColor} border border-current/10`}>
                 <div className="flex items-center gap-2 mb-2">
@@ -411,25 +394,29 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
           })}
         </div>
 
-        {/* Target Price Summary */}
-        {selectedStock.targetPrice && (
-          <div className="p-4 rounded-xl bg-dark-800/50 border border-dark-700/50 mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-xs text-dark-500 mb-1">합의 목표가</div>
-                <div className="text-xl font-bold text-brand-400">
-                  {selectedStock.targetPrice.toLocaleString()}원
-                </div>
+        {/* Target Return Summary */}
+        <div className="p-4 rounded-xl bg-dark-800/50 border border-dark-700/50 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs text-dark-500 mb-1">예상 수익률</div>
+              <div className="text-xl font-bold text-emerald-400">
+                +{selectedETF.targetReturn?.toFixed(1) || '-'}%
               </div>
-              {selectedStock.targetDate && (
-                <div className="text-right">
-                  <div className="text-xs text-dark-500 mb-1">예상 달성 시점</div>
-                  <div className="text-sm font-medium text-dark-200">{selectedStock.targetDate}</div>
-                </div>
-              )}
             </div>
+            {selectedETF.timeHorizon && (
+              <div className="text-right">
+                <div className="text-xs text-dark-500 mb-1">투자 기간</div>
+                <div className="text-sm font-medium text-dark-200">{selectedETF.timeHorizon}</div>
+              </div>
+            )}
+            {selectedETF.expenseRatio && (
+              <div className="text-right">
+                <div className="text-xs text-dark-500 mb-1">총보수</div>
+                <div className="text-sm font-medium text-dark-200">{(selectedETF.expenseRatio * 100).toFixed(2)}%</div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Debate History */}
         <div>
@@ -462,25 +449,25 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium text-dark-200 text-sm">{char.name}</span>
-                        <span className={`text-xs ${char.color}`}>{char.role}</span>
+                        <span className={`text-xs ${char.color}`}>{char.roleKo}</span>
                         <span className="text-xs text-dark-600">Round {msg.round}</span>
                       </div>
                       <div className={`p-3 rounded-xl rounded-tl-sm ${char.bgColor} border border-current/10`}>
                         <p className="text-sm text-dark-300 leading-relaxed whitespace-pre-wrap">
                           {msg.content}
                         </p>
-                        {msg.targetPrice && (
+                        {msg.targetReturn && (
                           <div className="mt-2 pt-2 border-t border-dark-700/50 flex items-center gap-4">
                             <div>
-                              <span className="text-xs text-dark-500">목표가: </span>
+                              <span className="text-xs text-dark-500">예상 수익률: </span>
                               <span className={`text-sm font-semibold ${char.color}`}>
-                                {msg.targetPrice.toLocaleString()}원
+                                +{msg.targetReturn.toFixed(1)}%
                               </span>
                             </div>
-                            {msg.targetDate && (
+                            {msg.timeHorizon && (
                               <div>
-                                <span className="text-xs text-dark-500">달성 예상: </span>
-                                <span className="text-sm text-dark-300">{msg.targetDate}</span>
+                                <span className="text-xs text-dark-500">투자 기간: </span>
+                                <span className="text-sm text-dark-300">{msg.timeHorizon}</span>
                               </div>
                             )}
                           </div>
@@ -505,7 +492,7 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
     );
   }
 
-  // Show category tabs and stock list
+  // Show category tabs and ETF list
   return (
     <div className="card p-3 sm:p-4 md:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 sm:mb-6">
@@ -532,23 +519,22 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
         </div>
       </div>
 
-      {/* Sector Tabs - Horizontal scroll on mobile */}
+      {/* Category Tabs - Horizontal scroll on mobile */}
       <div className="overflow-x-auto scrollbar-hide -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 mb-4 sm:mb-6">
         <div className="flex gap-1.5 sm:gap-2 min-w-max pb-1">
-          {SECTORS.map((sector) => {
+          {CATEGORIES.map((cat) => {
             const count = verdict.top5.filter(item => {
-              if (sector.id === 'all') return true;
-              const sectorId = SECTOR_MAP[item.sector] || 'other';
-              return sectorId === sector.id;
+              if (cat.id === 'all') return true;
+              return item.category === cat.id;
             }).length;
             
             return (
               <button
-                key={sector.id}
-                onClick={() => setSelectedSector(sector.id)}
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
                 className={`
                   px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all whitespace-nowrap
-                  ${selectedSector === sector.id
+                  ${selectedCategory === cat.id
                     ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'
                     : 'bg-dark-800/50 text-dark-400 border border-dark-700/50 hover:bg-dark-800'
                   }
@@ -556,8 +542,8 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
                 `}
                 disabled={count === 0}
               >
-                <span className="mr-1">{sector.icon}</span>
-                <span className="hidden sm:inline">{sector.name}</span>
+                <span className="mr-1">{cat.icon}</span>
+                <span className="hidden sm:inline">{cat.name}</span>
                 {count > 0 && (
                   <span className="ml-1 sm:ml-1.5 px-1 sm:px-1.5 py-0.5 rounded bg-dark-700/50 text-2xs sm:text-xs">
                     {count}
@@ -569,13 +555,13 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
         </div>
       </div>
 
-      {/* Stock List */}
+      {/* ETF List */}
       <div className="space-y-2 sm:space-y-3">
-        {filteredStocks.length > 0 ? (
-          filteredStocks.map((item, i) => (
+        {filteredETFs.length > 0 ? (
+          filteredETFs.map((item, i) => (
             <button
-              key={item.symbolCode}
-              onClick={() => handleStockClick(item)}
+              key={item.etfTicker}
+              onClick={() => handleETFClick(item)}
               className="w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-dark-800/50 hover:bg-dark-800 transition-colors group text-left"
             >
               {/* Rank Badge */}
@@ -589,15 +575,15 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
                 {item.rank}
               </div>
               
-              {/* Stock Info */}
+              {/* ETF Info */}
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-xs sm:text-sm md:text-base text-dark-200 group-hover:text-dark-100 transition-colors truncate">
-                  {item.symbolName}
+                <div className="font-medium text-xs sm:text-sm md:text-base text-dark-200 group-hover:text-dark-100 transition-colors truncate font-mono">
+                  {item.etfTicker}
                 </div>
                 <div className="flex items-center gap-1 sm:gap-1.5 text-2xs sm:text-xs text-dark-500 mt-0.5">
-                  <span className="font-mono shrink-0">{item.symbolCode}</span>
+                  <span className="truncate">{item.etfName}</span>
                   <span className="hidden sm:inline text-dark-600 shrink-0">|</span>
-                  <span className="hidden sm:inline truncate">{item.sector}</span>
+                  <span className="hidden sm:inline shrink-0">{item.category}</span>
                 </div>
               </div>
               
@@ -616,10 +602,12 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
                 })}
               </div>
               
-              {/* Score */}
+              {/* Score & Return */}
               <div className="text-right shrink-0">
                 <div className="text-xs sm:text-sm font-semibold text-brand-400 whitespace-nowrap">{item.avgScore.toFixed(1)}</div>
-                <div className="text-2xs sm:text-xs text-dark-500">Score</div>
+                {item.targetReturn && (
+                  <div className="text-2xs sm:text-xs text-emerald-400">+{item.targetReturn.toFixed(1)}%</div>
+                )}
               </div>
               
               {/* Arrow */}
@@ -631,7 +619,7 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
         ) : (
           <div className="text-center py-6 sm:py-8">
             <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">📭</div>
-            <p className="text-xs sm:text-sm text-dark-500">선택한 섹터에 해당하는 종목이 없습니다.</p>
+            <p className="text-xs sm:text-sm text-dark-500">선택한 카테고리에 해당하는 ETF가 없습니다.</p>
           </div>
         )}
       </div>
@@ -643,7 +631,7 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <p className="text-2xs sm:text-xs text-dark-400">
-            종목을 클릭하면 AI 3대장의 토론 내용을 복기할 수 있습니다.
+            ETF를 클릭하면 AI 3대장의 토론 내용을 복기할 수 있습니다.
           </p>
         </div>
       </div>
