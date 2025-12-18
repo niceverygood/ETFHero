@@ -635,9 +635,10 @@ export default function BattlePage() {
     }
   }, [pendingMessages, currentAnimatingId, processNextMessage]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [displayedMessages, currentAnimatingId]);
+  // 자동 스크롤 비활성화 - 사용자가 직접 스크롤하도록 함
+  // useEffect(() => {
+  //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // }, [displayedMessages, currentAnimatingId]);
 
   function handleCharacterClick(char: CharacterInfo) {
     setSelectedCharacter(char);
