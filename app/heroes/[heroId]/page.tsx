@@ -38,7 +38,7 @@ const HERO_META = {
   },
   gemini: {
     name: 'Gemi Nine',
-    nameKo: '제미 나인',
+    nameKo: '제미나인',
     title: '테마 ETF 전략가',
     subtitle: 'Theme & Growth Strategist',
     color: 'from-purple-500 to-pink-600',

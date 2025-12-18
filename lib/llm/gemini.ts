@@ -5,7 +5,7 @@ import { ANALYSIS_METHODOLOGIES, calculateTargetDate } from './analysis-framewor
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
 
-// 제미 나인의 드라마틱 시스템 프롬프트
+// 제미나인의 드라마틱 시스템 프롬프트
 function getSystemPrompt(): string {
   const backstory = CHARACTER_BACKSTORIES.gemini;
   const methodology = ANALYSIS_METHODOLOGIES.gemini;

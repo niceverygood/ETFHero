@@ -333,7 +333,7 @@ const CHARACTER_INFO: Record<CharacterType, { name: string; philosophy: string }
     philosophy: '숫자는 거짓말하지 않습니다. 펀더멘털이 검증된 저평가 우량주를 찾습니다.',
   },
   gemini: {
-    name: 'Gemi Nine (제미 나인)',
+    name: 'Gemi Nine (제미나인)',
     philosophy: '역사는 미친 놈들이 만들어요. 미래를 선도할 고성장 혁신 기업을 찾습니다.',
   },
   gpt: {

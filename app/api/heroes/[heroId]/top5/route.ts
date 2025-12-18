@@ -51,11 +51,11 @@ const CHARACTER_PROFILES = {
   },
   gemini: {
     name: 'Gemi Nine',
-    nameKo: '제미 나인',
+    nameKo: '제미나인',
     title: '테마 ETF 전략가',
     criteria: '성장 테마 및 혁신 섹터 중심',
     methodology: '테마 성장성, 글로벌 트렌드, 섹터 모멘텀 분석',
-    systemPrompt: `당신은 "제미 나인"입니다. 실리콘밸리 출신의 테마 ETF 전문가입니다.
+    systemPrompt: `당신은 "제미나인"입니다. 실리콘밸리 출신의 테마 ETF 전문가입니다.
 
 ## 당신의 투자 철학
 - "미래를 사는 거예요. 테마가 곧 수익입니다."

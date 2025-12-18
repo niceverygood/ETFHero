@@ -61,7 +61,7 @@ export const CHARACTERS: Record<CharacterType, CharacterInfo> = {
   gemini: {
     id: 'gemini',
     name: 'Gemi Nine',
-    nameKo: '제미 나인',
+    nameKo: '제미나인',
     role: 'Thematic ETF Strategist',
     roleKo: '테마 ETF 전략가',
     image: '/images/characters/gemini.png',
@@ -71,7 +71,7 @@ export const CHARACTERS: Record<CharacterType, CharacterInfo> = {
     description: '세련됨, 센스, 빠른 판단. 테마 ETF, 신흥 섹터, 혁신 분야 분석의 1인자.',
     tags: ['테마 투자', '트렌드'],
     // Extended details
-    fullBio: '실리콘밸리 출신의 제미 나인은 새로운 투자 테마와 섹터를 발굴하는 데 탁월한 능력을 보여왔습니다. AI, 클린에너지, 우주산업 등 차세대 성장 테마를 누구보다 먼저 포착합니다. "오늘의 테마 ETF가 내일의 메인스트림이 됩니다"라는 신념을 가지고 있습니다.',
+    fullBio: '실리콘밸리 출신의 제미나인은 새로운 투자 테마와 섹터를 발굴하는 데 탁월한 능력을 보여왔습니다. AI, 클린에너지, 우주산업 등 차세대 성장 테마를 누구보다 먼저 포착합니다. "오늘의 테마 ETF가 내일의 메인스트림이 됩니다"라는 신념을 가지고 있습니다.',
     analysisStyle: '트렌드 중심의 정성적 분석을 선호합니다. 기술 변화와 사회적 트렌드가 ETF 성과에 미치는 영향을 분석하며, 중장기 성장 잠재력에 집중합니다.',
     strengths: [
       '테마 ETF 발굴',

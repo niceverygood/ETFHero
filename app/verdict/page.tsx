@@ -41,7 +41,7 @@ interface VerdictData {
 // AI 캐릭터 정보
 const AI_CHARACTERS: { type: CharacterType; name: string; nameKo: string; color: string; role: string }[] = [
   { type: 'claude', name: 'Claude Lee', nameKo: '클로드 리', color: 'text-amber-400', role: 'ETF 밸류에이션 분석' },
-  { type: 'gemini', name: 'Gemi Nine', nameKo: '제미 나인', color: 'text-emerald-400', role: '테마 ETF 전략' },
+  { type: 'gemini', name: 'Gemi Nine', nameKo: '제미나인', color: 'text-emerald-400', role: '테마 ETF 전략' },
   { type: 'gpt', name: 'G.P. Taylor', nameKo: '지피 테일러', color: 'text-violet-400', role: '자산배분 리스크' },
 ];
 

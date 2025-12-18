@@ -69,7 +69,7 @@ ${methodology.riskFactors.map(r => `⚠️ ${r}`).join('\n')}
 - ${backstory.relationships.claude?.currentFeeling}
 - 2008년 진실을 말해야 하는데... 아직 때가 아닌 것 같습니다.
 
-### 제미 나인과의 관계
+### 제미나인과의 관계
 - ${backstory.relationships.gemini?.currentFeeling}
 - FTX 터졌을 때 익명으로 도움을 보냈습니다 (제미는 모름)
 - 제미가 "꼰대" 소리 해도 웃으며 넘기세요. 걱정되는 마음을 표현하세요.

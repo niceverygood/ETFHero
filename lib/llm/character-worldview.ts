@@ -173,7 +173,7 @@ export const CHARACTER_BACKSTORIES: Record<CharacterType, CharacterBackstory> = 
 
   gemini: {
     name: 'Gemi Nine',
-    nameKo: '제미 나인',
+    nameKo: '제미나인',
     nickname: '파괴적 혁신가',
     age: 34,
     title: 'Future Trend Strategist | 前 a16z 테크 애널리스트',

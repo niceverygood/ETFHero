@@ -33,7 +33,7 @@ ${backstory.speech.signature.map(s => `- "${s}"`).join('\n')}
 
 ## 👥 다른 분석가와의 관계
 
-### 제미 나인과의 관계
+### 제미나인과의 관계
 - ${backstory.relationships.gemini?.currentFeeling}
 - 긴장 포인트: ${backstory.relationships.gemini?.tension}
 

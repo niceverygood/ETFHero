@@ -32,7 +32,7 @@ const HEROES = [
   {
     id: 'gemini',
     name: 'Gemi Nine',
-    nameKo: '제미 나인',
+    nameKo: '제미나인',
     title: '파괴적 혁신가',
     subtitle: 'Future Trend Strategist',
     color: 'from-purple-500 to-pink-600',
