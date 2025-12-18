@@ -360,8 +360,8 @@ async function generateSuggestedQuestions(
     ? `\n현재 상담 중인 ETF: ${stockData.name} (${stockData.symbol}), 현재가 ${stockData.currentPrice.toLocaleString()}원` 
     : '';
 
-  const prompt = `당신은 ${characterNames[characterType]}입니다.
-아래 대화 맥락을 바탕으로, 사용자가 다음에 물어볼 만한 후속 질문 4개를 생성해주세요.
+  const prompt = `당신은 ${characterNames[characterType]}입니다. ETF 전문 상담 서비스 "ETFHero"의 AI 분석가입니다.
+아래 대화 맥락을 바탕으로, 사용자가 다음에 물어볼 만한 ETF 관련 후속 질문 4개를 생성해주세요.
 
 ## 당신의 전문 분야
 ${characterFocus[characterType]}
@@ -370,12 +370,20 @@ ${characterFocus[characterType]}
 ${recentContext}
 ${stockContext}
 
-## 생성 규칙
-1. 대화 흐름에 자연스럽게 이어지는 질문
-2. 당신의 전문 분야와 관련된 깊이 있는 질문
-3. ETF 투자에 실제로 도움이 되는 실용적인 질문
-4. 각 질문은 30자 이내로 간결하게
-5. 반드시 한국어로 작성
+## 중요: ETF 전용 질문 생성 규칙
+1. 반드시 ETF(상장지수펀드)에 관한 질문만 생성하세요
+2. 개별 주식(삼성전자, SK하이닉스 등)에 대한 질문은 절대 생성하지 마세요
+3. ETF 예시: KODEX 200, TIGER 미국S&P500, SPY, QQQ, ARIRANG 고배당주 등
+4. 대화 흐름에 자연스럽게 이어지는 질문
+5. 당신의 전문 분야와 관련된 깊이 있는 질문
+6. 각 질문은 30자 이내로 간결하게
+7. 반드시 한국어로 작성
+
+## 질문 예시 (참고용)
+- "KODEX 200과 TIGER 200 비교해주세요"
+- "테마 ETF 비중은 얼마가 적당할까요?"
+- "AI 관련 ETF 추천해주세요"
+- "채권 ETF 비중을 늘려야 할까요?"
 
 ## 출력 형식
 JSON 배열로만 응답하세요. 설명 없이 배열만:
@@ -404,25 +412,25 @@ JSON 배열로만 응답하세요. 설명 없이 배열만:
     console.error('Failed to generate suggested questions:', error);
   }
 
-  // 폴백: 캐릭터별 기본 질문
+  // 폴백: 캐릭터별 ETF 전용 기본 질문
   const fallbackQuestions: Record<CharacterType, string[]> = {
     claude: [
-      '이 ETF의 총 보수 비용은 어떤가요?',
-      '추적 오차가 큰 편인가요?',
-      '비슷한 ETF와 비교해주세요',
-      '장기 투자에 적합할까요?',
+      'KODEX 200과 TIGER 200 비교해주세요',
+      '국내 ETF 운용보수 평균은 얼마인가요?',
+      '괴리율이 큰 ETF는 피해야 하나요?',
+      'ETF 장기 투자 시 주의할 점은?',
     ],
     gemini: [
-      '관련 테마 ETF 추천해주세요',
-      '이 섹터의 성장 전망은?',
-      '언제 진입하면 좋을까요?',
-      '다른 테마 ETF와 비교하면?',
+      'AI 관련 ETF 중 추천할 만한 것은?',
+      '반도체 ETF vs 2차전지 ETF 전망은?',
+      '테마 ETF 투자 적정 비중은?',
+      '신흥국 ETF 지금 들어가도 될까요?',
     ],
     gpt: [
-      '포트폴리오 비중을 얼마나?',
-      '리스크 관리는 어떻게?',
-      '채권 ETF와 함께 보유하면?',
-      '환헤지 상품을 써야 할까요?',
+      '주식 ETF와 채권 ETF 비중 추천해주세요',
+      'ETF 포트폴리오 리밸런싱 주기는?',
+      '달러 강세 시 해외 ETF 전략은?',
+      '인플레이션 대비 ETF 추천해주세요',
     ],
   };
 
