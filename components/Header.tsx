@@ -8,7 +8,7 @@ import { UserMenu } from './UserMenu';
 const NAV_LINKS = [
   { href: '/verdict', label: 'Top 5' },
   { href: '/heroes', label: 'ETF Heros' },
-  { href: '/holdings', label: '종목검색' },
+  { href: '/backtest', label: '백테스트' },
   { href: '/compare', label: '비교' },
   { href: '/battle/SPY', label: 'Debate' },
   { href: '/consulting', label: 'Consulting' },
