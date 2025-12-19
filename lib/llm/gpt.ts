@@ -184,6 +184,28 @@ ${isFinalRound ? '최종 라운드: 토론을 마무리하며 합의점을 논�
 JSON으로 응답하세요.`;
 }
 
+// 대사에서 목표가 파싱
+function parseTargetPriceFromContent(content: string): number | null {
+  // "목표가 800원", "목표가 $800", "Target: 800", "800원 목표" 등의 패턴 매칭
+  const patterns = [
+    /목표가?\s*[:：]?\s*\$?([\d,]+(?:\.\d+)?)\s*(?:원|달러|불)?/i,
+    /target\s*(?:price)?\s*[:：]?\s*\$?([\d,]+(?:\.\d+)?)/i,
+    /\$?([\d,]+(?:\.\d+)?)\s*(?:원|달러)?\s*(?:을|를)?\s*목표/i,
+    /목표\s*[:：]?\s*\$?([\d,]+(?:\.\d+)?)\s*(?:원|달러|불)?/i,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = content.match(pattern);
+    if (match) {
+      const value = parseFloat(match[1].replace(/,/g, ''));
+      if (!isNaN(value) && value > 0) {
+        return value;
+      }
+    }
+  }
+  return null;
+}
+
 export class GPTAdapter implements LLMAdapter {
   characterType = 'gpt' as const;
 
@@ -206,8 +228,12 @@ export class GPTAdapter implements LLMAdapter {
       const content = response.choices[0]?.message?.content || '{}';
       const parsed = JSON.parse(content);
       
+      // 대사에서 목표가 파싱 (대사와 일치시키기 위해)
+      const contentTargetPrice = parseTargetPriceFromContent(parsed.content || '');
+
       // 목표가 검증 및 보정
-      let targetPrice = parsed.targetPrice;
+      // 대사에서 파싱된 값이 있으면 우선 사용
+      let targetPrice = contentTargetPrice || parsed.targetPrice;
       const currentPrice = context.currentPrice || 70000;
       
       if (targetPrice) {
