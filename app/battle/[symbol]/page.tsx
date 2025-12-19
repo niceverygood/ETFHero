@@ -113,15 +113,25 @@ interface RealTimeETFInfo {
   description?: string;
 }
 
+// 통화 포맷팅 유틸리티 함수
+function formatCurrency(value: number, currency?: string): string {
+  if (currency === 'USD') {
+    return `$${value.toLocaleString()}`;
+  }
+  return `${value.toLocaleString()}원`;
+}
+
 function ChatBubble({ 
   message, 
   currentPrice,
+  currency,
   onCharacterClick,
   isAnimating,
   onTypingComplete
 }: { 
   message: Message; 
   currentPrice: number;
+  currency?: string;
   onCharacterClick: (char: CharacterInfo) => void;
   isAnimating?: boolean;
   onTypingComplete?: () => void;
@@ -191,7 +201,7 @@ function ChatBubble({
                   <div className="text-xs text-dark-500 mb-1">Target Price</div>
                   <div className="flex items-baseline gap-2">
                     <span className={`text-lg font-bold ${char.color}`}>
-                      {message.targetPrice.toLocaleString()}원
+                      {formatCurrency(message.targetPrice, currency)}
                     </span>
                     {upsidePercent && (
                       <span className={`text-sm font-medium ${
@@ -301,7 +311,7 @@ function TypingIndicator() {
   );
 }
 
-function TargetSummaryCard({ targets, currentPrice }: { targets: TargetInfo[]; currentPrice: number }) {
+function TargetSummaryCard({ targets, currentPrice, currency }: { targets: TargetInfo[]; currentPrice: number; currency?: string }) {
   if (targets.length === 0) return null;
   
   const avgTarget = targets.reduce((sum, t) => sum + t.targetPrice, 0) / targets.length;
@@ -326,7 +336,7 @@ function TargetSummaryCard({ targets, currentPrice }: { targets: TargetInfo[]; c
               <div className="flex-1 min-w-0">
                 <div className="text-xs text-dark-500">{char?.name}</div>
                 <div className={`text-sm font-semibold ${char?.color}`}>
-                  {target.targetPrice.toLocaleString()}원
+                  {formatCurrency(target.targetPrice, currency)}
                 </div>
               </div>
               <div className="text-right">
@@ -347,7 +357,7 @@ function TargetSummaryCard({ targets, currentPrice }: { targets: TargetInfo[]; c
           <span className="text-xs text-dark-500">Consensus Target</span>
           <div className="text-right">
             <span className="text-lg font-bold text-brand-400">
-              {Math.round(avgTarget).toLocaleString()}원
+              {formatCurrency(Math.round(avgTarget), currency)}
             </span>
             <span className={`text-sm ml-2 ${
               parseFloat(avgUpside) >= 0 ? 'text-emerald-400' : 'text-red-400'
@@ -365,11 +375,13 @@ function TargetSummaryCard({ targets, currentPrice }: { targets: TargetInfo[]; c
 function FinalConsensusSummary({ 
   targets, 
   currentPrice, 
-  symbolName 
+  symbolName,
+  currency
 }: { 
   targets: TargetInfo[]; 
   currentPrice: number;
   symbolName: string;
+  currency?: string;
 }) {
   if (targets.length === 0) return null;
   
@@ -421,7 +433,7 @@ function FinalConsensusSummary({
             <div className="text-center">
               <div className="text-xs text-dark-500 mb-2">평균 목표가</div>
               <div className="text-3xl font-bold text-brand-400">
-                {Math.round(avgTarget).toLocaleString()}원
+                {formatCurrency(Math.round(avgTarget), currency)}
               </div>
               <div className={`text-sm font-medium mt-1 ${
                 parseFloat(avgUpside) >= 0 ? 'text-emerald-400' : 'text-red-400'
@@ -455,7 +467,7 @@ function FinalConsensusSummary({
                     <span className="text-xs text-dark-400">{char?.name}</span>
                   </div>
                   <div className={`text-lg font-bold ${char?.color}`}>
-                    {target.targetPrice.toLocaleString()}원
+                    {formatCurrency(target.targetPrice, currency)}
                   </div>
                   <div className="flex items-center justify-between mt-1">
                     <span className={`text-xs ${
@@ -477,7 +489,7 @@ function FinalConsensusSummary({
             <div>
               <span className="text-dark-500">목표가 범위: </span>
               <span className="text-dark-200 font-medium">
-                {minTarget.targetPrice.toLocaleString()}원 ~ {maxTarget.targetPrice.toLocaleString()}원
+                {formatCurrency(minTarget.targetPrice, currency)} ~ {formatCurrency(maxTarget.targetPrice, currency)}
               </span>
             </div>
             <div className="text-dark-500">
@@ -494,9 +506,9 @@ function FinalConsensusSummary({
               />
             </div>
             <div className="flex justify-between mt-1 text-xs text-dark-600">
-              <span>{minTarget.targetPrice.toLocaleString()}</span>
-              <span className="text-brand-400 font-medium">{Math.round(avgTarget).toLocaleString()}</span>
-              <span>{maxTarget.targetPrice.toLocaleString()}</span>
+              <span>{formatCurrency(minTarget.targetPrice, currency)}</span>
+              <span className="text-brand-400 font-medium">{formatCurrency(Math.round(avgTarget), currency)}</span>
+              <span>{formatCurrency(maxTarget.targetPrice, currency)}</span>
             </div>
           </div>
         </div>
@@ -969,6 +981,7 @@ export default function BattlePage() {
                       <ChatBubble 
                         message={msg} 
                         currentPrice={symbolInfo.price}
+                        currency={symbolInfo.currency}
                         onCharacterClick={handleCharacterClick}
                         isAnimating={isThisMessageAnimating}
                         onTypingComplete={isThisMessageAnimating ? handleTypingComplete : undefined}
@@ -1080,6 +1093,7 @@ export default function BattlePage() {
                     targets={targets} 
                     currentPrice={symbolInfo.price}
                     symbolName={symbolInfo.name}
+                    currency={symbolInfo.currency}
                   />
                 )}
                 
@@ -1091,7 +1105,7 @@ export default function BattlePage() {
             <div className="space-y-6">
               {/* Target Prices Summary - Only shown after debate is complete */}
               {isComplete && targets.length > 0 && currentAnimatingId === null && pendingMessages.length === 0 && (
-                <TargetSummaryCard targets={targets} currentPrice={symbolInfo.price} />
+                <TargetSummaryCard targets={targets} currentPrice={symbolInfo.price} currency={symbolInfo.currency} />
               )}
 
               {/* Participants */}
@@ -1124,7 +1138,7 @@ export default function BattlePage() {
                           <div className={`text-sm font-semibold ${char.color}`}>{avgScore}</div>
                           {showTargetPrice && latestTarget?.targetPrice && (
                             <div className="text-xs text-dark-500">
-                              {latestTarget.targetPrice.toLocaleString()}원
+                              {formatCurrency(latestTarget.targetPrice, symbolInfo.currency)}
                             </div>
                           )}
                         </div>
