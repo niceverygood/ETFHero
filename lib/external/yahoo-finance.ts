@@ -259,3 +259,193 @@ export async function getCachedETFPrices(symbols: string[]): Promise<Map<string,
   return results;
 }
 
+/**
+ * ETF 수익률 데이터 (실시간)
+ */
+export interface ETFPerformance {
+  ticker: string;
+  return1m: number;   // 1개월 수익률 (%)
+  return3m: number;   // 3개월 수익률 (%)
+  return6m: number;   // 6개월 수익률 (%)
+  return1y: number;   // 1년 수익률 (%)
+  returnYTD: number;  // YTD 수익률 (%)
+  dividendYield: number; // 배당수익률 (%)
+  lastUpdated: string;
+}
+
+/**
+ * Yahoo Finance에서 ETF 과거 가격 조회하여 수익률 계산
+ */
+export async function fetchETFPerformance(symbol: string): Promise<ETFPerformance | null> {
+  try {
+    // 1년 데이터 조회
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1y`;
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+      },
+      next: { revalidate: 300 }, // 5분 캐시
+    });
+
+    if (!response.ok) {
+      console.error(`Yahoo Finance performance API failed for ${symbol}: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const result = data.chart?.result?.[0];
+    
+    if (!result) {
+      return null;
+    }
+
+    const meta = result.meta;
+    const timestamps = result.timestamp || [];
+    const closes = result.indicators?.quote?.[0]?.close || [];
+    
+    if (closes.length === 0) {
+      return null;
+    }
+
+    // 현재 가격
+    const currentPrice = meta.regularMarketPrice || closes[closes.length - 1];
+    
+    // 날짜별 인덱스 찾기
+    const now = Date.now();
+    const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000;
+    const threeMonthsAgo = now - 90 * 24 * 60 * 60 * 1000;
+    const sixMonthsAgo = now - 180 * 24 * 60 * 60 * 1000;
+    const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000;
+    const startOfYear = new Date(new Date().getFullYear(), 0, 1).getTime();
+
+    // 가장 가까운 과거 가격 찾기
+    const findPriceAtDate = (targetTime: number): number | null => {
+      for (let i = timestamps.length - 1; i >= 0; i--) {
+        if (timestamps[i] * 1000 <= targetTime) {
+          return closes[i];
+        }
+      }
+      return closes[0]; // 가장 오래된 데이터
+    };
+
+    const price1m = findPriceAtDate(oneMonthAgo);
+    const price3m = findPriceAtDate(threeMonthsAgo);
+    const price6m = findPriceAtDate(sixMonthsAgo);
+    const price1y = findPriceAtDate(oneYearAgo);
+    const priceYTD = findPriceAtDate(startOfYear);
+
+    // 수익률 계산
+    const calcReturn = (pastPrice: number | null): number => {
+      if (!pastPrice || pastPrice === 0) return 0;
+      return Number((((currentPrice - pastPrice) / pastPrice) * 100).toFixed(2));
+    };
+
+    // 배당수익률 조회
+    let dividendYield = 0;
+    try {
+      const summaryUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=summaryDetail`;
+      const summaryRes = await fetch(summaryUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        },
+      });
+      if (summaryRes.ok) {
+        const summaryData = await summaryRes.json();
+        const detail = summaryData.quoteSummary?.result?.[0]?.summaryDetail;
+        if (detail?.dividendYield?.raw) {
+          dividendYield = Number((detail.dividendYield.raw * 100).toFixed(2));
+        } else if (detail?.yield?.raw) {
+          dividendYield = Number((detail.yield.raw * 100).toFixed(2));
+        }
+      }
+    } catch (e) {
+      // 배당 조회 실패 시 0으로
+    }
+
+    return {
+      ticker: symbol.toUpperCase(),
+      return1m: calcReturn(price1m),
+      return3m: calcReturn(price3m),
+      return6m: calcReturn(price6m),
+      return1y: calcReturn(price1y),
+      returnYTD: calcReturn(priceYTD),
+      dividendYield,
+      lastUpdated: new Date().toISOString(),
+    };
+
+  } catch (error) {
+    console.error(`Failed to fetch ETF performance for ${symbol}:`, error);
+    return null;
+  }
+}
+
+// 수익률 캐시
+const performanceCache = new Map<string, { data: ETFPerformance; timestamp: number }>();
+const PERFORMANCE_CACHE_TTL = 5 * 60 * 1000; // 5분
+
+/**
+ * 캐시된 ETF 수익률 조회
+ */
+export async function getCachedETFPerformance(symbol: string): Promise<ETFPerformance | null> {
+  const cached = performanceCache.get(symbol.toUpperCase());
+  
+  if (cached && Date.now() - cached.timestamp < PERFORMANCE_CACHE_TTL) {
+    return cached.data;
+  }
+
+  const performance = await fetchETFPerformance(symbol);
+  
+  if (performance) {
+    performanceCache.set(symbol.toUpperCase(), {
+      data: performance,
+      timestamp: Date.now(),
+    });
+  }
+
+  return performance;
+}
+
+/**
+ * 여러 ETF 수익률 일괄 조회
+ */
+export async function fetchMultipleETFPerformance(symbols: string[]): Promise<Map<string, ETFPerformance>> {
+  const results = new Map<string, ETFPerformance>();
+  const needsFetch: string[] = [];
+
+  // 캐시 확인
+  for (const symbol of symbols) {
+    const cached = performanceCache.get(symbol.toUpperCase());
+    if (cached && Date.now() - cached.timestamp < PERFORMANCE_CACHE_TTL) {
+      results.set(symbol.toUpperCase(), cached.data);
+    } else {
+      needsFetch.push(symbol);
+    }
+  }
+
+  // 병렬로 조회 (최대 5개씩 배치 - rate limit 방지)
+  const batchSize = 5;
+  for (let i = 0; i < needsFetch.length; i += batchSize) {
+    const batch = needsFetch.slice(i, i + batchSize);
+    const promises = batch.map(symbol => fetchETFPerformance(symbol));
+    const batchResults = await Promise.all(promises);
+    
+    batchResults.forEach((perf, idx) => {
+      if (perf) {
+        results.set(batch[idx].toUpperCase(), perf);
+        performanceCache.set(batch[idx].toUpperCase(), {
+          data: perf,
+          timestamp: Date.now(),
+        });
+      }
+    });
+
+    // Rate limit 방지를 위한 짧은 대기
+    if (i + batchSize < needsFetch.length) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+  }
+
+  return results;
+}
+

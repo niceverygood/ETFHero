@@ -1,100 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { findETFByTicker } from '@/lib/data/etf-list';
+import { getCachedETFPrice, getCachedETFPerformance } from '@/lib/external/yahoo-finance';
+import { fetchNaverETFDetail } from '@/lib/external/naver-etf';
 
-// Mock debate history data for ETFs
-function generateMockDebateHistory(symbol: string, date: string) {
-  const ETF_MAP: Record<string, { name: string; sector: string }> = {
-    '069500': { name: 'KODEX 200', sector: 'Market Index' },
-    '102110': { name: 'TIGER 200', sector: 'Market Index' },
-    '360750': { name: 'TIGER 미국S&P500', sector: 'Foreign Index' },
-    '133690': { name: 'TIGER 미국나스닥100', sector: 'Foreign Index' },
-    '091160': { name: 'KODEX 반도체', sector: 'Theme/Sector' },
-    '305720': { name: 'KODEX 2차전지산업', sector: 'Theme/Sector' },
-    '379800': { name: 'KODEX 미국S&P500TR', sector: 'Foreign Index' },
-    '161510': { name: 'ARIRANG 고배당주', sector: 'Dividend/Value' },
-    '148070': { name: 'KOSEF 국고채10년', sector: 'Bond' },
-    '364980': { name: 'TIGER AI반도체핵심공정', sector: 'Theme/Sector' },
-    '381170': { name: 'TIGER 미국테크TOP10', sector: 'Foreign Theme' },
-    '453810': { name: 'TIGER 미국AI빅테크10', sector: 'Foreign Theme' },
-    '266160': { name: 'KODEX 배당가치', sector: 'Dividend/Value' },
-  };
+// Supabase Client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-  const symbolInfo = ETF_MAP[symbol] || { name: symbol, sector: 'Unknown' };
-  const basePrice = 70000 + (parseInt(symbol) % 100) * 1000;
-
-  const messages = [
-    // Round 1
-    {
-      id: `${symbol}-${date}-claude-1`,
-      character: 'claude' as const,
-      content: `제 분석으로는 ${symbolInfo.name}의 펀더멘털이 상당히 견고합니다. 최근 분기 실적을 보면 매출 성장률이 전년 대비 15% 이상 증가했고, 영업이익률도 개선되고 있습니다.\n\n저는 이 종목에 대해 긍정적인 견해를 갖고 있습니다. 다만 현재 PER이 업종 평균 대비 높은 편이므로, 밸류에이션 부담은 인지하고 있어야 합니다.`,
-      score: 4,
-      targetPrice: Math.round(basePrice * 1.15 / 100) * 100,
-      targetDate: '2025년 3월',
-      risks: ['밸류에이션 부담', '실적 성장 둔화 가능성'],
-      round: 1,
-    },
-    {
-      id: `${symbol}-${date}-gemini-1`,
-      character: 'gemini' as const,
-      content: `저는 ${symbolInfo.name}에 대해 상당히 낙관적인 시각을 갖고 있습니다. 솔직히 이 종목의 성장 잠재력은 현재 주가에 충분히 반영되지 않았다고 봅니다.\n\n특히 AI와 신기술 분야에서의 투자 확대가 눈에 띕니다. ${symbolInfo.sector} 업종 내에서 혁신을 주도하고 있으며, 글로벌 경쟁력도 강화되고 있습니다.`,
-      score: 5,
-      targetPrice: Math.round(basePrice * 1.30 / 100) * 100,
-      targetDate: '2025년 6월',
-      risks: ['기술 변화 대응 속도', '신사업 불확실성'],
-      round: 1,
-    },
-    {
-      id: `${symbol}-${date}-gpt-1`,
-      character: 'gpt' as const,
-      content: `제 40년 경험에 비추어 보면, ${symbolInfo.name}을 평가할 때는 거시경제 환경을 반드시 고려해야 합니다. 현재 금리 수준과 경기 사이클을 감안하면, ${symbolInfo.sector} 업종 전반에 신중한 접근이 필요합니다.\n\n물론 ${symbolInfo.name}이 업종 내 우량 기업이라는 점은 인정합니다. 하지만 글로벌 불확실성이 해소되기 전까지는 보수적인 시각을 유지하는 것이 현명해 보입니다.`,
-      score: 3,
-      targetPrice: Math.round(basePrice * 1.08 / 100) * 100,
-      targetDate: '2025년 2월',
-      risks: ['금리 인상 영향', '경기 침체 우려', '지정학적 리스크'],
-      round: 1,
-    },
-    // Round 2
-    {
-      id: `${symbol}-${date}-claude-2`,
-      character: 'claude' as const,
-      content: `Gemini님의 성장성 분석이 인상적이었습니다. 저도 ${symbolInfo.name}의 성장 잠재력에는 동의합니다. 다만 제 관점에서는 밸류에이션도 함께 봐야 한다고 생각합니다.\n\nGPT님이 언급하신 거시 리스크도 일리가 있습니다. 하지만 ${symbolInfo.name}의 재무 건전성을 고려하면, 이런 외부 충격에도 버틸 체력이 있다고 봅니다. 종합하면 저는 여전히 긍정적이며, 기존 목표가를 유지합니다.`,
-      score: 4,
-      targetPrice: Math.round(basePrice * 1.15 / 100) * 100,
-      targetDate: '2025년 3월',
-      risks: ['업종 내 경쟁 심화', '원자재 가격 변동'],
-      round: 2,
-    },
-    {
-      id: `${symbol}-${date}-gemini-2`,
-      character: 'gemini' as const,
-      content: `Claude님의 밸류에이션 분석은 좋았지만, 저는 좀 다르게 생각합니다. 성장주를 평가할 때 현재 PER보다 미래 성장률이 더 중요합니다.\n\nGPT님이 리스크를 강조하셨는데, 솔직히 말해서 리스크만 보면 어떤 투자도 할 수 없습니다. ${symbolInfo.name}의 혁신 역량과 시장 기회를 고려하면, 저는 오히려 지금이 기회라고 확신하며, 공격적인 목표가를 유지합니다.`,
-      score: 5,
-      targetPrice: Math.round(basePrice * 1.32 / 100) * 100,
-      targetDate: '2025년 6월',
-      risks: ['경쟁사 추격', '규제 환경 변화'],
-      round: 2,
-    },
-    {
-      id: `${symbol}-${date}-gpt-2`,
-      character: 'gpt' as const,
-      content: `Claude 분석가와 Gemini 분석가의 의견을 종합해보겠습니다. 펀더멘털과 성장성 모두 긍정적인 포인트가 있다는 것에는 동의합니다.\n\n하지만 제가 강조하고 싶은 건, 아무리 좋은 기업도 거시 환경을 이길 수는 없다는 점입니다. ${symbolInfo.name}이 좋은 기업인 건 맞지만, 현 시점에서는 리스크 관리가 필요합니다. 목표가는 소폭 상향하지만 보수적으로 유지하겠습니다.`,
-      score: 3,
-      targetPrice: Math.round(basePrice * 1.10 / 100) * 100,
-      targetDate: '2025년 2월',
-      risks: ['환율 변동성', '글로벌 공급망 이슈', '인플레이션 압력'],
-      round: 2,
-    },
-  ];
-
-  return {
-    sessionId: `${symbol}-${date}-session`,
-    symbol,
-    symbolName: symbolInfo.name,
-    date,
-    messages,
-    consensusTarget: Math.round((messages[0].targetPrice! + messages[1].targetPrice! + messages[2].targetPrice!) / 3 / 100) * 100,
-  };
-}
+// AI 캐릭터 정보
+const CHARACTERS = {
+  claude: { name: 'Claude Lee', color: 'blue' },
+  gemini: { name: '제미나인', color: 'purple' },
+  gpt: { name: 'G.P. Taylor', color: 'amber' },
+};
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -109,14 +30,119 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // For now, return mock data
-    // In production, this would query the database for actual debate history
-    const mockDate = date || new Date().toISOString().split('T')[0];
-    const debateHistory = generateMockDebateHistory(symbol, mockDate);
+    // 1. ETF 기본 정보 조회
+    const etfInfo = findETFByTicker(symbol);
+    if (!etfInfo) {
+      return NextResponse.json(
+        { success: false, error: 'ETF not found' },
+        { status: 404 }
+      );
+    }
 
+    // 2. DB에서 토론 히스토리 조회 시도
+    let dbHistory = null;
+    try {
+      const { data, error } = await supabase
+        .from('debate_sessions')
+        .select('*')
+        .eq('symbol', symbol)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!error && data) {
+        dbHistory = data;
+      }
+    } catch (e) {
+      console.log('No DB history found for symbol:', symbol);
+    }
+
+    // 3. 실시간 가격 및 수익률 데이터 조회
+    let currentPrice = 0;
+    let changePercent = 0;
+    let performance = null;
+
+    try {
+      if (etfInfo.region === 'US') {
+        const quote = await getCachedETFPrice(symbol);
+        if (quote) {
+          currentPrice = quote.price;
+          changePercent = quote.changePercent;
+        }
+        performance = await getCachedETFPerformance(symbol);
+      } else if (etfInfo.region === 'KR') {
+        const naverData = await fetchNaverETFDetail(symbol);
+        if (naverData) {
+          currentPrice = naverData.price;
+          changePercent = naverData.changePercent;
+        }
+      }
+    } catch (e) {
+      console.log('Price fetch failed');
+    }
+
+    // 4. DB에 히스토리가 있으면 반환
+    if (dbHistory && dbHistory.messages) {
+      return NextResponse.json({
+        success: true,
+        isFromDB: true,
+        data: {
+          sessionId: dbHistory.id,
+          symbol,
+          symbolName: etfInfo.nameKo || etfInfo.name,
+          date: dbHistory.created_at?.split('T')[0] || date,
+          messages: dbHistory.messages,
+          consensusTarget: dbHistory.consensus_target,
+          currentPrice,
+          changePercent,
+          performance,
+        },
+      });
+    }
+
+    // 5. DB에 없으면 실시간 데이터 기반 기본 응답 반환
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    
+    // 실시간 데이터 기반 목표가 계산
+    const basePrice = currentPrice || 100;
+    const return1y = performance?.return1y || 0;
+    
+    // 목표가는 현재가 + 예상 상승률 (보수적/공격적/중립)
+    const claudeTarget = Math.round(basePrice * (1 + (return1y > 0 ? 0.1 : 0.05)) * 100) / 100;
+    const geminiTarget = Math.round(basePrice * (1 + (return1y > 0 ? 0.2 : 0.1)) * 100) / 100;
+    const gptTarget = Math.round(basePrice * (1 + (return1y > 0 ? 0.05 : 0.02)) * 100) / 100;
+
+    // 새 토론 세션 생성 (아직 진행되지 않음을 나타냄)
     return NextResponse.json({
       success: true,
-      data: debateHistory,
+      isFromDB: false,
+      needsNewDebate: true,
+      data: {
+        sessionId: `pending-${symbol}-${targetDate}`,
+        symbol,
+        symbolName: etfInfo.nameKo || etfInfo.name,
+        date: targetDate,
+        messages: [],
+        suggestedTargets: {
+          claude: claudeTarget,
+          gemini: geminiTarget,
+          gpt: gptTarget,
+        },
+        currentPrice,
+        changePercent,
+        performance: performance ? {
+          return1m: performance.return1m,
+          return3m: performance.return3m,
+          return1y: performance.return1y,
+          dividendYield: performance.dividendYield,
+        } : null,
+        etfInfo: {
+          category: etfInfo.category,
+          issuer: etfInfo.issuer,
+          expenseRatio: etfInfo.expenseRatio,
+          description: etfInfo.description,
+        },
+      },
     });
   } catch (error) {
     console.error('Failed to fetch debate history:', error);
@@ -126,5 +152,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-

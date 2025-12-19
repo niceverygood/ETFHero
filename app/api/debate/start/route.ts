@@ -1,19 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createDebateSession, getSymbolByCode } from '@/lib/supabase';
-
-// Fallback ETF lookup
-const MOCK_ETFS: Record<string, { name: string; sector: string }> = {
-  '069500': { name: 'KODEX 200', sector: '시장지수' },
-  '102110': { name: 'TIGER 200', sector: '시장지수' },
-  '360750': { name: 'TIGER 미국S&P500', sector: '해외지수' },
-  '133690': { name: 'TIGER 미국나스닥100', sector: '해외지수' },
-  '091160': { name: 'KODEX 반도체', sector: '테마/섹터' },
-  '305720': { name: 'KODEX 2차전지산업', sector: '테마/섹터' },
-  '161510': { name: 'ARIRANG 고배당주', sector: '배당/가치' },
-  '364980': { name: 'TIGER AI반도체핵심공정', sector: '테마/섹터' },
-  'SPY': { name: 'SPDR S&P 500 ETF', sector: 'US Market' },
-  'QQQ': { name: 'Invesco QQQ Trust', sector: 'US Tech' },
-};
+import { findETFByTicker, ALL_ETFS } from '@/lib/data/etf-list';
+import { getCachedETFPrice } from '@/lib/external/yahoo-finance';
+import { fetchNaverETFDetail } from '@/lib/external/naver-etf';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,31 +16,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Try to get symbol from Supabase first
-    let symbolInfo: { name: string; sector: string | null } | null = null;
+    // 1. etf-list에서 ETF 정보 조회
+    let symbolInfo: { name: string; sector: string | null; price?: number } | null = null;
+    const etfInfo = findETFByTicker(symbol);
     
-    try {
-      const dbSymbol = await getSymbolByCode(symbol);
-      if (dbSymbol) {
-        symbolInfo = { name: dbSymbol.name, sector: dbSymbol.sector };
+    if (etfInfo) {
+      symbolInfo = { 
+        name: etfInfo.nameKo || etfInfo.name, 
+        sector: etfInfo.category 
+      };
+      
+      // 2. 실시간 가격 조회
+      try {
+        if (etfInfo.region === 'US') {
+          const quote = await getCachedETFPrice(symbol);
+          if (quote) {
+            symbolInfo.price = quote.price;
+          }
+        } else if (etfInfo.region === 'KR') {
+          const naverData = await fetchNaverETFDetail(symbol);
+          if (naverData) {
+            symbolInfo.price = naverData.price;
+          }
+        }
+      } catch (e) {
+        console.log('Price fetch failed, continuing without price');
       }
-    } catch (e) {
-      console.log('Supabase lookup failed, using fallback:', e);
     }
-    
-    // Fallback to mock data
+
+    // 3. Supabase에서 조회 시도 (DB에 있으면)
     if (!symbolInfo) {
-      symbolInfo = MOCK_ETFS[symbol];
+      try {
+        const dbSymbol = await getSymbolByCode(symbol);
+        if (dbSymbol) {
+          symbolInfo = { name: dbSymbol.name, sector: dbSymbol.sector };
+        }
+      } catch (e) {
+        console.log('Supabase lookup failed:', e);
+      }
     }
 
     if (!symbolInfo) {
       return NextResponse.json(
-        { success: false, error: 'Unknown symbol' },
+        { success: false, error: 'Unknown ETF symbol' },
         { status: 404 }
       );
     }
 
-    // Try to create session in Supabase
+    // 4. Supabase에 세션 생성 시도
     let sessionId: string;
     try {
       const session = await createDebateSession(symbol, symbolInfo.name);
@@ -68,6 +80,7 @@ export async function POST(request: NextRequest) {
       symbol,
       symbolName: symbolInfo.name,
       sector: symbolInfo.sector,
+      currentPrice: symbolInfo.price,
       date: new Date().toISOString().split('T')[0],
       status: 'running',
       round: 0,
@@ -75,7 +88,7 @@ export async function POST(request: NextRequest) {
         {
           id: `${sessionId}-system-0`,
           role: 'SYSTEM',
-          content: `${symbolInfo.name}(${symbol})에 대한 토론을 시작합니다.`,
+          content: `${symbolInfo.name}(${symbol})에 대한 AI 전문가 토론을 시작합니다.${symbolInfo.price ? ` 현재가: $${symbolInfo.price.toFixed(2)}` : ''}`,
           sources: [],
           createdAt: new Date().toISOString(),
         },
