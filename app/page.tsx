@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DisclaimerBar, Header, CharacterAvatar, AIConsultationModal } from '@/components';
+import { CharacterAvatar, AIConsultationModal } from '@/components';
 import { CHARACTERS } from '@/lib/characters';
 import { CalendarSection } from './CalendarSection';
 import type { CharacterType } from '@/lib/llm/types';
@@ -18,9 +18,7 @@ export default function HomePage() {
 
   return (
     <>
-      <DisclaimerBar />
-      <Header />
-      <main className="min-h-screen relative overflow-hidden">
+      <div className="min-h-screen relative overflow-hidden">
         {/* Background Effects */}
         <div className="fixed inset-0 bg-dark-950" />
         <div className="fixed inset-0 bg-grid opacity-50" />
@@ -201,8 +199,7 @@ export default function HomePage() {
             </div>
           </div>
         </footer>
-      </main>
-      <DisclaimerBar variant="bottom" compact />
+      </div>
 
       {/* AI Consultation Modal */}
       <AIConsultationModal

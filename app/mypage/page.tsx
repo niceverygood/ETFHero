@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { DisclaimerBar, Header, CharacterAvatar, MyPortfolioViewer, FeedList } from '@/components';
+import { CharacterAvatar, MyPortfolioViewer, FeedList } from '@/components';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { supabase } from '@/lib/supabase/client';
 import { CHARACTERS } from '@/lib/characters';
@@ -214,8 +214,6 @@ function MyPageContent() {
 
   return (
     <>
-      <DisclaimerBar />
-      <Header />
       <main className="min-h-screen bg-dark-950 pt-32 pb-20">
         <div className="container-app">
           {/* Profile Header */}
@@ -662,7 +660,6 @@ function MyPageContent() {
           </div>
         </div>
       </main>
-      <DisclaimerBar variant="bottom" compact />
     </>
   );
 }

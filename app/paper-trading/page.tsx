@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Header, DisclaimerBar, CharacterAvatar } from '@/components';
+import { CharacterAvatar } from '@/components';
 import { CHARACTERS } from '@/lib/characters';
 import type { CharacterType } from '@/lib/types';
 
@@ -305,8 +305,6 @@ export default function PaperTradingPage() {
 
   return (
     <div className="min-h-screen bg-dark-950">
-      <DisclaimerBar />
-      <Header />
       
       <main className="pt-32 pb-20">
         <div className="container-app">

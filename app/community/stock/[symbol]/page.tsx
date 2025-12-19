@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { DisclaimerBar, Header } from '@/components';
+import { } from '@/components';
 
 interface Post {
   id: string;
@@ -201,8 +201,6 @@ export default function StockRoomPage() {
 
   return (
     <>
-      <DisclaimerBar />
-      <Header />
       <main className="min-h-screen bg-dark-950 pt-28 pb-16">
         <div className="container-app max-w-3xl">
           {/* Back Button */}

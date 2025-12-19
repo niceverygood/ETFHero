@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { DisclaimerBar, Header, SkeletonList, CharacterAvatar } from '@/components';
+import { SkeletonList, CharacterAvatar } from '@/components';
 import type { CharacterType } from '@/lib/llm/types';
 
 interface Top5Item {
@@ -132,8 +132,6 @@ export default function VerdictPage() {
 
   return (
     <>
-      <DisclaimerBar />
-      <Header />
       <main className="min-h-screen bg-dark-950 pt-24 sm:pt-28 lg:pt-32 pb-16">
         <div className="container-app px-4 sm:px-6">
           {/* AI Consensus Header */}
@@ -374,7 +372,6 @@ export default function VerdictPage() {
           )}
         </div>
       </main>
-      <DisclaimerBar variant="bottom" compact />
     </>
   );
 }

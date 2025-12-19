@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CharacterAvatar } from '@/components/CharacterAvatar';
-import { DisclaimerBar, Header } from '@/components';
+import { } from '@/components';
 
 // AI 의견 메시지 인터페이스
 interface AIOpinionMessage {
@@ -255,8 +255,6 @@ export default function HeroDetailPage() {
   
   return (
     <>
-      <DisclaimerBar />
-      <Header />
       <main className="min-h-screen bg-dark-950 pt-24 sm:pt-28 lg:pt-32 pb-20">
         <div className="container-app">
         {/* Back Button */}
@@ -710,7 +708,6 @@ export default function HeroDetailPage() {
         </div>
         </div>
       </main>
-      <DisclaimerBar variant="bottom" compact />
     </>
   );
 }

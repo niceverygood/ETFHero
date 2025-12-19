@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { DisclaimerBar, Header, PaywallModal, CharacterAvatarGroup } from '@/components';
+import { PaywallModal, CharacterAvatarGroup } from '@/components';
 
 const MOCK_REPORT = {
   id: '1',
@@ -32,8 +32,6 @@ export default function ReportPage() {
 
   return (
     <>
-      <DisclaimerBar />
-      <Header />
       <main className="min-h-screen bg-dark-950 pt-32 pb-16">
         <div className="container-narrow">
           {/* Breadcrumb */}
@@ -131,7 +129,6 @@ export default function ReportPage() {
         price={MOCK_REPORT.price}
       />
       
-      <DisclaimerBar variant="bottom" compact />
     </>
   );
 }

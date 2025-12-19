@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { DisclaimerBar, Header, CharacterAvatar, AIPortfolioSimulator } from '@/components';
+import { CharacterAvatar, AIPortfolioSimulator } from '@/components';
 import { CHARACTERS } from '@/lib/characters';
 import {
   generatePortfolioHistory,
@@ -424,8 +424,6 @@ export default function ArchivePage() {
 
   return (
     <>
-      <DisclaimerBar />
-      <Header />
       <main className="min-h-screen bg-dark-950 pt-32 pb-16">
         <div className="container-app">
           {/* Page Header */}
@@ -526,7 +524,6 @@ export default function ArchivePage() {
           </div>
         </div>
       </main>
-      <DisclaimerBar variant="bottom" compact />
     </>
   );
 }

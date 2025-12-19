@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { DisclaimerBar, Header, CharacterAvatar, WatchlistButton, StockSearchModal } from '@/components';
+import { CharacterAvatar, WatchlistButton, StockSearchModal } from '@/components';
 import { CharacterDetailModal } from '@/components/CharacterDetailModal';
 import { CHARACTERS, CharacterInfo } from '@/lib/characters';
 import { useDebateHistory } from '@/lib/hooks';
@@ -825,8 +825,6 @@ export default function BattlePage() {
 
   return (
     <>
-      <DisclaimerBar />
-      <Header />
       <main className="min-h-screen bg-dark-950 pt-28 pb-16">
         <div className="container-app">
           <div className="grid lg:grid-cols-4 gap-8">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { DisclaimerBar, Header } from '@/components';
+import { } from '@/components';
 import { POPULAR_HOLDINGS } from '@/lib/data/etf-holdings';
 
 interface ETFResult {
@@ -89,8 +89,6 @@ export default function HoldingsSearchPage() {
 
   return (
     <>
-      <DisclaimerBar />
-      <Header />
       <main className="min-h-screen bg-dark-950 pt-24 pb-20">
         <div className="container-app">
           {/* Hero Section */}
@@ -314,7 +312,6 @@ export default function HoldingsSearchPage() {
           )}
         </div>
       </main>
-      <DisclaimerBar variant="bottom" compact />
     </>
   );
 }

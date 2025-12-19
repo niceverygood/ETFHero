@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { DisclaimerBar, Header } from '@/components';
+import { } from '@/components';
 
 interface Comment {
   id: string;
@@ -122,8 +122,6 @@ export default function PostDetailPage() {
   if (isLoading) {
     return (
       <>
-        <DisclaimerBar />
-        <Header />
         <main className="min-h-screen bg-dark-950 pt-28 pb-16">
           <div className="container-app max-w-3xl">
             <div className="flex items-center justify-center py-20">
@@ -138,8 +136,6 @@ export default function PostDetailPage() {
   if (!post) {
     return (
       <>
-        <DisclaimerBar />
-        <Header />
         <main className="min-h-screen bg-dark-950 pt-28 pb-16">
           <div className="container-app max-w-3xl text-center py-20">
             <h2 className="text-xl font-semibold text-dark-300 mb-4">게시글을 찾을 수 없습니다</h2>
@@ -156,8 +152,6 @@ export default function PostDetailPage() {
 
   return (
     <>
-      <DisclaimerBar />
-      <Header />
       <main className="min-h-screen bg-dark-950 pt-28 pb-16">
         <div className="container-app max-w-3xl">
           {/* Back Button */}

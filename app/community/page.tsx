@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { DisclaimerBar, Header } from '@/components';
+import { } from '@/components';
 
 interface Post {
   id: string;
@@ -304,8 +304,6 @@ export default function CommunityPage() {
 
   return (
     <>
-      <DisclaimerBar />
-      <Header />
       <main className="min-h-screen bg-dark-950 pt-24 sm:pt-28 pb-16">
         <div className="container-app px-4 sm:px-6">
           <div className="grid lg:grid-cols-4 gap-6 lg:gap-8">

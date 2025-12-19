@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { DisclaimerBar, Header, CharacterAvatar, AIConsultationModal, MultiExpertConsultation, StockSearchModal, useToast } from '@/components';
+import { CharacterAvatar, AIConsultationModal, MultiExpertConsultation, StockSearchModal, useToast } from '@/components';
 import { CHARACTERS } from '@/lib/characters';
 import { findETFByTicker } from '@/lib/data/etf-list';
 import type { CharacterType } from '@/lib/types';
@@ -111,8 +111,6 @@ export default function ConsultingPage() {
 
   return (
     <>
-      <DisclaimerBar />
-      <Header />
       <main className="min-h-screen bg-dark-950 pt-28 pb-16">
         <div className="container-app">
           {/* Page Header */}

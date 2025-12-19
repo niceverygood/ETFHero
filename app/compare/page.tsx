@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { DisclaimerBar, Header } from '@/components';
+import { } from '@/components';
 import { ALL_ETFS, POPULAR_ETFS, type ETFProduct } from '@/lib/data/etf-list';
 
 interface CompareData {
@@ -135,8 +135,6 @@ export default function ComparePage() {
 
   return (
     <>
-      <DisclaimerBar />
-      <Header />
       <main className="min-h-screen bg-dark-950 pt-24 pb-20">
         <div className="container-app">
           {/* Hero Section */}
@@ -422,7 +420,6 @@ export default function ComparePage() {
           </div>
         </div>
       </main>
-      <DisclaimerBar variant="bottom" compact />
     </>
   );
 }

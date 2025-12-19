@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { CharacterAvatar } from '@/components/CharacterAvatar';
-import { DisclaimerBar, Header } from '@/components';
 
 // 캐릭터 히어로 데이터
 const HEROES = [
@@ -80,8 +79,6 @@ export default function HeroesPage() {
 
   return (
     <>
-      <DisclaimerBar />
-      <Header />
       <main className="min-h-screen bg-dark-950 pt-24 sm:pt-28 lg:pt-32 pb-20">
       {/* Hero Section */}
       <section className="container-app mb-16">
@@ -196,7 +193,6 @@ export default function HeroesPage() {
         </div>
       </section>
     </main>
-      <DisclaimerBar variant="bottom" compact />
     </>
   );
 }

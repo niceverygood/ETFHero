@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { DisclaimerBar, Header } from '@/components';
+import { } from '@/components';
 import { FeedList, FollowButton } from '@/components/Community';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
@@ -108,8 +108,6 @@ export default function UserProfilePage() {
   if (isLoading) {
     return (
       <>
-        <DisclaimerBar />
-        <Header />
         <main className="min-h-screen bg-dark-950 pt-32 pb-20">
           <div className="container-app">
             <div className="animate-pulse">
@@ -131,8 +129,6 @@ export default function UserProfilePage() {
   if (!profile) {
     return (
       <>
-        <DisclaimerBar />
-        <Header />
         <main className="min-h-screen bg-dark-950 pt-32 pb-20">
           <div className="container-app text-center py-20">
             <div className="text-6xl mb-4">😕</div>
@@ -147,8 +143,6 @@ export default function UserProfilePage() {
 
   return (
     <>
-      <DisclaimerBar />
-      <Header />
       <main className="min-h-screen bg-dark-950 pt-20 pb-20">
         <div className="container-app">
           {/* Cover Image */}
@@ -406,7 +400,6 @@ export default function UserProfilePage() {
           </div>
         )}
       </main>
-      <DisclaimerBar variant="bottom" compact />
     </>
   );
 }
