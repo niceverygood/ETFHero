@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { UserMenu } from './UserMenu';
 
 const NAV_LINKS = [
+  { href: '/signals', label: '🎯 시그널' },
   { href: '/verdict', label: 'Top 5' },
   { href: '/heroes', label: 'ETF Heros' },
   { href: '/backtest', label: '백테스트' },
