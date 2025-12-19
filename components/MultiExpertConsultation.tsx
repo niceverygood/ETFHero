@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { CharacterAvatar } from './CharacterAvatar';
 import { CHARACTERS } from '@/lib/characters';
 import type { CharacterType } from '@/lib/llm/types';
@@ -39,6 +39,9 @@ const SUGGESTED_QUESTIONS = [
   '주요 리스크는?',
 ];
 
+// 순서대로 처리할 전문가 목록
+const EXPERT_ORDER: CharacterType[] = ['claude', 'gemini', 'gpt'];
+
 export function MultiExpertConsultation({ 
   isOpen, 
   onClose, 
@@ -48,111 +51,174 @@ export function MultiExpertConsultation({
 }: MultiExpertConsultationProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingExperts, setLoadingExperts] = useState<CharacterType[]>([]);
-  const [isTyping, setIsTyping] = useState(false);
-  const [currentTypingMessage, setCurrentTypingMessage] = useState('');
-  const [typingCharacter, setTypingCharacter] = useState<CharacterType | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [currentExpertIndex, setCurrentExpertIndex] = useState(-1);
+  const [displayText, setDisplayText] = useState('');
+  const [isTypingAnimation, setIsTypingAnimation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // 모달 열릴 때 초기화 및 초기 분석 요청
+  // 현재 응답 중인 전문가
+  const currentExpert = currentExpertIndex >= 0 ? EXPERT_ORDER[currentExpertIndex] : null;
+  
+  // 완료된 전문가 목록
+  const completedExperts = EXPERT_ORDER.slice(0, Math.max(0, currentExpertIndex));
+
+  // 스크롤
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, displayText]);
+
+  // 모달 열릴 때 초기화
   useEffect(() => {
     if (isOpen && stockData && stockName) {
       setMessages([]);
       setInput('');
-      setIsLoading(false);
-      requestInitialAnalysis();
+      setIsProcessing(false);
+      setCurrentExpertIndex(-1);
+      setDisplayText('');
+      setIsTypingAnimation(false);
+      
+      // 초기 분석 시작
+      requestExpertAnalysis(true);
     }
+    
+    return () => {
+      // 모달 닫힐 때 진행 중인 요청 취소
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [isOpen, stockData, stockName]);
 
-  // 메시지 추가 시 스크롤
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, currentTypingMessage]);
+  // 타이핑 애니메이션
+  const typeText = useCallback(async (text: string): Promise<void> => {
+    setIsTypingAnimation(true);
+    setDisplayText('');
+    
+    const chunkSize = 3;
+    for (let i = 0; i <= text.length; i += chunkSize) {
+      setDisplayText(text.substring(0, i));
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+    
+    setDisplayText(text);
+    await new Promise(resolve => setTimeout(resolve, 100));
+    setIsTypingAnimation(false);
+  }, []);
 
-  // 초기 분석 요청 (3명 모두)
-  const requestInitialAnalysis = async () => {
+  // 전문가 응답 요청
+  const fetchExpertResponse = async (
+    expert: CharacterType, 
+    userMessage: string,
+    conversationHistory: { role: 'user' | 'assistant'; content: string }[],
+    isInitial: boolean
+  ): Promise<string | null> => {
+    try {
+      const response = await fetch('/api/consultation/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          characterType: expert,
+          messages: [...conversationHistory, { role: 'user', content: userMessage }],
+          stockData,
+          isInitialAnalysis: isInitial,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success && data.data?.content) {
+        return data.data.content;
+      }
+      return null;
+    } catch (error) {
+      console.error(`${expert} response error:`, error);
+      return null;
+    }
+  };
+
+  // 순차적으로 전문가 분석 요청
+  const requestExpertAnalysis = async (isInitial: boolean, userQuestion?: string) => {
     if (!stockData || !stockName) return;
 
-    setIsLoading(true);
-    const experts: CharacterType[] = ['claude', 'gemini', 'gpt'];
-    setLoadingExperts([...experts]);
+    setIsProcessing(true);
+    
+    // 대화 히스토리 구성
+    const conversationHistory = messages
+      .filter(m => m.type === 'user' || m.characterType)
+      .map(m => ({
+        role: m.type === 'user' ? 'user' as const : 'assistant' as const,
+        content: m.type === 'user' ? m.content : `[${CHARACTERS[m.characterType!].name}] ${m.content}`,
+      }));
 
-    for (const expert of experts) {
-      try {
-        // 현재 전문가 응답 대기 상태로 설정
-        setTypingCharacter(expert);
-        setIsTyping(true);
-        setCurrentTypingMessage('');
+    const question = isInitial
+      ? `${stockName}(${stockSymbol})에 대한 당신의 투자 관점과 핵심 의견을 간단히 말해주세요. 현재가 ${stockData.currentPrice?.toLocaleString() || '정보없음'}원입니다.`
+      : userQuestion!;
 
-        const response = await fetch('/api/consultation/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            characterType: expert,
-            messages: [{
-              role: 'user',
-              content: `${stockName}(${stockSymbol})에 대한 당신의 투자 관점과 핵심 의견을 간단히 말해주세요. 현재가 ${stockData.currentPrice?.toLocaleString() || '정보없음'}원입니다.`,
-            }],
-            stockData,
-            isInitialAnalysis: true,
-          }),
-        });
-
-        const data = await response.json();
+    // 각 전문가를 순서대로 처리
+    for (let i = 0; i < EXPERT_ORDER.length; i++) {
+      const expert = EXPERT_ORDER[i];
+      
+      // 현재 전문가 설정
+      setCurrentExpertIndex(i);
+      setDisplayText('');
+      
+      // 잠시 대기 (로딩 표시)
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // API 호출
+      const response = await fetchExpertResponse(expert, question, conversationHistory, isInitial);
+      
+      if (response) {
+        // 타이핑 애니메이션
+        await typeText(response);
         
-        if (data.success && data.data?.content) {
-          const content = data.data.content;
-          const messageId = `${expert}-initial-${Date.now()}`;
-          
-          // 타이핑 애니메이션 (더 부드럽게)
-          const chunkSize = 5;
-          for (let i = 0; i <= content.length; i += chunkSize) {
-            setCurrentTypingMessage(content.substring(0, i));
-            await new Promise(resolve => setTimeout(resolve, 8));
-          }
-          // 전체 내용 표시
-          setCurrentTypingMessage(content);
-          await new Promise(resolve => setTimeout(resolve, 100));
-          
-          // 타이핑 상태 해제 후 메시지 추가 (순서 중요!)
-          setIsTyping(false);
-          setTypingCharacter(null);
-          setCurrentTypingMessage('');
-          
-          // 약간의 딜레이 후 메시지 추가 (깜빡임 방지)
-          await new Promise(resolve => setTimeout(resolve, 50));
-          
-          setMessages(prev => [...prev, {
-            id: messageId,
-            type: 'expert',
-            content: content,
-            characterType: expert,
-            timestamp: new Date(),
-          }]);
-          
-          // 다음 전문가 전 잠시 대기
-          await new Promise(resolve => setTimeout(resolve, 300));
-        }
-      } catch (error) {
-        console.error(`${expert} initial analysis error:`, error);
-        // 에러 발생 시에도 상태 정리
-        setIsTyping(false);
-        setTypingCharacter(null);
-        setCurrentTypingMessage('');
-      } finally {
-        setLoadingExperts(prev => prev.filter(e => e !== expert));
+        // 메시지 추가
+        const messageId = `${expert}-${Date.now()}`;
+        setMessages(prev => [...prev, {
+          id: messageId,
+          type: 'expert',
+          content: response,
+          characterType: expert,
+          timestamp: new Date(),
+        }]);
+        
+        // 히스토리에 추가
+        conversationHistory.push({
+          role: 'assistant',
+          content: `[${CHARACTERS[expert].name}] ${response}`,
+        });
+      } else {
+        // 에러 메시지 추가
+        setMessages(prev => [...prev, {
+          id: `${expert}-error-${Date.now()}`,
+          type: 'expert',
+          content: '응답을 받지 못했습니다.',
+          characterType: expert,
+          timestamp: new Date(),
+        }]);
+      }
+      
+      // 타이핑 상태 초기화
+      setDisplayText('');
+      
+      // 다음 전문가 전 대기
+      if (i < EXPERT_ORDER.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
     }
 
-    setIsLoading(false);
+    // 완료
+    setCurrentExpertIndex(-1);
+    setIsProcessing(false);
     inputRef.current?.focus();
   };
 
   // 질문 제출
   const handleSubmit = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isProcessing) return;
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -162,88 +228,10 @@ export function MultiExpertConsultation({
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const question = input.trim();
     setInput('');
-    setIsLoading(true);
 
-    const experts: CharacterType[] = ['claude', 'gemini', 'gpt'];
-    setLoadingExperts([...experts]);
-
-    // 대화 히스토리 구성
-    const conversationHistory = messages
-      .filter(m => m.type === 'user' || m.characterType)
-      .map(m => ({
-        role: m.type === 'user' ? 'user' as const : 'assistant' as const,
-        content: m.type === 'user' ? m.content : `[${CHARACTERS[m.characterType!].name}] ${m.content}`,
-      }));
-
-    for (const expert of experts) {
-      try {
-        setTypingCharacter(expert);
-        setIsTyping(true);
-        setCurrentTypingMessage('');
-
-        const response = await fetch('/api/consultation/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            characterType: expert,
-            messages: [...conversationHistory, { role: 'user', content: userMessage.content }],
-            stockData,
-          }),
-        });
-
-        const data = await response.json();
-        
-        if (data.success && data.data?.content) {
-          const content = data.data.content;
-          const messageId = `${expert}-${Date.now()}`;
-          
-          // 타이핑 애니메이션
-          for (let i = 0; i <= content.length; i += 5) {
-            setCurrentTypingMessage(content.substring(0, i));
-            await new Promise(resolve => setTimeout(resolve, 8));
-          }
-          setCurrentTypingMessage(content);
-          await new Promise(resolve => setTimeout(resolve, 100));
-          
-          // 타이핑 상태 해제 후 메시지 추가
-          setIsTyping(false);
-          setTypingCharacter(null);
-          setCurrentTypingMessage('');
-          
-          await new Promise(resolve => setTimeout(resolve, 50));
-          
-          setMessages(prev => [...prev, {
-            id: messageId,
-            type: 'expert',
-            content: content,
-            characterType: expert,
-            timestamp: new Date(),
-          }]);
-          
-          await new Promise(resolve => setTimeout(resolve, 300));
-        }
-      } catch (error) {
-        console.error(`${expert} response error:`, error);
-        setIsTyping(false);
-        setTypingCharacter(null);
-        setCurrentTypingMessage('');
-        setMessages(prev => [...prev, {
-          id: `${expert}-error-${Date.now()}`,
-          type: 'expert',
-          content: '응답을 받지 못했습니다. 다시 시도해주세요.',
-          characterType: expert,
-          timestamp: new Date(),
-        }]);
-      } finally {
-        setLoadingExperts(prev => prev.filter(e => e !== expert));
-      }
-    }
-
-    setIsTyping(false);
-    setTypingCharacter(null);
-    setCurrentTypingMessage('');
-    setIsLoading(false);
+    await requestExpertAnalysis(false, question);
   };
 
   if (!isOpen) return null;
@@ -256,7 +244,7 @@ export function MultiExpertConsultation({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex -space-x-2">
-                {(['claude', 'gemini', 'gpt'] as CharacterType[]).map((char) => (
+                {EXPERT_ORDER.map((char) => (
                   <div key={char} className="ring-2 ring-dark-900 rounded-full">
                     <CharacterAvatar character={char} size="sm" />
                   </div>
@@ -296,38 +284,25 @@ export function MultiExpertConsultation({
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* 초기 로딩 */}
-          {messages.length === 0 && isLoading && (
+          {/* 초기 로딩 (메시지 없고 처리 중일 때) */}
+          {messages.length === 0 && isProcessing && currentExpertIndex === 0 && !displayText && (
             <div className="text-center py-8">
-              {/* 스피너 인디케이터 */}
+              {/* 스피너 */}
               <div className="relative w-24 h-24 mx-auto mb-6">
-                {/* 외부 링 - 회전 */}
                 <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-brand-500 border-r-purple-500 animate-spin" />
-                {/* 중간 링 - 반대로 회전 */}
                 <div className="absolute inset-2 rounded-full border-4 border-transparent border-b-blue-500 border-l-amber-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
-                {/* 내부 펄스 */}
                 <div className="absolute inset-4 rounded-full bg-gradient-to-br from-brand-500/20 to-purple-500/20 animate-pulse" />
               </div>
               
               <div className="flex justify-center gap-4 mb-4">
-                {(['claude', 'gemini', 'gpt'] as CharacterType[]).map((char, idx) => (
+                {EXPERT_ORDER.map((char, idx) => (
                   <div 
                     key={char} 
-                    className={`relative transition-all duration-500 ${loadingExperts.includes(char) ? 'opacity-100 scale-100' : 'opacity-30 scale-90'}`}
+                    className={`relative transition-all duration-500 ${idx === 0 ? 'opacity-100 scale-100' : 'opacity-30 scale-90'}`}
                   >
                     <CharacterAvatar character={char} size="lg" />
-                    {loadingExperts.includes(char) && (
-                      <div 
-                        className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-ping"
-                        style={{ animationDelay: `${idx * 200}ms` }}
-                      />
-                    )}
-                    {!loadingExperts.includes(char) && messages.some(m => m.characterType === char) && (
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                        <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
+                    {idx === 0 && (
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-ping" />
                     )}
                   </div>
                 ))}
@@ -340,24 +315,20 @@ export function MultiExpertConsultation({
               {/* 진행 상태 */}
               <div className="flex items-center justify-center gap-2 text-xs text-dark-500">
                 <span className="inline-flex items-center gap-1">
-                  <span className={`w-2 h-2 rounded-full ${loadingExperts.includes('claude') ? 'bg-blue-500 animate-pulse' : messages.some(m => m.characterType === 'claude') ? 'bg-green-500' : 'bg-dark-600'}`} />
+                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                   Claude Lee
                 </span>
                 <span>→</span>
                 <span className="inline-flex items-center gap-1">
-                  <span className={`w-2 h-2 rounded-full ${loadingExperts.includes('gemini') ? 'bg-purple-500 animate-pulse' : messages.some(m => m.characterType === 'gemini') ? 'bg-green-500' : 'bg-dark-600'}`} />
-                  Gemi Nine
+                  <span className="w-2 h-2 rounded-full bg-dark-600" />
+                  제미나인
                 </span>
                 <span>→</span>
                 <span className="inline-flex items-center gap-1">
-                  <span className={`w-2 h-2 rounded-full ${loadingExperts.includes('gpt') ? 'bg-amber-500 animate-pulse' : messages.some(m => m.characterType === 'gpt') ? 'bg-green-500' : 'bg-dark-600'}`} />
+                  <span className="w-2 h-2 rounded-full bg-dark-600" />
                   G.P. Taylor
                 </span>
               </div>
-              
-              <p className="text-dark-500 text-xs mt-4">
-                3명의 전문가가 순차적으로 답변합니다. 잠시만 기다려주세요.
-              </p>
             </div>
           )}
 
@@ -394,29 +365,36 @@ export function MultiExpertConsultation({
             }
           })}
 
-          {/* 타이핑 중인 메시지 */}
-          {isTyping && typingCharacter && (
+          {/* 현재 타이핑 중인 메시지 */}
+          {currentExpert && displayText && (
             <div className="flex gap-3">
-              <CharacterAvatar character={typingCharacter} size="md" />
-              <div className={`max-w-[85%] p-3 rounded-2xl rounded-bl-sm ${CHARACTERS[typingCharacter].bgColor}`}>
+              <CharacterAvatar character={currentExpert} size="md" />
+              <div className={`max-w-[85%] p-3 rounded-2xl rounded-bl-sm ${CHARACTERS[currentExpert].bgColor}`}>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-sm font-semibold ${CHARACTERS[typingCharacter].color}`}>
-                    {CHARACTERS[typingCharacter].name}
+                  <span className={`text-sm font-semibold ${CHARACTERS[currentExpert].color}`}>
+                    {CHARACTERS[currentExpert].name}
                   </span>
                 </div>
                 <p className="text-sm text-dark-200 whitespace-pre-wrap leading-relaxed">
-                  {currentTypingMessage}
-                  <span className="inline-block w-0.5 h-4 bg-dark-300 ml-0.5 animate-pulse" />
+                  {displayText}
+                  {isTypingAnimation && (
+                    <span className="inline-block w-0.5 h-4 bg-dark-300 ml-0.5 animate-pulse" />
+                  )}
                 </p>
               </div>
             </div>
           )}
 
-          {/* 다음 전문가 로딩 표시 */}
-          {isLoading && !isTyping && loadingExperts.length > 0 && (
+          {/* 다음 전문가 로딩 표시 (타이핑 중이 아닐 때) */}
+          {isProcessing && currentExpert && !displayText && (
             <div className="flex gap-3">
-              <CharacterAvatar character={loadingExperts[0]} size="md" />
-              <div className={`p-3 rounded-2xl rounded-bl-sm ${CHARACTERS[loadingExperts[0]].bgColor}`}>
+              <CharacterAvatar character={currentExpert} size="md" />
+              <div className={`p-3 rounded-2xl rounded-bl-sm ${CHARACTERS[currentExpert].bgColor}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-sm font-semibold ${CHARACTERS[currentExpert].color}`}>
+                    {CHARACTERS[currentExpert].name}
+                  </span>
+                </div>
                 <div className="flex gap-1">
                   <span className="w-2 h-2 bg-dark-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                   <span className="w-2 h-2 bg-dark-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -426,11 +404,36 @@ export function MultiExpertConsultation({
             </div>
           )}
 
+          {/* 진행 상태 표시 (처리 중일 때) */}
+          {isProcessing && messages.length > 0 && (
+            <div className="flex items-center justify-center gap-2 text-xs text-dark-500 py-2">
+              {EXPERT_ORDER.map((expert, idx) => {
+                const isCompleted = messages.some(m => m.characterType === expert);
+                const isCurrent = expert === currentExpert;
+                const isPending = !isCompleted && !isCurrent;
+                
+                return (
+                  <span key={expert} className="inline-flex items-center gap-1">
+                    <span className={`w-2 h-2 rounded-full transition-colors ${
+                      isCompleted ? 'bg-green-500' : 
+                      isCurrent ? `${expert === 'claude' ? 'bg-blue-500' : expert === 'gemini' ? 'bg-purple-500' : 'bg-amber-500'} animate-pulse` : 
+                      'bg-dark-600'
+                    }`} />
+                    <span className={isCompleted ? 'text-green-500' : isCurrent ? 'text-white' : 'text-dark-600'}>
+                      {CHARACTERS[expert].name}
+                    </span>
+                    {idx < EXPERT_ORDER.length - 1 && <span className="mx-1">→</span>}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
           <div ref={messagesEndRef} />
         </div>
 
         {/* Suggested Questions */}
-        {messages.length > 0 && !isLoading && (
+        {messages.length > 0 && !isProcessing && (
           <div className="px-4 pb-2 flex-shrink-0">
             <div className="flex flex-wrap gap-2">
               {SUGGESTED_QUESTIONS.map((q, i) => (
@@ -459,17 +462,17 @@ export function MultiExpertConsultation({
                   handleSubmit();
                 }
               }}
-              placeholder={isLoading ? '전문가들이 응답 중...' : '3명의 전문가에게 질문하세요...'}
-              disabled={isLoading}
+              placeholder={isProcessing ? '전문가들이 응답 중...' : '3명의 전문가에게 질문하세요...'}
+              disabled={isProcessing}
               rows={1}
-              className={`flex-1 px-4 py-3 rounded-xl bg-dark-800 border border-dark-700 text-dark-100 placeholder-dark-500 resize-none focus:outline-none focus:border-brand-500 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`flex-1 px-4 py-3 rounded-xl bg-dark-800 border border-dark-700 text-dark-100 placeholder-dark-500 resize-none focus:outline-none focus:border-brand-500 transition-colors ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
               style={{ minHeight: '48px', maxHeight: '120px' }}
             />
             <button
               onClick={handleSubmit}
-              disabled={!input.trim() || isLoading}
+              disabled={!input.trim() || isProcessing}
               className={`px-4 rounded-xl font-medium transition-colors ${
-                input.trim() && !isLoading
+                input.trim() && !isProcessing
                   ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:opacity-90'
                   : 'bg-dark-800 text-dark-600 cursor-not-allowed'
               }`}
