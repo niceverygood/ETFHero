@@ -9,9 +9,9 @@ const NAV_LINKS = [
   { href: '/verdict', label: 'Top 5' },
   { href: '/heroes', label: 'ETF Heros' },
   { href: '/backtest', label: '백테스트' },
+  { href: '/dividend', label: '배당' },
   { href: '/compare', label: '비교' },
   { href: '/battle/SPY', label: 'Debate' },
-  { href: '/consulting', label: 'Consulting' },
 ];
 
 export function Header() {
