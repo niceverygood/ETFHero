@@ -131,20 +131,24 @@ export default function HomePage() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
               {[
-                { icon: '🇺🇸', name: '미국 대형주', count: '25+ ETFs' },
-                { icon: '💻', name: '기술/반도체', count: '15+ ETFs' },
-                { icon: '📈', name: '성장주', count: '12+ ETFs' },
-                { icon: '💰', name: '배당', count: '18+ ETFs' },
-                { icon: '📜', name: '채권', count: '20+ ETFs' },
-                { icon: '🌍', name: '해외/신흥국', count: '22+ ETFs' },
-                { icon: '🏢', name: '부동산', count: '10+ ETFs' },
-                { icon: '🎯', name: '테마', count: '30+ ETFs' },
+                { id: 'us-large-cap', icon: '🇺🇸', name: '미국 대형주', count: '25+ ETFs', color: 'from-blue-500/20 to-blue-600/10' },
+                { id: 'tech-semi', icon: '💻', name: '기술/반도체', count: '15+ ETFs', color: 'from-purple-500/20 to-purple-600/10' },
+                { id: 'growth', icon: '📈', name: '성장주', count: '12+ ETFs', color: 'from-green-500/20 to-green-600/10' },
+                { id: 'dividend', icon: '💰', name: '배당', count: '18+ ETFs', color: 'from-amber-500/20 to-amber-600/10' },
+                { id: 'bond', icon: '📜', name: '채권', count: '20+ ETFs', color: 'from-slate-500/20 to-slate-600/10' },
+                { id: 'international', icon: '🌍', name: '해외/신흥국', count: '22+ ETFs', color: 'from-cyan-500/20 to-cyan-600/10' },
+                { id: 'real-estate', icon: '🏢', name: '부동산', count: '10+ ETFs', color: 'from-orange-500/20 to-orange-600/10' },
+                { id: 'thematic', icon: '🎯', name: '테마', count: '30+ ETFs', color: 'from-pink-500/20 to-pink-600/10' },
               ].map((category) => (
-                <div key={category.name} className="card-interactive text-center py-6">
-                  <div className="text-3xl mb-2">{category.icon}</div>
-                  <h3 className="font-medium text-dark-200 mb-1">{category.name}</h3>
+                <button
+                  key={category.id}
+                  onClick={() => router.push(`/category/${category.id}`)}
+                  className={`card-interactive text-center py-6 bg-gradient-to-br ${category.color} hover:scale-105 transition-all duration-300 group`}
+                >
+                  <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">{category.icon}</div>
+                  <h3 className="font-medium text-dark-200 mb-1 group-hover:text-white transition-colors">{category.name}</h3>
                   <p className="text-xs text-dark-500">{category.count}</p>
-                </div>
+                </button>
               ))}
             </div>
           </div>
