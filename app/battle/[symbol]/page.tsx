@@ -428,14 +428,14 @@ function FinalConsensusSummary({
         </div>
         
         {/* Main Consensus */}
-        <div className="p-6 rounded-xl bg-dark-800/50 border border-dark-700/50 mb-6">
-          <div className="grid grid-cols-2 gap-6">
+        <div className="p-4 sm:p-6 rounded-xl bg-dark-800/50 border border-dark-700/50 mb-6">
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-4 sm:gap-6">
             <div className="text-center">
               <div className="text-xs text-dark-500 mb-2">평균 목표가</div>
-              <div className="text-3xl font-bold text-brand-400">
+              <div className="text-2xl sm:text-3xl font-bold text-brand-400">
                 {formatCurrency(Math.round(avgTarget), currency)}
               </div>
-              <div className={`text-sm font-medium mt-1 ${
+              <div className={`text-xs sm:text-sm font-medium mt-1 ${
                 parseFloat(avgUpside) >= 0 ? 'text-emerald-400' : 'text-red-400'
               }`}>
                 현재가 대비 {parseFloat(avgUpside) >= 0 ? '+' : ''}{avgUpside}%
@@ -443,10 +443,10 @@ function FinalConsensusSummary({
             </div>
             <div className="text-center">
               <div className="text-xs text-dark-500 mb-2">예상 달성 시점</div>
-              <div className="text-3xl font-bold text-dark-100">
+              <div className="text-2xl sm:text-3xl font-bold text-dark-100">
                 {consensusDate}
               </div>
-              <div className="text-sm text-dark-500 mt-1">
+              <div className="text-xs sm:text-sm text-dark-500 mt-1">
                 AI 3인 합의 예측
               </div>
             </div>
@@ -456,26 +456,26 @@ function FinalConsensusSummary({
         {/* Individual Targets */}
         <div className="mb-6">
           <div className="text-xs text-dark-500 mb-3">개별 AI 목표가</div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 sm:gap-3">
             {targets.map((target) => {
               const char = CHARACTERS[target.character as CharacterType];
               const upside = ((target.targetPrice - currentPrice) / currentPrice * 100).toFixed(1);
               return (
-                <div key={target.character} className={`p-3 rounded-xl ${char?.bgColor} border border-current/10`}>
-                  <div className="flex items-center gap-2 mb-2">
+                <div key={target.character} className={`p-2 sm:p-3 rounded-xl ${char?.bgColor} border border-current/10`}>
+                  <div className="flex items-center gap-2 mb-1 sm:mb-2">
                     <CharacterAvatar character={target.character as CharacterType} size="sm" />
-                    <span className="text-xs text-dark-400">{char?.name}</span>
+                    <span className="text-2xs sm:text-xs text-dark-400 truncate">{char?.name}</span>
                   </div>
-                  <div className={`text-lg font-bold ${char?.color}`}>
+                  <div className={`text-base sm:text-lg font-bold ${char?.color}`}>
                     {formatCurrency(target.targetPrice, currency)}
                   </div>
                   <div className="flex items-center justify-between mt-1">
-                    <span className={`text-xs ${
+                    <span className={`text-2xs sm:text-xs ${
                       parseFloat(upside) >= 0 ? 'text-emerald-400' : 'text-red-400'
                     }`}>
                       {parseFloat(upside) >= 0 ? '+' : ''}{upside}%
                     </span>
-                    <span className="text-xs text-dark-600">{target.targetDate}</span>
+                    <span className="text-2xs sm:text-xs text-dark-600">{target.targetDate}</span>
                   </div>
                 </div>
               );
@@ -833,47 +833,49 @@ export default function BattlePage() {
               {/* ETF Header */}
               <div className="card mb-6">
                 <div className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                  {/* 모바일/데스크탑 레이아웃 */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                    {/* 왼쪽: 검색버튼 + ETF 정보 */}
+                    <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
                       {/* 종목 검색 버튼 */}
                       <button
                         onClick={() => setIsStockSearchOpen(true)}
-                        className="w-12 h-12 rounded-xl bg-dark-800 hover:bg-dark-700 border border-dark-700 hover:border-brand-500/50 flex items-center justify-center transition-all group"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-dark-800 hover:bg-dark-700 border border-dark-700 hover:border-brand-500/50 flex items-center justify-center transition-all group flex-shrink-0"
                         title="ETF 검색"
                       >
-                        <svg className="w-5 h-5 text-dark-400 group-hover:text-brand-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-dark-400 group-hover:text-brand-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                       </button>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h1 className="text-xl font-bold text-dark-50">{symbolInfo.name}</h1>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h1 className="text-lg sm:text-xl font-bold text-dark-50 truncate">{symbolInfo.name}</h1>
                           <button
                             onClick={() => setIsStockSearchOpen(true)}
-                            className="px-2 py-1 text-xs text-dark-500 hover:text-brand-400 hover:bg-dark-800 rounded transition-colors"
+                            className="px-2 py-1 text-xs text-dark-500 hover:text-brand-400 hover:bg-dark-800 rounded transition-colors flex-shrink-0"
                           >
                             변경
                           </button>
                         </div>
-                        <div className="flex items-center gap-2 text-sm flex-wrap">
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm flex-wrap mt-1">
                           <span className="text-dark-500 font-mono">{symbol}</span>
-                          <span className="text-dark-600">|</span>
-                          <span className="text-dark-500">{symbolInfo.sector}</span>
+                          <span className="text-dark-600 hidden xs:inline">|</span>
+                          <span className="text-dark-500 hidden xs:inline">{symbolInfo.sector}</span>
                           {symbolInfo.price > 0 && (
                             <>
-                              <span className="text-dark-600">|</span>
-                              <span className="text-brand-400 font-semibold">
+                              <span className="text-dark-600 hidden sm:inline">|</span>
+                              <span className="text-brand-400 font-semibold whitespace-nowrap">
                                 {symbolInfo.currency === 'USD' ? '$' : ''}{symbolInfo.price.toLocaleString()}{symbolInfo.currency !== 'USD' ? '원' : ''}
                               </span>
                               {symbolInfo.change !== 0 && (
-                                <span className={`font-medium ${symbolInfo.change > 0 ? 'text-red-400' : 'text-blue-400'}`}>
+                                <span className={`font-medium whitespace-nowrap ${symbolInfo.change > 0 ? 'text-red-400' : 'text-blue-400'}`}>
                                   {symbolInfo.change > 0 ? '▲' : '▼'} {Math.abs(symbolInfo.changePercent).toFixed(2)}%
                                 </span>
                               )}
                             </>
                           )}
                           {symbolInfo.isRealTime && (
-                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">
+                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-500/20 text-green-400 text-2xs sm:text-xs whitespace-nowrap">
                               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                               실시간
                             </span>
@@ -881,18 +883,20 @@ export default function BattlePage() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    
+                    {/* 오른쪽: 관심 등록 + 라운드 */}
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-auto sm:ml-0">
                       {/* Watchlist Button */}
                       <WatchlistButton
                         symbolCode={symbol}
                         symbolName={symbolInfo.name}
                         size="md"
-                        showLabel
+                        showLabel={false}
                       />
                       {round > 0 && (
-                        <div className="flex items-center gap-2">
-                          <span className="badge-brand">Round {round}/4</span>
-                          {isComplete && <span className="badge-success">Complete</span>}
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <span className="badge-brand text-2xs sm:text-xs">R{round}/4</span>
+                          {isComplete && <span className="badge-success text-2xs sm:text-xs">✓</span>}
                         </div>
                     )}
                   </div>

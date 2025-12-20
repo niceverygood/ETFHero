@@ -129,42 +129,42 @@ export default function CategoryPage() {
   return (
     <div className="min-h-screen bg-dark-950">
       {/* Header */}
-      <div className={`bg-gradient-to-r ${style.gradient} py-12`}>
+      <div className={`bg-gradient-to-r ${style.gradient} py-8 sm:py-12`}>
         <div className="container-app">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-sm text-white/70 mb-6">
+          <nav className="flex items-center gap-2 text-xs sm:text-sm text-white/70 mb-4 sm:mb-6">
             <Link href="/" className="hover:text-white">홈</Link>
             <span>/</span>
-            <span className="text-white">{category?.nameKo || '카테고리'}</span>
+            <span className="text-white truncate">{category?.nameKo || '카테고리'}</span>
           </nav>
 
-          <div className="flex items-center gap-4 mb-4">
-            <span className="text-5xl">{style.icon}</span>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white">
+          <div className="flex items-start sm:items-center gap-3 sm:gap-4 mb-4">
+            <span className="text-4xl sm:text-5xl flex-shrink-0">{style.icon}</span>
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white truncate">
                 {category?.nameKo || '로딩 중...'}
               </h1>
-              <p className="text-white/80 mt-2 max-w-2xl">
+              <p className="text-white/80 mt-1 sm:mt-2 max-w-2xl text-sm sm:text-base line-clamp-2">
                 {category?.description}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 mt-6">
-            <span className={`px-4 py-2 rounded-full ${style.bg} text-white font-medium`}>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-4 sm:mt-6">
+            <span className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full ${style.bg} text-white font-medium text-sm`}>
               {etfs.length} ETFs
             </span>
             {selectedETFs.length > 0 && (
               <button
                 onClick={compareSelected}
                 disabled={selectedETFs.length < 2}
-                className={`px-4 py-2 rounded-full font-medium transition ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-medium text-sm transition ${
                   selectedETFs.length >= 2
                     ? 'bg-white text-dark-900 hover:bg-white/90'
                     : 'bg-white/30 text-white/60 cursor-not-allowed'
                 }`}
               >
-                선택한 {selectedETFs.length}개 비교하기
+                선택한 {selectedETFs.length}개 비교
               </button>
             )}
           </div>
@@ -172,15 +172,14 @@ export default function CategoryPage() {
       </div>
 
       {/* Content */}
-      <div className="container-app py-8">
+      <div className={`container-app py-6 sm:py-8 ${selectedETFs.length > 0 ? 'pb-24 sm:pb-20' : ''}`}>
         {/* Sort & Filter Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3 mb-4 sm:mb-6">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-dark-400">정렬:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-sm"
+              className="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-dark-800 border border-dark-700 rounded-lg text-xs sm:text-sm"
             >
               <option value="aum">AUM (자산규모)</option>
               <option value="expenseRatio">보수율</option>
@@ -189,13 +188,13 @@ export default function CategoryPage() {
             </select>
             <button
               onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-              className="p-2 bg-dark-800 border border-dark-700 rounded-lg hover:bg-dark-700"
+              className="p-1.5 sm:p-2 bg-dark-800 border border-dark-700 rounded-lg hover:bg-dark-700 text-sm"
             >
               {sortOrder === 'desc' ? '↓' : '↑'}
             </button>
           </div>
 
-          <div className="text-sm text-dark-400">
+          <div className="text-xs sm:text-sm text-dark-400">
             {selectedETFs.length > 0 && (
               <span>
                 {selectedETFs.length}/5 선택됨
@@ -245,32 +244,32 @@ export default function CategoryPage() {
 
         {/* ETF Grid */}
         {!loading && !error && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {sortedETFs.map((etf) => {
               const isSelected = selectedETFs.includes(etf.ticker);
               return (
                 <div
                   key={etf.ticker}
-                  className={`bg-dark-900 rounded-xl p-6 border-2 transition-all ${
+                  className={`bg-dark-900 rounded-xl p-4 sm:p-6 border-2 transition-all ${
                     isSelected 
                       ? 'border-purple-500 bg-purple-500/5' 
                       : 'border-transparent hover:border-dark-700'
                   }`}
                 >
                   {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-xl ${style.bg} flex items-center justify-center text-xl font-bold`}>
+                  <div className="flex items-start justify-between mb-3 sm:mb-4">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${style.bg} flex items-center justify-center text-base sm:text-xl font-bold flex-shrink-0`}>
                         {etf.ticker.slice(0, 2)}
                       </div>
-                      <div>
-                        <div className="font-bold text-lg">{etf.ticker}</div>
-                        <div className="text-sm text-dark-400">{etf.issuer}</div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-base sm:text-lg truncate">{etf.ticker}</div>
+                        <div className="text-xs sm:text-sm text-dark-400 truncate">{etf.issuer}</div>
                       </div>
                     </div>
                     <button
                       onClick={() => toggleETFSelection(etf.ticker)}
-                      className={`p-2 rounded-lg transition ${
+                      className={`p-1.5 sm:p-2 rounded-lg transition flex-shrink-0 ${
                         isSelected
                           ? 'bg-purple-500 text-white'
                           : 'bg-dark-800 text-dark-400 hover:text-white'
@@ -282,16 +281,16 @@ export default function CategoryPage() {
                   </div>
 
                   {/* Name */}
-                  <h3 className="font-medium text-dark-200 mb-2 line-clamp-2">
+                  <h3 className="font-medium text-dark-200 mb-2 line-clamp-1 sm:line-clamp-2 text-sm sm:text-base">
                     {etf.nameKo || etf.name}
                   </h3>
 
                   {/* Price Info */}
                   {etf.price !== undefined && (
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xl font-bold">${etf.price.toFixed(2)}</span>
+                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                      <span className="text-lg sm:text-xl font-bold">${etf.price.toFixed(2)}</span>
                       {etf.changePercent !== undefined && (
-                        <span className={`text-sm font-medium ${
+                        <span className={`text-xs sm:text-sm font-medium ${
                           etf.changePercent >= 0 ? 'text-green-400' : 'text-red-400'
                         }`}>
                           {etf.changePercent >= 0 ? '+' : ''}{etf.changePercent.toFixed(2)}%
@@ -301,20 +300,20 @@ export default function CategoryPage() {
                   )}
 
                   {/* Metrics */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-dark-800/50 rounded-lg p-2">
-                      <div className="text-xs text-dark-500">보수율</div>
-                      <div className="font-medium">{etf.expenseRatio ? `${etf.expenseRatio}%` : '-'}</div>
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <div className="bg-dark-800/50 rounded-lg p-1.5 sm:p-2">
+                      <div className="text-2xs sm:text-xs text-dark-500">보수율</div>
+                      <div className="font-medium text-sm sm:text-base">{etf.expenseRatio ? `${etf.expenseRatio}%` : '-'}</div>
                     </div>
-                    <div className="bg-dark-800/50 rounded-lg p-2">
-                      <div className="text-xs text-dark-500">AUM</div>
-                      <div className="font-medium">{etf.aum ? formatAUM(etf.aum) : '-'}</div>
+                    <div className="bg-dark-800/50 rounded-lg p-1.5 sm:p-2">
+                      <div className="text-2xs sm:text-xs text-dark-500">AUM</div>
+                      <div className="font-medium text-sm sm:text-base">{etf.aum ? formatAUM(etf.aum) : '-'}</div>
                     </div>
                   </div>
 
-                  {/* Description */}
+                  {/* Description - hide on smallest screens */}
                   {etf.description && (
-                    <p className="text-sm text-dark-500 mb-4 line-clamp-2">
+                    <p className="hidden xs:block text-xs sm:text-sm text-dark-500 mb-3 sm:mb-4 line-clamp-2">
                       {etf.description}
                     </p>
                   )}
@@ -323,13 +322,13 @@ export default function CategoryPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => viewDebate(etf.ticker)}
-                      className={`flex-1 py-2 px-4 rounded-lg font-medium text-sm bg-gradient-to-r ${style.gradient} text-white hover:opacity-90`}
+                      className={`flex-1 py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg font-medium text-xs sm:text-sm bg-gradient-to-r ${style.gradient} text-white hover:opacity-90`}
                     >
                       🎭 AI 토론
                     </button>
                     <Link
                       href={`/compare?tickers=${etf.ticker}`}
-                      className="py-2 px-4 bg-dark-800 text-dark-300 rounded-lg font-medium text-sm hover:bg-dark-700"
+                      className="py-1.5 sm:py-2 px-3 sm:px-4 bg-dark-800 text-dark-300 rounded-lg font-medium text-xs sm:text-sm hover:bg-dark-700"
                     >
                       📊 상세
                     </Link>
@@ -359,15 +358,15 @@ export default function CategoryPage() {
 
       {/* Fixed Compare Bar */}
       {selectedETFs.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-dark-900/95 backdrop-blur border-t border-dark-700 p-4 z-40">
-          <div className="container-app flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-dark-400">비교할 ETF:</span>
-              <div className="flex gap-2">
+        <div className="fixed bottom-0 left-0 right-0 bg-dark-900/95 backdrop-blur border-t border-dark-700 p-3 sm:p-4 z-40">
+          <div className="container-app flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <span className="text-xs sm:text-sm text-dark-400 whitespace-nowrap">비교:</span>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {selectedETFs.map(ticker => (
                   <span
                     key={ticker}
-                    className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm flex items-center gap-1"
+                    className="px-2 sm:px-3 py-0.5 sm:py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs sm:text-sm flex items-center gap-1"
                   >
                     {ticker}
                     <button
@@ -383,13 +382,13 @@ export default function CategoryPage() {
             <button
               onClick={compareSelected}
               disabled={selectedETFs.length < 2}
-              className={`px-6 py-2 rounded-xl font-medium transition ${
+              className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-xl font-medium text-sm transition flex-shrink-0 ${
                 selectedETFs.length >= 2
                   ? 'bg-purple-500 text-white hover:bg-purple-600'
                   : 'bg-dark-700 text-dark-500 cursor-not-allowed'
               }`}
             >
-              {selectedETFs.length >= 2 ? '비교하기' : '2개 이상 선택하세요'}
+              {selectedETFs.length >= 2 ? '비교하기' : '2개 이상 선택'}
             </button>
           </div>
         </div>
