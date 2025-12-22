@@ -4,9 +4,17 @@ import { generateDebatePrompt } from './debate-prompts';
 import { CHARACTER_BACKSTORIES } from './character-worldview';
 import { ANALYSIS_METHODOLOGIES, calculateTargetDate } from './analysis-framework';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Lazy initialization to avoid build-time errors
+let anthropic: Anthropic | null = null;
+
+function getAnthropicClient(): Anthropic {
+  if (!anthropic) {
+    anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+  }
+  return anthropic;
+}
 
 // 새로운 드라마틱 시스템 프롬프트 생성
 function getSystemPrompt(): string {
@@ -181,7 +189,7 @@ export class ClaudeAdapter implements LLMAdapter {
    */
   async generateRaw(prompt: string): Promise<string> {
     try {
-      const response = await anthropic.messages.create({
+      const response = await getAnthropicClient().messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         messages: [
@@ -202,7 +210,7 @@ export class ClaudeAdapter implements LLMAdapter {
     const userPrompt = buildPrompt(context);
 
     try {
-      const response = await anthropic.messages.create({
+      const response = await getAnthropicClient().messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1500,
         system: systemPrompt,

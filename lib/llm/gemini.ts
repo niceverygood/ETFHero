@@ -3,7 +3,15 @@ import type { LLMAdapter, LLMContext, LLMResponse } from './types';
 import { CHARACTER_BACKSTORIES } from './character-worldview';
 import { ANALYSIS_METHODOLOGIES, calculateTargetDate } from './analysis-framework';
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
+// Lazy initialization to avoid build-time errors
+let genAI: GoogleGenerativeAI | null = null;
+
+function getGenAI(): GoogleGenerativeAI {
+  if (!genAI) {
+    genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
+  }
+  return genAI;
+}
 
 // 제미나인의 드라마틱 시스템 프롬프트
 function getSystemPrompt(): string {
@@ -189,7 +197,7 @@ export class GeminiAdapter implements LLMAdapter {
    */
   async generateRaw(prompt: string): Promise<string> {
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const model = getGenAI().getGenerativeModel({ model: 'gemini-2.0-flash' });
       const result = await model.generateContent(prompt);
       return result.response.text();
     } catch (error) {
@@ -203,7 +211,7 @@ export class GeminiAdapter implements LLMAdapter {
 
     try {
       // gemini-2.0-flash 사용 (rate limit이 더 높음)
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const model = getGenAI().getGenerativeModel({ model: 'gemini-2.0-flash' });
       const result = await model.generateContent(userPrompt);
       const text = result.response.text();
       

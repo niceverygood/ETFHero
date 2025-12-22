@@ -3,9 +3,17 @@ import type { LLMAdapter, LLMContext, LLMResponse } from './types';
 import { CHARACTER_BACKSTORIES } from './character-worldview';
 import { ANALYSIS_METHODOLOGIES, calculateTargetDate } from './analysis-framework';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid build-time errors
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openai;
+}
 
 // G.P. 테일러의 드라마틱 시스템 프롬프트
 function getSystemPrompt(): string {
@@ -214,7 +222,7 @@ export class GPTAdapter implements LLMAdapter {
    */
   async generateRaw(prompt: string): Promise<string> {
     try {
-      const response = await openai.chat.completions.create({
+      const response = await getOpenAIClient().chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
           { role: 'user', content: prompt },
@@ -233,7 +241,7 @@ export class GPTAdapter implements LLMAdapter {
     const userPrompt = buildPrompt(context);
 
     try {
-      const response = await openai.chat.completions.create({
+      const response = await getOpenAIClient().chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
