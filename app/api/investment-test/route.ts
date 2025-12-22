@@ -593,6 +593,67 @@ async function callExpertAI(
   return JSON.parse(jsonMatch[0]);
 }
 
+// Fallback expert analysis when AI is not available
+function generateFallbackExpert(
+  character: 'claude' | 'gemini' | 'gpt',
+  investorType: string,
+  typeInfo: typeof INVESTOR_TYPES[string]
+) {
+  const info = CHARACTER_INFO[character];
+  const etfs = typeInfo.compatibleETFs || ['VOO', 'QQQ', 'SCHD'];
+  
+  const characterMessages = {
+    claude: {
+      personalMessage: `${typeInfo.name} 유형이시군요! 제 분석에 따르면, 당신은 ${typeInfo.description.slice(0, 50)}... 펀더멘털 분석을 기반으로 신중한 투자를 추천드립니다.`,
+      strengthAnalysis: `${typeInfo.strengths[0]}이(가) 강점입니다. 이를 활용한 밸류에이션 기반 투자가 적합합니다.`,
+      riskWarning: `${typeInfo.weaknesses[0]}에 주의하세요. 객관적 데이터로 판단하는 습관을 들이세요.`,
+      strategy: `${typeInfo.advice} 분기별 리밸런싱으로 포트폴리오를 점검하세요.`,
+      expectedReturn: '7-12%',
+      riskScore: 3,
+    },
+    gemini: {
+      personalMessage: `Hey! ${typeInfo.name} 타입이시네요! ${typeInfo.nickname}라니 멋지네요. 성장 잠재력이 큰 테마에 투자해보세요!`,
+      strengthAnalysis: `${typeInfo.strengths[0]} - 이 강점으로 미래 성장 산업을 포착할 수 있어요!`,
+      riskWarning: `${typeInfo.weaknesses[0]}만 조심하면 돼요. 분산투자 잊지 마세요!`,
+      strategy: `${typeInfo.advice} 기술 혁신과 메가 트렌드에 올라타세요!`,
+      expectedReturn: '10-20%',
+      riskScore: 4,
+    },
+    gpt: {
+      personalMessage: `${typeInfo.name} 유형이시군요. 40년간 다양한 투자자를 봐왔는데, ${typeInfo.nickname} 스타일은 리스크 관리가 중요합니다.`,
+      strengthAnalysis: `${typeInfo.strengths[0]}은(는) 장기 투자에서 큰 자산입니다.`,
+      riskWarning: `${typeInfo.weaknesses[0]}에 대비해 분산투자와 현금 비중 유지를 권합니다.`,
+      strategy: `${typeInfo.advice} 자산 배분의 원칙을 지키세요.`,
+      expectedReturn: '5-10%',
+      riskScore: 2,
+    },
+  };
+
+  const charAdvice = characterMessages[character];
+  
+  return {
+    character,
+    ...info,
+    personalMessage: charAdvice.personalMessage,
+    strengthAnalysis: charAdvice.strengthAnalysis,
+    riskWarning: charAdvice.riskWarning,
+    recommendations: etfs.slice(0, 4).map((ticker, i) => {
+      const etf = [...US_ETFS, ...KR_ETFS].find(e => e.ticker === ticker);
+      return {
+        ticker,
+        name: etf?.nameKo || etf?.name || ticker,
+        reason: `${typeInfo.name} 유형에 적합한 ETF`,
+        allocation: i === 0 ? 40 : i === 1 ? 30 : i === 2 ? 20 : 10,
+      };
+    }),
+    strategy: charAdvice.strategy,
+    actionItem: `${etfs[0]} ETF를 시작으로 투자 여정을 시작해보세요.`,
+    expectedReturn: charAdvice.expectedReturn,
+    riskScore: charAdvice.riskScore,
+    success: false, // Mark as fallback
+  };
+}
+
 /**
  * GET /api/investment-test
  * 테스트 질문 목록 반환
@@ -604,7 +665,7 @@ export async function GET() {
       questions: TEST_QUESTIONS,
       totalQuestions: TEST_QUESTIONS.length,
       investorTypes: Object.keys(INVESTOR_TYPES).length,
-      aiEnabled: hasOpenRouterKey(),
+      aiEnabled: true, // Always enabled with fallback
       experts: Object.entries(CHARACTER_INFO).map(([key, info]) => ({
         id: key,
         ...info,
@@ -628,13 +689,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!hasOpenRouterKey()) {
-      return NextResponse.json(
-        { success: false, error: 'AI 서비스가 현재 사용 불가능합니다.' },
-        { status: 503 }
-      );
-    }
-
     // 점수 계산
     const scores = calculateScores(answers);
     const investorType = determineInvestorType(scores);
@@ -642,36 +696,34 @@ export async function POST(request: NextRequest) {
 
     console.log(`Investment test: type=${investorType}, scores=`, scores);
 
-    // 3명의 AI 전문가 병렬 호출
-    const expertPromises = (['claude', 'gemini', 'gpt'] as const).map(async (character) => {
-      try {
-        const prompt = buildExpertPrompt(character, investorType, typeInfo, scores);
-        const result = await callExpertAI(character, prompt);
-        return {
-          character,
-          ...CHARACTER_INFO[character],
-          ...result,
-          success: true,
-        };
-      } catch (error) {
-        console.error(`Expert ${character} failed:`, error);
-        return {
-          character,
-          ...CHARACTER_INFO[character],
-          personalMessage: `${CHARACTER_INFO[character].nameKo}의 분석을 불러올 수 없습니다.`,
-          strengthAnalysis: '',
-          riskWarning: '',
-          recommendations: [],
-          strategy: '',
-          actionItem: '',
-          expectedReturn: '',
-          riskScore: 3,
-          success: false,
-        };
-      }
-    });
+    let expertResults;
+    
+    if (hasOpenRouterKey()) {
+      // 3명의 AI 전문가 병렬 호출
+      const expertPromises = (['claude', 'gemini', 'gpt'] as const).map(async (character) => {
+        try {
+          const prompt = buildExpertPrompt(character, investorType, typeInfo, scores);
+          const result = await callExpertAI(character, prompt);
+          return {
+            character,
+            ...CHARACTER_INFO[character],
+            ...result,
+            success: true,
+          };
+        } catch (error) {
+          console.error(`Expert ${character} failed:`, error);
+          return generateFallbackExpert(character, investorType, typeInfo);
+        }
+      });
 
-    const expertResults = await Promise.all(expertPromises);
+      expertResults = await Promise.all(expertPromises);
+    } else {
+      // AI 키가 없으면 기본 분석 제공
+      console.log('No OpenRouter key, using fallback analysis');
+      expertResults = (['claude', 'gemini', 'gpt'] as const).map(character => 
+        generateFallbackExpert(character, investorType, typeInfo)
+      );
+    }
 
     return NextResponse.json({
       success: true,
@@ -692,7 +744,7 @@ export async function POST(request: NextRequest) {
         expertAnalysis: expertResults,
         // 메타 정보
         analyzedAt: new Date().toISOString(),
-        isAIAnalysis: true,
+        isAIAnalysis: hasOpenRouterKey(),
       },
     });
 
