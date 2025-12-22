@@ -618,3 +618,4 @@ function SimpleChart({ data }: { data: DailyValue[] }) {
   );
 }
 
+

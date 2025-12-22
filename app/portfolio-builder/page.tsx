@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -123,7 +123,7 @@ function mapInvestorTypeToProfile(code: string, scores: any): Partial<InvestorPr
   return result;
 }
 
-export default function PortfolioBuilderPage() {
+function PortfolioBuilderContent() {
   const searchParams = useSearchParams();
   const fromTest = searchParams.get('fromTest') === 'true';
   
@@ -775,3 +775,22 @@ export default function PortfolioBuilderPage() {
   );
 }
 
+// Loading fallback for Suspense
+function PortfolioBuilderLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-dark-950 to-dark-900 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+        <p className="text-gray-400">로딩 중...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function PortfolioBuilderPage() {
+  return (
+    <Suspense fallback={<PortfolioBuilderLoading />}>
+      <PortfolioBuilderContent />
+    </Suspense>
+  );
+}

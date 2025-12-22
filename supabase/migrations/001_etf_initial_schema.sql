@@ -234,3 +234,4 @@ INSERT INTO etf_themes (name, name_ko, description, is_trending) VALUES
   ('Value Investing', '가치 투자', '저평가된 기업에 투자', false)
 ON CONFLICT (name) DO NOTHING;
 
+

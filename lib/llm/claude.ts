@@ -101,7 +101,7 @@ function buildPrompt(context: LLMContext): string {
   let targetGuidance = '';
   if (myPreviousTarget) {
     targetGuidance = `
-이전 목표가: ${myPreviousTarget.targetPrice.toLocaleString()}원 (${myPreviousTarget.targetDate})
+이전 예상 수익률: ${myPreviousTarget.targetReturn}% (${myPreviousTarget.timeHorizon})
 다른 분석가 의견을 들은 후 조정 가능합니다.`;
   } else {
     targetGuidance = `
@@ -127,8 +127,8 @@ function buildPrompt(context: LLMContext): string {
 ## 📝 이전 토론
 ${context.previousMessages.map(m => {
   const name = CHARACTER_BACKSTORIES[m.character as keyof typeof CHARACTER_BACKSTORIES].nameKo;
-  const price = m.targetPrice ? ` (목표가: ${m.targetPrice.toLocaleString()}원)` : '';
-  return `**${name}**${price}:\n"${m.content}"`;
+  const returnInfo = m.targetReturn ? ` (예상 수익률: ${m.targetReturn}%)` : '';
+  return `**${name}**${returnInfo}:\n"${m.content}"`;
 }).join('\n\n')}
 
 ⚠️ 위 의견들에 구체적으로 반응하세요. 특히:
@@ -138,14 +138,14 @@ ${context.previousMessages.map(m => {
   }
 
   return `
-종목: ${context.symbol} (${context.symbolName})
-섹터: ${context.sector || '반도체/IT'}
+ETF: ${context.ticker} (${context.etfName})
+카테고리: ${context.category || 'ETF'}
 라운드: ${context.round}/4
 ${targetGuidance}
 ${previousContext}
 
 당신(${CHARACTER_BACKSTORIES.claude.nameKo})의 분석을 제시하세요.
-${context.round === 1 ? '첫 라운드: 종목에 대한 솔직한 첫인상을 밝히세요. 목표가와 목표일을 논리적으로 도출하세요.' : ''}
+${context.round === 1 ? '첫 라운드: ETF에 대한 솔직한 첫인상을 밝히세요. 목표 수익률과 투자 기간을 논리적으로 도출하세요.' : ''}
 ${context.round >= 3 ? '후반 라운드: 과거 상처나 관계의 긴장이 드러날 수 있습니다.' : ''}
 
 JSON으로 응답하세요.`;
@@ -218,37 +218,22 @@ export class ClaudeAdapter implements LLMAdapter {
       const jsonStr = jsonMatch ? jsonMatch[0] : '{}';
       const parsed = JSON.parse(jsonStr);
 
-      // 대사에서 목표가 파싱 (대사와 일치시키기 위해)
-      const contentTargetPrice = parseTargetPriceFromContent(parsed.content || '');
-
-      // 목표가 검증 및 보정
-      // 대사에서 파싱된 값이 있으면 우선 사용
-      let targetPrice = contentTargetPrice || parsed.targetPrice;
-      const currentPrice = context.currentPrice || 70000;
+      // 목표 수익률 계산 (ETF용)
+      let targetReturn = parsed.targetReturn || parsed.targetPrice;
       
-      if (targetPrice) {
-        // 1. 목표가가 현재가의 1% 미만이면 1000을 곱함 (단위 오류 보정)
-        if (targetPrice < currentPrice * 0.01) {
-          console.warn(`Claude target price too low (${targetPrice}), multiplying by 1000`);
-          targetPrice = targetPrice * 1000;
+      // 목표 수익률 검증 및 보정
+      if (typeof targetReturn === 'number') {
+        // 수익률이 아닌 가격으로 잘못 입력된 경우 보정
+        if (targetReturn > 100) {
+          // 현재가 대비 수익률로 변환
+          const currentPrice = context.currentPrice || 100;
+          targetReturn = ((targetReturn - currentPrice) / currentPrice) * 100;
         }
-        
-        // 2. 그래도 현재가의 50% 미만이면 합리적 목표가 계산 (현재가 + 10~20%)
-        if (targetPrice < currentPrice * 0.5) {
-          console.warn(`Claude target price still unrealistic (${targetPrice}), using fallback calculation`);
-          const balancedMultiplier = 1.10 + Math.random() * 0.10; // 10-20%
-          targetPrice = Math.round(currentPrice * balancedMultiplier / 100) * 100;
-        }
-        
-        // 3. 목표가가 현재가의 300% 초과시 보정
-        if (targetPrice > currentPrice * 3) {
-          console.warn(`Claude target price too high (${targetPrice}), capping at 120%`);
-          targetPrice = Math.round(currentPrice * 1.20 / 100) * 100;
-        }
+        // 합리적인 범위로 제한 (-50% ~ +100%)
+        targetReturn = Math.min(100, Math.max(-50, targetReturn));
       } else {
-        // 목표가 없으면 균형잡힌 계산
-        const balancedMultiplier = 1.10 + Math.random() * 0.10;
-        targetPrice = Math.round(currentPrice * balancedMultiplier / 100) * 100;
+        // 기본값: 균형잡힌 수익률 (5~15%)
+        targetReturn = 5 + Math.random() * 10;
       }
 
       return {
@@ -256,9 +241,9 @@ export class ClaudeAdapter implements LLMAdapter {
         score: Math.min(5, Math.max(1, parsed.score || 3)),
         risks: parsed.risks || [],
         sources: parsed.sources || [],
-        targetPrice,
-        targetDate: parsed.targetDate,
-        priceRationale: parsed.priceRationale,
+        targetReturn: Math.round(targetReturn * 10) / 10,
+        timeHorizon: parsed.targetDate || parsed.timeHorizon || '6개월',
+        returnRationale: parsed.priceRationale || parsed.returnRationale,
       };
     } catch (error) {
       console.error('Claude API error:', error);

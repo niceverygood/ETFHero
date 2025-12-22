@@ -102,10 +102,10 @@ function buildPrompt(context: LLMContext): string {
   const marketShare = 5 + Math.random() * 15;  // 5-20%
   
   let targetGuidance = '';
-  if (myPreviousTarget) {
+  if (myPreviousTarget && myPreviousTarget.targetPrice) {
     targetGuidance = `
 이전 목표가: ${myPreviousTarget.targetPrice.toLocaleString()}원
-${claudeTarget ? `클로드 목표가: ${claudeTarget.targetPrice.toLocaleString()}원 (너무 보수적이면 지적하세요!)` : ''}`;
+${claudeTarget?.targetPrice ? `클로드 목표가: ${claudeTarget.targetPrice.toLocaleString()}원 (너무 보수적이면 지적하세요!)` : ''}`;
   } else {
     targetGuidance = `
 ## 📈 분석 데이터
@@ -131,7 +131,7 @@ ${claudeTarget ? `클로드 목표가: ${claudeTarget.targetPrice.toLocaleString
 ## 📝 이전 토론
 ${context.previousMessages.map(m => {
   const name = CHARACTER_BACKSTORIES[m.character as keyof typeof CHARACTER_BACKSTORIES].nameKo;
-  const price = m.targetPrice ? ` (목표가: ${m.targetPrice.toLocaleString()}원)` : '';
+  const price = m.targetPrice ? ` (목표가: ${m.targetPrice.toLocaleString()}원)` : (m.targetReturn ? ` (예상 수익률: ${m.targetReturn}%)` : '');
   return `**${name}**${price}:\n"${m.content}"`;
 }).join('\n\n')}
 
@@ -146,8 +146,8 @@ ${getSystemPrompt()}
 
 ---
 
-종목: ${context.symbol} (${context.symbolName})
-섹터: ${context.sector || 'Tech/Growth'}
+ETF: ${context.ticker || context.symbol} (${context.etfName || context.symbolName})
+카테고리: ${context.category || context.sector || 'Tech/Growth'}
 라운드: ${context.round}/4
 ${targetGuidance}
 ${previousContext}

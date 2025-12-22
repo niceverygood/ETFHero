@@ -475,7 +475,7 @@ export default function InvestmentTestPage() {
                   {result.investorType.name}
                 </h2>
                 <p className="text-purple-400 font-medium mb-4">
-                  "{result.investorType.nickname}"
+                  &ldquo;{result.investorType.nickname}&rdquo;
                 </p>
                 <p className="text-gray-300 max-w-2xl mx-auto leading-relaxed">
                   {result.investorType.description}
@@ -687,7 +687,7 @@ export default function InvestmentTestPage() {
                       <>
                         {/* 개인 메시지 */}
                         <div className="mb-4 p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-xl border border-purple-500/20">
-                          <p className="text-gray-200 leading-relaxed italic">"{expert.personalMessage}"</p>
+                          <p className="text-gray-200 leading-relaxed italic">&ldquo;{expert.personalMessage}&rdquo;</p>
                         </div>
 
                         {/* 강점 분석 */}

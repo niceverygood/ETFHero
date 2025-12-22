@@ -191,3 +191,4 @@ export const HIGH_DIVIDEND_ETFS = [
   'SCHD', 'VYM', 'DVY', 'VIG', 'NOBL',
 ];
 
+

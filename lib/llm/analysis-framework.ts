@@ -412,28 +412,48 @@ export interface ConsensusResult {
 export function deriveConsensus(
   targets: Array<{
     character: CharacterType;
-    targetPrice: number;
-    targetDate: string;
+    targetPrice?: number;
+    targetDate?: string;
     confidence: number;
   }>
 ): ConsensusResult {
+  // Filter out targets without price
+  const validTargets = targets.filter(t => t.targetPrice != null) as Array<{
+    character: CharacterType;
+    targetPrice: number;
+    targetDate?: string;
+    confidence: number;
+  }>;
+  
+  // If no valid targets, return default
+  if (validTargets.length === 0) {
+    return {
+      agreementLevel: 'divided',
+      convergenceLogic: '목표가 데이터가 충분하지 않아 합의 도출이 어렵습니다.',
+      consensusPrice: 0,
+      consensusDate: '',
+      priceRange: { low: 0, high: 0, consensus: 0 },
+      weights: {} as Record<CharacterType, number>,
+    };
+  }
+  
   // 신뢰도 가중 평균
-  const totalConfidence = targets.reduce((sum, t) => sum + t.confidence, 0);
+  const totalConfidence = validTargets.reduce((sum, t) => sum + t.confidence, 0);
   const weights: Record<CharacterType, number> = {} as Record<CharacterType, number>;
   
-  targets.forEach(t => {
+  validTargets.forEach(t => {
     weights[t.character] = t.confidence / totalConfidence;
   });
   
   // 가중 평균 목표가
-  const weightedPrice = targets.reduce(
+  const weightedPrice = validTargets.reduce(
     (sum, t) => sum + t.targetPrice * weights[t.character],
     0
   );
   const consensusPrice = Math.round(weightedPrice / 100) * 100;
   
   // 가격 범위
-  const prices = targets.map(t => t.targetPrice);
+  const prices = validTargets.map(t => t.targetPrice);
   const priceRange = {
     low: Math.min(...prices),
     high: Math.max(...prices),
@@ -459,8 +479,8 @@ export function deriveConsensus(
     convergenceLogic = `세 분석가 모두 ${consensusPrice.toLocaleString()}원 부근에서 의견이 수렴됨. ` +
       `펀더멘털(클로드), 성장성(제미), 리스크(테일러) 관점에서 모두 합리적인 가격대로 평가.`;
   } else if (agreementLevel === 'majority') {
-    const highTarget = targets.find(t => t.targetPrice === priceRange.high);
-    const lowTarget = targets.find(t => t.targetPrice === priceRange.low);
+    const highTarget = validTargets.find(t => t.targetPrice === priceRange.high);
+    const lowTarget = validTargets.find(t => t.targetPrice === priceRange.low);
     convergenceLogic = `${highTarget?.character === 'gemini' ? '제미의 공격적 목표가' : '클로드의 분석'} ` +
       `(${priceRange.high.toLocaleString()}원)와 ` +
       `${lowTarget?.character === 'gpt' ? '테일러의 보수적 목표가' : '분석'} ` +
@@ -470,10 +490,13 @@ export function deriveConsensus(
       `균형점을 찾아 ${consensusPrice.toLocaleString()}원으로 절충.`;
   }
   
-  // 목표일은 중간값 사용
-  const sortedDates = targets
-    .map(t => new Date(t.targetDate.replace(/년|월|분기|상반기|하반기/g, '-').replace(/-$/, '')))
-    .sort((a, b) => a.getTime() - b.getTime());
+  // 목표일은 중간값 사용 (filter targets with valid dates)
+  const targetsWithDates = validTargets.filter(t => t.targetDate);
+  const sortedDates = targetsWithDates.length > 0 
+    ? targetsWithDates
+        .map(t => new Date(t.targetDate!.replace(/년|월|분기|상반기|하반기/g, '-').replace(/-$/, '')))
+        .sort((a, b) => a.getTime() - b.getTime())
+    : [new Date()];
   
   const medianDate = sortedDates[Math.floor(sortedDates.length / 2)];
   const consensusDate = formatQuarter(medianDate);

@@ -240,3 +240,4 @@ CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON user_profiles FOR EAC
 CREATE TRIGGER update_posts_updated_at BEFORE UPDATE ON posts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_comments_updated_at BEFORE UPDATE ON post_comments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+

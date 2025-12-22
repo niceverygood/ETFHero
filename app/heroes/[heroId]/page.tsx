@@ -100,7 +100,7 @@ export default function HeroDetailPage() {
   const [data, setData] = useState<HeroData | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedStock, setExpandedStock] = useState<number | null>(null);
-  const [stockOpinions, setStockOpinions] = useState<Record<string, StockOpinionState>>({});
+  const [stockOpinions, setStockOpinions] = useState<Record<string, ETFOpinionState>>({});
   const [typingText, setTypingText] = useState<Record<string, string>>({});
   const opinionEndRef = useRef<HTMLDivElement>(null);
   

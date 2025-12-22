@@ -270,7 +270,7 @@ export class MockLLMAdapter implements LLMAdapter {
     const myPreviousTarget = previousTargets.find(t => t.character === this.characterType);
     
     let targetPrice: number;
-    if (myPreviousTarget && round > 1) {
+    if (myPreviousTarget && myPreviousTarget.targetPrice && round > 1) {
       // 토론 기반 소폭 조정 (-3% ~ +3%)
       const adjustment = (random() - 0.5) * 0.06;
       targetPrice = Math.round(myPreviousTarget.targetPrice * (1 + adjustment) / 100) * 100;

@@ -388,3 +388,4 @@ export const POPULAR_HOLDINGS = [
   { ticker: 'JPM', name: 'JPMorgan Chase', nameKo: 'JP모건' },
 ];
 
+

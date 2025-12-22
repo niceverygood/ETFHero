@@ -36,16 +36,23 @@ interface Analysis {
 }
 
 // 비교 항목 정의
-const COMPARE_FIELDS = [
-  { key: 'issuer', label: '운용사', format: (v: string) => v || '-' },
-  { key: 'category', label: '카테고리', format: (v: string) => v || '-' },
-  { key: 'expenseRatio', label: '총보수', format: (v: number) => v != null ? `${v.toFixed(2)}%` : '-', highlight: 'lowest' },
-  { key: 'aum', label: '운용자산(AUM)', format: (v: number) => v ? `$${v}B` : '-', highlight: 'highest' },
-  { key: 'dividendYield', label: '배당률', format: (v: number) => v != null ? `${v.toFixed(2)}%` : '-', highlight: 'highest' },
-  { key: 'return1m', label: '1개월 수익률', format: (v: number) => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(2)}%` : '-', highlight: 'highest' },
-  { key: 'return3m', label: '3개월 수익률', format: (v: number) => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(2)}%` : '-', highlight: 'highest' },
-  { key: 'return1y', label: '1년 수익률', format: (v: number) => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(2)}%` : '-', highlight: 'highest' },
-  { key: 'return3y', label: '3년 수익률', format: (v: number) => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(2)}%` : '-', highlight: 'highest' },
+interface CompareField {
+  key: string;
+  label: string;
+  format: (v: any) => string;
+  highlight?: 'lowest' | 'highest';
+}
+
+const COMPARE_FIELDS: CompareField[] = [
+  { key: 'issuer', label: '운용사', format: (v) => v || '-' },
+  { key: 'category', label: '카테고리', format: (v) => v || '-' },
+  { key: 'expenseRatio', label: '총보수', format: (v) => v != null ? `${v.toFixed(2)}%` : '-', highlight: 'lowest' },
+  { key: 'aum', label: '운용자산(AUM)', format: (v) => v ? `$${v}B` : '-', highlight: 'highest' },
+  { key: 'dividendYield', label: '배당률', format: (v) => v != null ? `${v.toFixed(2)}%` : '-', highlight: 'highest' },
+  { key: 'return1m', label: '1개월 수익률', format: (v) => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(2)}%` : '-', highlight: 'highest' },
+  { key: 'return3m', label: '3개월 수익률', format: (v) => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(2)}%` : '-', highlight: 'highest' },
+  { key: 'return1y', label: '1년 수익률', format: (v) => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(2)}%` : '-', highlight: 'highest' },
+  { key: 'return3y', label: '3년 수익률', format: (v) => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(2)}%` : '-', highlight: 'highest' },
 ];
 
 export default function ComparePage() {
@@ -321,7 +328,7 @@ export default function ComparePage() {
                         <td className="p-4 text-dark-400">{field.label}</td>
                         {compareData.map((etf) => {
                           const value = (etf as any)[field.key];
-                          const isBest = field.highlight && typeof value === 'number' && isBestValue(value, field.key, field.highlight as 'highest' | 'lowest');
+                          const isBest = field.highlight && typeof value === 'number' && isBestValue(value, field.key, field.highlight);
                           const isReturn = field.key.includes('return');
                           
                           return (

@@ -367,3 +367,4 @@ export function getDividendETFsByFrequency(frequency: DividendFrequency): ETFDiv
   return DIVIDEND_ETFS.filter(e => e.frequency === frequency);
 }
 
+

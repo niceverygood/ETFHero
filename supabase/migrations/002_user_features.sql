@@ -175,3 +175,4 @@ CREATE TRIGGER update_consultations_updated_at BEFORE UPDATE ON user_consultatio
 CREATE TRIGGER update_preferences_updated_at BEFORE UPDATE ON user_preferences FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_activity_stats_updated_at BEFORE UPDATE ON user_activity_stats FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+

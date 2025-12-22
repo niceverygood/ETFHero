@@ -8,12 +8,20 @@ export interface LLMResponse {
   returnRationale?: string;
   horizonRationale?: string;
   methodology?: string;
+  // Legacy fields for backward compatibility
+  targetPrice?: number;
+  targetDate?: string;
+  priceRationale?: string;
+  dateRationale?: string;
 }
 
 export interface PreviousTarget {
   character: string;
-  targetReturn: number;
-  timeHorizon: string;
+  targetReturn?: number;
+  timeHorizon?: string;
+  // Legacy fields for backward compatibility
+  targetPrice?: number;
+  targetDate?: string;
 }
 
 export interface LLMContext {
@@ -29,6 +37,8 @@ export interface LLMContext {
     content: string;
     targetReturn?: number;
     timeHorizon?: string;
+    // Legacy field for backward compatibility
+    targetPrice?: number;
   }>;
   previousTargets?: PreviousTarget[];
   marketData?: {
@@ -44,6 +54,15 @@ export interface LLMContext {
     aum?: number;
     holdingsCount?: number;
   };
+  financials?: {
+    per?: number;
+    pbr?: number;
+    roe?: number;
+  };
+  // Legacy fields for backward compatibility
+  symbol?: string;
+  symbolName?: string;
+  sector?: string;
 }
 
 export interface LLMAdapter {

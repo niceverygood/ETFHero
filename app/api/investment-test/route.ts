@@ -293,7 +293,7 @@ const INVESTOR_TYPES: Record<string, {
 };
 
 // 테스트 질문 목록 (재미있고 전문적인 시나리오)
-export const TEST_QUESTIONS = [
+const TEST_QUESTIONS = [
   // R/S 축 (위험 성향)
   {
     id: 1,

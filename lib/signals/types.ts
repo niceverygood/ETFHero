@@ -159,3 +159,4 @@ export const SIGNAL_LABELS: Record<SignalType, { label: string; labelKo: string;
   'STRONG_SELL': { label: 'Strong Sell', labelKo: '적극 매도', color: 'text-red-400', emoji: '🔻' },
 };
 
+

@@ -119,20 +119,20 @@ function buildPrompt(context: LLMContext): string {
   if (isFinalRound) {
     targetGuidance = `
 ## 🎯 최종 라운드 - 합의 도출
-${claudeTarget ? `클로드 목표가: ${claudeTarget.targetPrice.toLocaleString()}원` : ''}
-${geminiTarget ? `제미 목표가: ${geminiTarget.targetPrice.toLocaleString()}원 (과도하면 지적하세요)` : ''}
+${claudeTarget?.targetPrice ? `클로드 목표가: ${claudeTarget.targetPrice.toLocaleString()}원` : (claudeTarget?.targetReturn ? `클로드 예상 수익률: ${claudeTarget.targetReturn}%` : '')}
+${geminiTarget?.targetPrice ? `제미 목표가: ${geminiTarget.targetPrice.toLocaleString()}원 (과도하면 지적하세요)` : (geminiTarget?.targetReturn ? `제미 예상 수익률: ${geminiTarget.targetReturn}% (과도하면 지적하세요)` : '')}
 
 **합의 도출 과정:**
-1. 각 분석가의 목표가 논리 검토
+1. 각 분석가의 목표 논리 검토
 2. 리스크 요인 종합 평가
 3. 가중평균 또는 중간값으로 합의점 제시
 4. 합의에 이른 논리적 근거 설명
 
 토론을 정리하고 세 분석가의 합의 범위와 논리를 제시하세요.`;
-  } else if (myPreviousTarget) {
+  } else if (myPreviousTarget && myPreviousTarget.targetPrice) {
     targetGuidance = `
 이전 목표가: ${myPreviousTarget.targetPrice.toLocaleString()}원
-${geminiTarget ? `제미 목표가: ${geminiTarget.targetPrice.toLocaleString()}원 - 너무 공격적이면 경고하세요` : ''}`;
+${geminiTarget?.targetPrice ? `제미 목표가: ${geminiTarget.targetPrice.toLocaleString()}원 - 너무 공격적이면 경고하세요` : ''}`;
   } else {
     targetGuidance = `
 ## 📈 분석 데이터
@@ -158,7 +158,7 @@ ${geminiTarget ? `제미 목표가: ${geminiTarget.targetPrice.toLocaleString()}
 ## 📝 이전 토론
 ${context.previousMessages.map(m => {
   const name = CHARACTER_BACKSTORIES[m.character as keyof typeof CHARACTER_BACKSTORIES].nameKo;
-  const price = m.targetPrice ? ` (목표가: ${m.targetPrice.toLocaleString()}원)` : '';
+  const price = m.targetPrice ? ` (목표가: ${m.targetPrice.toLocaleString()}원)` : (m.targetReturn ? ` (예상 수익률: ${m.targetReturn}%)` : '');
   return `**${name}**${price}:\n"${m.content}"`;
 }).join('\n\n')}
 
@@ -170,8 +170,8 @@ ${context.previousMessages.map(m => {
   }
 
   return `
-종목: ${context.symbol} (${context.symbolName})
-섹터: ${context.sector || 'Mixed'}
+ETF: ${context.ticker || context.symbol} (${context.etfName || context.symbolName})
+카테고리: ${context.category || context.sector || 'Mixed'}
 라운드: ${context.round}/4
 ${targetGuidance}
 ${previousContext}
