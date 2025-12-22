@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { fetchNaverETFList, type NaverETFItem } from '@/lib/external/naver-etf';
 import { 
   OpenRouterClaudeAdapter, 
@@ -7,12 +6,7 @@ import {
   OpenRouterGPTAdapter,
   hasOpenRouterKey 
 } from '@/lib/llm/openrouter';
-
-// Supabase Client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getSupabaseClient } from '@/lib/supabase-client';
 
 // 캐시 (같은 날짜에 중복 AI 호출 방지)
 const scoreCache = new Map<string, {
@@ -224,7 +218,7 @@ export async function GET(request: NextRequest) {
     // 1. DB에서 해당 날짜의 verdict 조회
     let dbVerdict = null;
     try {
-      const { data: verdict, error } = await supabase
+      const { data: verdict, error } = await getSupabaseClient()
         .from('verdicts')
         .select('*')
         .eq('date', targetDate)

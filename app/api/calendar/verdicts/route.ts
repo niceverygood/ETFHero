@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/lib/supabase-client';
 import { ALL_ETFS, POPULAR_ETFS, findETFByTicker } from '@/lib/data/etf-list';
-
-// Supabase Client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Popular ETFs for generating fallback verdicts
 const MOCK_ETFS = ALL_ETFS.filter(e => POPULAR_ETFS.includes(e.ticker)).slice(0, 20);
@@ -112,7 +106,7 @@ export async function GET(request: NextRequest) {
     let dbVerdictMap: Record<string, any> = {};
     
     try {
-      const { data: dbVerdicts, error } = await supabase
+      const { data: dbVerdicts, error } = await getSupabaseClient()
         .from('verdicts')
         .select('date, top5, consensus_summary, market_theme')
         .gte('date', startDate)

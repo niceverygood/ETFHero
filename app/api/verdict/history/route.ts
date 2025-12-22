@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// Supabase Client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getSupabaseClient } from '@/lib/supabase-client';
 
 // 종목명 매핑
 const STOCK_NAMES: Record<string, string> = {
@@ -43,7 +37,7 @@ export async function GET(request: NextRequest) {
   
   try {
     // DB에서 해당 월의 모든 verdict 조회
-    const { data: verdicts, error } = await supabase
+    const { data: verdicts, error } = await getSupabaseClient()
       .from('verdicts')
       .select('date, top5, consensus_summary')
       .gte('date', startDate)

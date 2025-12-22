@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { findETFByTicker } from '@/lib/data/etf-list';
 import { getCachedETFPrice, getCachedETFPerformance } from '@/lib/external/yahoo-finance';
 import { fetchNaverETFDetail } from '@/lib/external/naver-etf';
-
-// Supabase Client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getSupabaseClient } from '@/lib/supabase-client';
 
 // AI 캐릭터 정보
 const CHARACTERS = {
@@ -42,7 +36,7 @@ export async function GET(request: NextRequest) {
     // 2. DB에서 토론 히스토리 조회 시도
     let dbHistory = null;
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabaseClient()
         .from('debate_sessions')
         .select('*')
         .eq('symbol', symbol)

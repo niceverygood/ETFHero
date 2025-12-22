@@ -1,20 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { fetchMultipleStockPrices } from '@/lib/market-data/kis';
+import { getSupabaseClient } from '@/lib/supabase-client';
 
-// Supabase Admin Client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy AI Clients
+let openai: OpenAI | null = null;
+let anthropic: Anthropic | null = null;
+let genAI: GoogleGenerativeAI | null = null;
 
-// AI Clients
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
+function getOpenAI(): OpenAI {
+  if (!openai) openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
+  return openai;
+}
+
+function getAnthropic(): Anthropic {
+  if (!anthropic) anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
+  return anthropic;
+}
+
+function getGenAI(): GoogleGenerativeAI {
+  if (!genAI) genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
+  return genAI;
+}
 
 // 분석 대상 ETF 목록
 const ANALYSIS_ETFS = [
@@ -56,7 +65,7 @@ JSON 형식으로 응답:
 {"top5":[{"rank":1,"symbol":"코드","name":"ETF명","score":4.5,"reason":"분석이유"}]}`;
 
   try {
-    const response = await anthropic.messages.create({
+    const response = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
       messages: [{ role: 'user', content: prompt }],
@@ -86,7 +95,7 @@ JSON 형식으로 응답:
 {"top5":[{"rank":1,"symbol":"코드","name":"ETF명","score":4.8,"reason":"분석이유"}]}`;
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = getGenAI().getGenerativeModel({ model: 'gemini-2.0-flash' });
     const result = await model.generateContent(prompt);
     const text = result.response.text();
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -113,7 +122,7 @@ JSON 형식으로 응답:
 {"top5":[{"rank":1,"symbol":"코드","name":"ETF명","score":4.2,"reason":"분석이유"}]}`;
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 2048,
@@ -220,7 +229,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // 1. 오늘 이미 생성된 verdict가 있는지 확인
-    const { data: existingVerdict } = await supabase
+    const { data: existingVerdict } = await getSupabaseClient()
       .from('verdicts')
       .select('*')
       .eq('date', today)
@@ -266,7 +275,7 @@ export async function GET(request: NextRequest) {
     // 5. Verdict 저장
     const consensusSummary = `오늘 ${top5.filter(t => t.isUnanimous).length}개 ETF가 3명의 AI 분석가 만장일치 추천을 받았습니다. 1위 ${top5[0]?.name}(${top5[0]?.symbol})은 평균 ${top5[0]?.avgScore}점을 기록했습니다.`;
 
-    const { data: verdict, error } = await supabase
+    const { data: verdict, error } = await getSupabaseClient()
       .from('verdicts')
       .insert({
         date: today,
@@ -285,7 +294,7 @@ export async function GET(request: NextRequest) {
 
     // 6. Predictions 저장
     for (const stock of top5) {
-      await supabase.from('predictions').insert({
+      await getSupabaseClient().from('predictions').insert({
         verdict_id: verdict.id,
         symbol_code: stock.symbol,
         symbol_name: stock.name,
