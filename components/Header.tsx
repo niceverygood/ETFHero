@@ -7,13 +7,14 @@ import { UserMenu } from './UserMenu';
 
 // 메인 네비게이션 링크
 const NAV_LINKS = [
-  { href: '/signals', label: '시그널', icon: '🎯' },
+  { href: '/investment-test', label: '성향테스트', icon: '🧠' },
+  { href: '/portfolio-builder', label: '포트폴리오', icon: '✨' },
   { href: '/verdict', label: 'Top5', icon: '' },
-  { href: '/heroes', label: 'AI', icon: '' },
-  { href: '/backtest', label: '백테스트', icon: '' },
-  { href: '/dividend', label: '배당', icon: '' },
-  { href: '/compare', label: '비교', icon: '' },
+  { href: '/heroes', label: 'AI상담', icon: '' },
   { href: '/battle/SPY', label: '토론', icon: '' },
+  { href: '/compare', label: '비교', icon: '' },
+  { href: '/backtest', label: '백테스트', icon: '' },
+  { href: '/signals', label: '시그널', icon: '' },
 ];
 
 export function Header() {

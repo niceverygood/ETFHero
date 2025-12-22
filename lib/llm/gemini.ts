@@ -184,6 +184,20 @@ function parseTargetPriceFromContent(content: string): number | null {
 export class GeminiAdapter implements LLMAdapter {
   characterType = 'gemini' as const;
 
+  /**
+   * 단순 텍스트 프롬프트로 응답 생성
+   */
+  async generateRaw(prompt: string): Promise<string> {
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const result = await model.generateContent(prompt);
+      return result.response.text();
+    } catch (error) {
+      console.error('Gemini raw API error:', error);
+      throw error;
+    }
+  }
+
   async generateStructured(context: LLMContext): Promise<LLMResponse> {
     const userPrompt = buildPrompt(context);
 

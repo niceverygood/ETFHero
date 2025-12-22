@@ -23,6 +23,7 @@ export interface LLMContext {
   assetClass?: string;
   round: number;
   currentPrice?: number;
+  currency?: 'USD' | 'KRW';  // 통화 정보 추가
   previousMessages: Array<{
     character: string;
     content: string;

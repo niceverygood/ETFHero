@@ -176,6 +176,27 @@ function parseTargetPriceFromContent(content: string): number | null {
 export class ClaudeAdapter implements LLMAdapter {
   characterType = 'claude' as const;
 
+  /**
+   * 단순 텍스트 프롬프트로 응답 생성
+   */
+  async generateRaw(prompt: string): Promise<string> {
+    try {
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [
+          { role: 'user', content: prompt },
+        ],
+      });
+
+      const textContent = response.content.find(c => c.type === 'text');
+      return textContent?.type === 'text' ? textContent.text : '';
+    } catch (error) {
+      console.error('Claude raw API error:', error);
+      throw error;
+    }
+  }
+
   async generateStructured(context: LLMContext): Promise<LLMResponse> {
     const systemPrompt = getSystemPrompt();
     const userPrompt = buildPrompt(context);

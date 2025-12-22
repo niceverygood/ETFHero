@@ -18,6 +18,7 @@ interface DebatePromptContext {
   symbolName: string;
   sector?: string;
   currentPrice: number;
+  currency?: 'USD' | 'KRW';  // 통화 추가
   round: number;
   character: CharacterType;
   previousMessages: PreviousMessage[];
@@ -185,15 +186,23 @@ function getRoundDirective(round: number, character: CharacterType): string {
   return directive;
 }
 
+// 통화 포맷 헬퍼
+function formatPrice(price: number, currency: 'USD' | 'KRW' = 'KRW'): string {
+  if (currency === 'USD') {
+    return `$${price.toLocaleString()}`;
+  }
+  return `${price.toLocaleString()}원`;
+}
+
 // 이전 대화 요약
-function summarizePreviousMessages(messages: PreviousMessage[]): string {
+function summarizePreviousMessages(messages: PreviousMessage[], currency: 'USD' | 'KRW' = 'KRW'): string {
   if (!messages.length) return '';
   
   let summary = `## 📝 지금까지의 토론\n\n`;
   
   for (const msg of messages) {
     const name = CHARACTER_BACKSTORIES[msg.character].nameKo;
-    const price = msg.targetPrice ? ` (목표가: ${msg.targetPrice.toLocaleString()}원)` : '';
+    const price = msg.targetPrice ? ` (목표가: ${formatPrice(msg.targetPrice, currency)})` : '';
     summary += `**${name}**${price}:\n"${msg.content.substring(0, 200)}${msg.content.length > 200 ? '...' : ''}"\n\n`;
   }
   
@@ -203,29 +212,34 @@ function summarizePreviousMessages(messages: PreviousMessage[]): string {
 }
 
 // 종목 분석 지침
-function getAnalysisGuidelines(symbol: string, symbolName: string, currentPrice: number, sector?: string): string {
+function getAnalysisGuidelines(symbol: string, symbolName: string, currentPrice: number, sector?: string, currency: 'USD' | 'KRW' = 'KRW'): string {
+  const currencyUnit = currency === 'USD' ? '달러($)' : '원(KRW)';
+  const isUS = currency === 'USD';
+  
   return `## 📊 분석 대상
 - **종목**: ${symbolName} (${symbol})
-- **현재가**: ${currentPrice.toLocaleString()}원
+- **현재가**: ${formatPrice(currentPrice, currency)}
 - **섹터**: ${sector || '기타'}
+- **통화**: ${currencyUnit}
 
 ## 🎯 응답 필수 포함 요소
 1. **당신만의 시각**으로 종목 분석 (다른 분석가와 차별화)
 2. **구체적 수치** (PER, 성장률, 목표가 등)
 3. **리스크 요인** 2-3개
-4. **목표가와 근거**
+4. **목표가와 근거** (⚠️ 목표가는 반드시 ${isUS ? '달러($)' : '원'}으로 표기)
 
 ## ⚠️ 응답 형식
 - 분석은 한국어로, 전문 용어는 필요시 영어 병기
 - 길이: 3-5문단
 - 당신의 말투와 성격이 드러나야 함
 - 다른 분석가를 언급할 때는 이름 사용 (클로드, 제미, 테일러)
+- **목표가는 반드시 ${isUS ? '달러($)로 표기 (예: $750)' : '원으로 표기 (예: 45,000원)'}**
 `;
 }
 
 // 메인 프롬프트 생성 함수
 export function generateDebatePrompt(context: DebatePromptContext): string {
-  const { symbol, symbolName, sector, currentPrice, round, character, previousMessages } = context;
+  const { symbol, symbolName, sector, currentPrice, currency = 'KRW', round, character, previousMessages } = context;
   
   const otherCharacters: CharacterType[] = (['claude', 'gemini', 'gpt'] as CharacterType[])
     .filter(c => c !== character);
@@ -239,7 +253,7 @@ export function generateDebatePrompt(context: DebatePromptContext): string {
   
   // 이전 대화가 있으면 추가
   if (previousMessages.length > 0) {
-    prompt += summarizePreviousMessages(previousMessages);
+    prompt += summarizePreviousMessages(previousMessages, currency);
     prompt += '\n\n';
     
     // 감정 트리거 체크
@@ -251,7 +265,7 @@ export function generateDebatePrompt(context: DebatePromptContext): string {
     }
   }
   
-  prompt += getAnalysisGuidelines(symbol, symbolName, currentPrice, sector);
+  prompt += getAnalysisGuidelines(symbol, symbolName, currentPrice, sector, currency);
   
   return prompt;
 }

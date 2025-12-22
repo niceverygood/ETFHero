@@ -13,33 +13,21 @@ export interface DebateMessage {
   createdAt: Date;
 }
 
-export interface ETFInfo {
+export interface SymbolInfo {
   id: string;
-  ticker: string;
+  symbol: string;
   name: string;
-  nameKo?: string;
-  issuer?: string;
-  category?: string;
-  assetClass: string;
-  region: string;
-  expenseRatio?: number;
-  aum?: number;
-  description?: string;
-  dividendYield?: number;
-  peRatio?: number;
+  market: string;
+  sector?: string;
 }
 
 export interface Top5Item {
   rank: number;
-  etfId: string;
-  ticker: string;
+  symbolId: string;
+  symbol: string;
   name: string;
-  nameKo?: string;
-  category?: string;
   avgScore: number;
   rationale: string;
-  targetReturn?: number;
-  timeHorizon?: string;
 }
 
 export interface VerdictData {
@@ -47,15 +35,14 @@ export interface VerdictData {
   date: string;
   top5: Top5Item[];
   rationale?: string;
-  marketTheme?: string;
   createdAt: Date;
 }
 
 export interface PredictionWithOutcome {
   id: string;
   date: string;
-  etf: ETFInfo;
-  timeHorizon: string;
+  symbol: SymbolInfo;
+  horizonDays: number;
   predictedDirection: 'up' | 'down' | 'neutral';
   confidence: number;
   outcome?: {
@@ -74,7 +61,6 @@ export interface ArchiveMetrics {
     down: { total: number; hits: number };
     neutral: { total: number; hits: number };
   };
-  byCategory?: Record<string, { total: number; hits: number }>;
 }
 
 export interface LLMResponse {
@@ -88,71 +74,3 @@ export interface LLMAdapter {
   generateStructured(prompt: string, context: Record<string, unknown>): Promise<LLMResponse>;
 }
 
-// ETF-specific types
-export interface ETFCategory {
-  id: string;
-  name: string;
-  nameKo?: string;
-  description?: string;
-  icon?: string;
-  color?: string;
-}
-
-export interface ETFTheme {
-  id: string;
-  name: string;
-  nameKo?: string;
-  description?: string;
-  relatedETFs?: string[];
-  isTrending: boolean;
-}
-
-export interface ETFHolding {
-  ticker: string;
-  name: string;
-  weight: number;
-  sector?: string;
-}
-
-export interface ETFAnalysis {
-  etfId: string;
-  ticker: string;
-  name: string;
-  claudeAnalysis?: {
-    score: number;
-    summary: string;
-    strengths: string[];
-    weaknesses: string[];
-  };
-  geminiAnalysis?: {
-    score: number;
-    summary: string;
-    strengths: string[];
-    weaknesses: string[];
-  };
-  gptAnalysis?: {
-    score: number;
-    summary: string;
-    strengths: string[];
-    weaknesses: string[];
-  };
-  consensusScore: number;
-  consensusSummary: string;
-  recommendation: 'strong_buy' | 'buy' | 'hold' | 'sell' | 'strong_sell';
-}
-
-export interface PortfolioAllocation {
-  etfTicker: string;
-  etfName: string;
-  weight: number;
-  rationale: string;
-}
-
-export interface PortfolioRecommendation {
-  name: string;
-  description: string;
-  riskLevel: 'conservative' | 'moderate' | 'aggressive';
-  expectedReturn: string;
-  allocations: PortfolioAllocation[];
-  totalExpenseRatio: number;
-}

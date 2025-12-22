@@ -3,6 +3,12 @@ import { MockLLMAdapter } from './mock';
 import { ClaudeAdapter } from './claude';
 import { GeminiAdapter } from './gemini';
 import { GPTAdapter } from './gpt';
+import { 
+  OpenRouterClaudeAdapter, 
+  OpenRouterGeminiAdapter, 
+  OpenRouterGPTAdapter,
+  hasOpenRouterKey 
+} from './openrouter';
 import { deriveConsensus, type ConsensusResult } from './analysis-framework';
 
 interface DebateMessage {
@@ -19,7 +25,19 @@ interface DebateMessage {
 }
 
 function getAdapter(character: CharacterType): LLMAdapter {
-  // Check if real API keys are available
+  // 1순위: OpenRouter (하나의 키로 모든 모델 사용)
+  if (hasOpenRouterKey()) {
+    switch (character) {
+      case 'claude':
+        return new OpenRouterClaudeAdapter();
+      case 'gemini':
+        return new OpenRouterGeminiAdapter();
+      case 'gpt':
+        return new OpenRouterGPTAdapter();
+    }
+  }
+
+  // 2순위: 개별 API 키
   const hasOpenAI = !!process.env.OPENAI_API_KEY;
   const hasAnthropic = !!process.env.ANTHROPIC_API_KEY;
   const hasGoogle = !!process.env.GOOGLE_AI_API_KEY;
@@ -36,13 +54,139 @@ function getAdapter(character: CharacterType): LLMAdapter {
   }
 }
 
+// 심볼이 미국 ETF인지 판단
+function isUSSymbol(symbol: string): boolean {
+  // 숫자로만 이루어진 경우 한국 ETF (예: 069500, 102110)
+  if (/^\d+$/.test(symbol)) return false;
+  // 알파벳 포함 시 미국 ETF (예: SPY, QQQ, VTI)
+  return /[A-Za-z]/.test(symbol);
+}
+
 export class DebateOrchestrator {
   private previousMessages: DebateMessage[] = [];
   private previousTargets: PreviousTarget[] = [];
   private currentPrice: number = 70000;
+  private currency: 'USD' | 'KRW' = 'KRW';
 
   setCurrentPrice(price: number) {
     this.currentPrice = price;
+  }
+
+  setCurrency(currency: 'USD' | 'KRW') {
+    this.currency = currency;
+  }
+
+  // 단일 캐릭터의 응답 생성 (순차 로딩용)
+  async generateSingleResponse(
+    symbol: string,
+    symbolName: string,
+    round: number,
+    character: CharacterType
+  ): Promise<DebateMessage> {
+    // 심볼에 따라 통화 자동 결정
+    const currency = isUSSymbol(symbol) ? 'USD' : 'KRW';
+    this.currency = currency;
+
+    const adapter = getAdapter(character);
+    const context: LLMContext = {
+      ticker: symbol,
+      etfName: symbolName,
+      round,
+      currentPrice: this.currentPrice,
+      currency,
+      previousMessages: this.previousMessages.map(m => ({
+        character: m.character,
+        content: m.content,
+        targetReturn: m.targetPrice,
+        timeHorizon: m.targetDate,
+      })),
+      previousTargets: this.previousTargets,
+    };
+
+    try {
+      const response = await adapter.generateStructured(context);
+      
+      // 최종 목표가 검증 (안전 장치)
+      let validatedTargetPrice = response.targetPrice;
+      if (validatedTargetPrice !== undefined) {
+        if (validatedTargetPrice < this.currentPrice * 0.5) {
+          console.warn(`[Orchestrator] ${character} target price ${validatedTargetPrice} is unrealistic, recalculating`);
+          const fallbackMultiplier = character === 'gemini' ? 1.3 : character === 'claude' ? 1.15 : 1.1;
+          validatedTargetPrice = Math.round(this.currentPrice * fallbackMultiplier / 100) * 100;
+        } else if (validatedTargetPrice > this.currentPrice * 5) {
+          console.warn(`[Orchestrator] ${character} target price ${validatedTargetPrice} is too high, capping`);
+          const capMultiplier = character === 'gemini' ? 2.0 : 1.5;
+          validatedTargetPrice = Math.round(this.currentPrice * capMultiplier / 100) * 100;
+        }
+      }
+      
+      const message: DebateMessage = {
+        character,
+        content: response.content,
+        score: response.score,
+        risks: response.risks,
+        sources: response.sources,
+        targetPrice: validatedTargetPrice,
+        targetDate: response.targetDate,
+        priceRationale: response.priceRationale,
+        dateRationale: response.dateRationale,
+        methodology: response.methodology,
+      };
+
+      // 메시지 히스토리에 추가
+      this.previousMessages.push(message);
+      
+      // 타겟 업데이트
+      if (validatedTargetPrice && response.targetDate) {
+        const existingIndex = this.previousTargets.findIndex(t => t.character === character);
+        const newTarget = { character, targetPrice: validatedTargetPrice, targetDate: response.targetDate };
+        if (existingIndex >= 0) {
+          this.previousTargets[existingIndex] = newTarget;
+        } else {
+          this.previousTargets.push(newTarget);
+        }
+      }
+      
+      return message;
+    } catch (error) {
+      console.error(`Error generating response for ${character}:`, error);
+      // Fallback to mock if real API fails
+      const mockAdapter = new MockLLMAdapter(character);
+      const response = await mockAdapter.generateStructured(context);
+      
+      let validatedTargetPrice = response.targetPrice;
+      if (validatedTargetPrice !== undefined && validatedTargetPrice < this.currentPrice * 0.5) {
+        const fallbackMultiplier = character === 'gemini' ? 1.3 : character === 'claude' ? 1.15 : 1.1;
+        validatedTargetPrice = Math.round(this.currentPrice * fallbackMultiplier / 100) * 100;
+      }
+      
+      const message: DebateMessage = {
+        character,
+        content: response.content,
+        score: response.score,
+        risks: response.risks,
+        sources: response.sources,
+        targetPrice: validatedTargetPrice,
+        targetDate: response.targetDate,
+        priceRationale: response.priceRationale,
+        dateRationale: response.dateRationale,
+        methodology: response.methodology,
+      };
+
+      this.previousMessages.push(message);
+      
+      if (validatedTargetPrice && response.targetDate) {
+        const existingIndex = this.previousTargets.findIndex(t => t.character === character);
+        const newTarget = { character, targetPrice: validatedTargetPrice, targetDate: response.targetDate };
+        if (existingIndex >= 0) {
+          this.previousTargets[existingIndex] = newTarget;
+        } else {
+          this.previousTargets.push(newTarget);
+        }
+      }
+      
+      return message;
+    }
   }
 
   async generateRound(
@@ -53,19 +197,24 @@ export class DebateOrchestrator {
     const characters: CharacterType[] = ['claude', 'gemini', 'gpt'];
     const messages: DebateMessage[] = [];
     const newTargets: PreviousTarget[] = [];
+    
+    // 심볼에 따라 통화 자동 결정
+    const currency = isUSSymbol(symbol) ? 'USD' : 'KRW';
+    this.currency = currency;
 
     for (const character of characters) {
       const adapter = getAdapter(character);
       const context: LLMContext = {
-        symbol,
-        symbolName,
+        ticker: symbol,
+        etfName: symbolName,
         round,
         currentPrice: this.currentPrice,
+        currency,
         previousMessages: [...this.previousMessages, ...messages].map(m => ({
           character: m.character,
           content: m.content,
-          targetPrice: m.targetPrice,
-          targetDate: m.targetDate,
+          targetReturn: m.targetPrice,
+          timeHorizon: m.targetDate,
         })),
         previousTargets: this.previousTargets,
       };

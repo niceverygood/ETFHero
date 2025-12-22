@@ -739,16 +739,12 @@ export default function BattlePage() {
     }
   }
 
-  async function generateRound(sid: string, r: number) {
-    // 이미 같은 라운드를 생성 중이면 중복 호출 방지
-    if (generatingRoundRef.current === r) {
-      console.log(`Round ${r} is already being generated, skipping duplicate call`);
-      return;
-    }
-    
-    generatingRoundRef.current = r;
-    setIsLoading(true);
-    
+  // 단일 캐릭터 응답 가져오기 (Promise 반환)
+  async function fetchSingleCharacter(
+    sid: string, 
+    r: number, 
+    character: CharacterType
+  ): Promise<Message | null> {
     try {
       const res = await fetch('/api/debate/next', {
         method: 'POST',
@@ -759,23 +755,15 @@ export default function BattlePage() {
           symbol,
           symbolName: symbolInfo.name,
           currentPrice: symbolInfo.price,
+          character,
         }),
       });
       const data = await res.json();
-      if (data.success) {
-        const newMessages = data.data.messages.map((m: {
-          character: CharacterType;
-          content: string;
-          score: number;
-          risks: string[];
-          sources: string[];
-          targetPrice?: number;
-          targetDate?: string;
-          priceRationale?: string;
-          dateRationale?: string;
-          methodology?: string;
-        }, i: number) => ({
-          id: `${sid}-${r}-${m.character}-${i}`, // 더 고유한 ID 생성
+      
+      if (data.success && data.data.message) {
+        const m = data.data.message;
+        const newMessage: Message = {
+          id: `${sid}-${r}-${m.character}-${Date.now()}`,
           character: m.character,
           round: r,
           content: m.content,
@@ -788,27 +776,82 @@ export default function BattlePage() {
           dateRationale: m.dateRationale,
           methodology: m.methodology,
           timestamp: new Date().toISOString(),
-        }));
+        };
         
-        // 중복 메시지 필터링
-        setMessages((prev) => {
-          const existingIds = new Set(prev.map(m => m.id));
-          const uniqueNewMessages = newMessages.filter((m: Message) => !existingIds.has(m.id));
-          return [...prev, ...uniqueNewMessages];
-        });
-        setRound(r);
-        
-        // Update targets
+        // 타겟 업데이트
         if (data.data.targets) {
           setTargets(data.data.targets);
         }
         
-        // Record debate view in history
-        recordDebateView(symbol, symbolInfo.name, sid, r, 4);
+        return newMessage;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Failed to fetch ${character} response:`, error);
+      return null;
+    }
+  }
+
+  // 메시지를 화면에 추가
+  function addMessageToDisplay(message: Message) {
+    setMessages((prev) => {
+      const existingIds = new Set(prev.map(msg => msg.id));
+      if (existingIds.has(message.id)) return prev;
+      return [...prev, message];
+    });
+  }
+
+  async function generateRound(sid: string, r: number) {
+    if (generatingRoundRef.current === r) {
+      console.log(`Round ${r} is already being generated, skipping`);
+      return;
+    }
+    
+    generatingRoundRef.current = r;
+    setIsLoading(true);
+    setRound(r);
+    
+    const characters: CharacterType[] = ['claude', 'gemini', 'gpt'];
+    
+    try {
+      // 파이프라인 방식: 현재 응답이 표시되는 동안 다음 응답을 미리 요청
+      let nextPromise: Promise<Message | null> | null = null;
+      
+      for (let i = 0; i < characters.length; i++) {
+        const character = characters[i];
         
-        if (r >= 4) {
-          setIsComplete(true);
+        // 현재 캐릭터 응답 가져오기
+        // (이전 루프에서 미리 요청한 게 있으면 그걸 사용)
+        const currentPromise = nextPromise || fetchSingleCharacter(sid, r, character);
+        
+        // 다음 캐릭터가 있으면 미리 요청 시작 (병렬로)
+        if (i < characters.length - 1) {
+          nextPromise = fetchSingleCharacter(sid, r, characters[i + 1]);
+        } else {
+          nextPromise = null;
         }
+        
+        // 현재 응답 기다리기
+        const message = await currentPromise;
+        
+        if (message) {
+          // 메시지를 화면에 추가 (타이핑 효과 시작)
+          addMessageToDisplay(message);
+          
+          // 마지막이 아니면 타이핑 효과가 진행되는 동안 대기
+          // (다음 요청은 이미 병렬로 진행 중)
+          if (i < characters.length - 1) {
+            // 타이핑 효과 예상 시간 (글자 수 * 25ms + 여유)
+            const typingTime = Math.min(message.content.length * 12, 3000);
+            await new Promise(resolve => setTimeout(resolve, typingTime));
+          }
+        }
+      }
+      
+      recordDebateView(symbol, symbolInfo.name, sid, r, 4);
+      
+      if (r >= 4) {
+        setIsComplete(true);
       }
     } catch (error) {
       console.error('Failed to generate round:', error);

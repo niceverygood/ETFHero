@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrCreateSession } from '@/lib/llm';
 import { createDebateMessage, updateDebateSession } from '@/lib/supabase';
+import type { CharacterType } from '@/lib/types';
 
 // Mock current prices for ETFs
 const ETF_PRICES: Record<string, number> = {
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Debate next request body:', body);
     
-    const { sessionId, round, symbol, symbolName, currentPrice } = body;
+    const { sessionId, round, symbol, symbolName, currentPrice, character } = body;
 
     if (!sessionId) {
       console.error('Missing sessionId in request');
@@ -47,10 +48,84 @@ export async function POST(request: NextRequest) {
     const finalSymbolName = symbolName || 'KODEX 200';
     const finalCurrentPrice = currentPrice || ETF_PRICES[finalSymbol] || 35000;
 
-    console.log(`Generating round ${round} for ${finalSymbol} (${finalSymbolName}) at price ${finalCurrentPrice}`);
-
     const orchestrator = getOrCreateSession(sessionId);
     orchestrator.setCurrentPrice(finalCurrentPrice);
+
+    // 단일 캐릭터 요청인 경우
+    if (character && ['claude', 'gemini', 'gpt'].includes(character)) {
+      console.log(`Generating single response for ${character} in round ${round}`);
+      
+      const message = await orchestrator.generateSingleResponse(
+        finalSymbol,
+        finalSymbolName,
+        round,
+        character as CharacterType
+      );
+
+      // Try to save message to Supabase
+      let savedMessage;
+      try {
+        const saved = await createDebateMessage(
+          sessionId,
+          message.character,
+          message.content,
+          message.score,
+          message.risks,
+          message.sources,
+          round
+        );
+        savedMessage = {
+          id: saved.id,
+          character: message.character,
+          content: message.content,
+          score: message.score,
+          risks: message.risks,
+          sources: message.sources,
+          targetPrice: message.targetPrice,
+          targetDate: message.targetDate,
+          priceRationale: message.priceRationale,
+          dateRationale: message.dateRationale,
+          methodology: message.methodology,
+          createdAt: saved.created_at,
+        };
+      } catch (e) {
+        console.log('Failed to save message to Supabase:', e);
+        savedMessage = {
+          id: `${sessionId}-${character}-${round}-${Date.now()}`,
+          character: message.character,
+          content: message.content,
+          score: message.score,
+          risks: message.risks,
+          sources: message.sources,
+          targetPrice: message.targetPrice,
+          targetDate: message.targetDate,
+          priceRationale: message.priceRationale,
+          dateRationale: message.dateRationale,
+          methodology: message.methodology,
+          createdAt: new Date().toISOString(),
+        };
+      }
+
+      // Get current targets
+      const targets = orchestrator.getTargets();
+      const consensus = orchestrator.getConsensus();
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          sessionId,
+          round,
+          currentPrice: finalCurrentPrice,
+          message: savedMessage, // 단일 메시지
+          targets,
+          consensus,
+        },
+      });
+    }
+
+    // 기존 방식: 3명 모두 생성
+    console.log(`Generating round ${round} for ${finalSymbol} (${finalSymbolName}) at price ${finalCurrentPrice}`);
+
     const messages = await orchestrator.generateRound(finalSymbol, finalSymbolName, round);
 
     console.log(`Generated ${messages.length} messages`);

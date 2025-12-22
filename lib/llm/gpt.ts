@@ -209,6 +209,25 @@ function parseTargetPriceFromContent(content: string): number | null {
 export class GPTAdapter implements LLMAdapter {
   characterType = 'gpt' as const;
 
+  /**
+   * 단순 텍스트 프롬프트로 응답 생성
+   */
+  async generateRaw(prompt: string): Promise<string> {
+    try {
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'user', content: prompt },
+        ],
+        max_tokens: 1000,
+      });
+      return response.choices[0]?.message?.content || '';
+    } catch (error) {
+      console.error('GPT raw API error:', error);
+      throw error;
+    }
+  }
+
   async generateStructured(context: LLMContext): Promise<LLMResponse> {
     const systemPrompt = getSystemPrompt();
     const userPrompt = buildPrompt(context);

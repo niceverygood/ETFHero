@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { KISMarketDataProvider, fetchMultipleStockPrices } from '@/lib/market-data/kis';
-import { MockMarketDataProvider } from '@/lib/market-data/mock';
 import { getCachedETFPrice, getCachedETFPrices } from '@/lib/external/yahoo-finance';
-import { fetchNaverETFDetail } from '@/lib/external/naver-etf';
+import { fetchNaverETFDetail, fetchNaverETFList } from '@/lib/external/naver-etf';
 import { findETFByTicker } from '@/lib/data/etf-list';
-
-// KIS API 사용 여부 확인
-const useKISAPI = !!(process.env.KIS_APP_KEY && process.env.KIS_APP_SECRET);
 
 // 미국 ETF인지 확인 (영문 심볼)
 function isUSSymbol(symbol: string): boolean {
@@ -114,39 +109,11 @@ export async function GET(request: NextRequest) {
         }
       }
       
-      // 기존 KIS/Mock 로직 (주식용)
-      if (useKISAPI) {
-        const provider = new KISMarketDataProvider();
-        const quote = await provider.getQuote(symbol);
-        
-        return NextResponse.json({
-          success: true,
-          source: 'kis',
-          isRealTime: true,
-          data: {
-            symbol: quote.symbol,
-            name: quote.name,
-            price: quote.price,
-            change: quote.change,
-            changePercent: quote.changePercent,
-            volume: quote.volume,
-            high52Week: quote.high52Week,
-            low52Week: quote.low52Week,
-            updatedAt: quote.updatedAt,
-          },
-        });
-      } else {
-        // Mock 데이터 사용
-        const provider = new MockMarketDataProvider();
-        const quote = await provider.getQuote(symbol);
-        
-        return NextResponse.json({
-          success: true,
-          source: 'mock',
-          isRealTime: false,
-          data: quote,
-        });
-      }
+      // 알 수 없는 심볼 형식
+      return NextResponse.json({
+        success: false,
+        error: `Unknown symbol format: ${symbol}. Use US ETF ticker (e.g., SPY) or Korean ETF code (e.g., 069500)`,
+      }, { status: 400 });
     }
     
     // 여러 종목 조회
@@ -206,31 +173,8 @@ export async function GET(request: NextRequest) {
         }
       }
       
-      // 기타 (주식) - KIS/Mock
-      if (otherSymbols.length > 0) {
-        if (useKISAPI) {
-          const results = await fetchMultipleStockPrices(otherSymbols);
-          results.forEach((value, key) => {
-            data[key] = { ...value, source: 'kis' };
-          });
-        } else {
-          const provider = new MockMarketDataProvider();
-          for (const sym of otherSymbols) {
-            try {
-              const quote = await provider.getQuote(sym);
-              data[sym] = {
-                price: quote.price,
-                change: quote.change,
-                changePercent: quote.changePercent,
-                name: quote.name,
-                source: 'mock',
-              };
-            } catch {
-              // 개별 종목 실패 시 스킵
-            }
-          }
-        }
-      }
+      // 기타 심볼은 지원하지 않음 (US/KR ETF만 지원)
+      // otherSymbols는 무시됨
       
       return NextResponse.json({
         success: true,
@@ -247,24 +191,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Stock price API error:', error);
     
-    // KIS API 실패 시 Mock으로 폴백
-    if (useKISAPI && symbol) {
-      try {
-        const provider = new MockMarketDataProvider();
-        const quote = await provider.getQuote(symbol);
-        
-        return NextResponse.json({
-          success: true,
-          source: 'mock_fallback',
-          data: quote,
-        });
-      } catch {
-        // Mock도 실패
-      }
-    }
-    
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch stock price' },
+      { success: false, error: 'Failed to fetch ETF price. Please try again.' },
       { status: 500 }
     );
   }
