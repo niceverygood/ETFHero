@@ -53,6 +53,27 @@ interface UserStats {
   most_discussed_stock: string | null;
 }
 
+interface InvestmentTestRecord {
+  id: string;
+  investor_type_code: string;
+  investor_type_name: string;
+  investor_type_emoji: string;
+  investor_type_nickname: string;
+  investor_type_description: string;
+  scores: {
+    riskTolerance: { R: number; S: number };
+    analysisStyle: { A: number; I: number };
+    investmentHorizon: { L: number; S: number };
+    tradingStyle: { P: number; A: number };
+  };
+  strengths: string[];
+  weaknesses: string[];
+  advice: string;
+  compatible_etfs: string[];
+  famous_person: string;
+  created_at: string;
+}
+
 type TabType = 'overview' | 'feed' | 'portfolio' | 'debates' | 'consultations' | 'watchlist' | 'settings';
 
 // Main page wrapper with Suspense
@@ -75,6 +96,11 @@ function MyPageContent() {
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // 투자 성향 테스트 기록
+  const [investmentTestHistory, setInvestmentTestHistory] = useState<InvestmentTestRecord[]>([]);
+  const [canTakeTest, setCanTakeTest] = useState(true);
+  const [nextTestAvailableAt, setNextTestAvailableAt] = useState<string | null>(null);
 
   // Settings state
   const [preferredAnalyst, setPreferredAnalyst] = useState<CharacterType>('claude');
@@ -149,6 +175,19 @@ function MyPageContent() {
         setPreferredAnalyst(prefsData.preferred_analyst);
         setNotificationEnabled(prefsData.notification_enabled);
         setEmailDigest(prefsData.email_digest);
+      }
+      
+      // Fetch investment test history
+      try {
+        const testHistoryRes = await fetch(`/api/investment-test/history?userId=${user.id}`);
+        const testHistoryData = await testHistoryRes.json();
+        if (testHistoryData.success) {
+          setInvestmentTestHistory(testHistoryData.data.history || []);
+          setCanTakeTest(testHistoryData.data.canTakeTest);
+          setNextTestAvailableAt(testHistoryData.data.nextAvailableAt);
+        }
+      } catch (err) {
+        console.error('Failed to fetch investment test history:', err);
       }
 
       setDebateHistory(debates || []);
@@ -364,6 +403,98 @@ function MyPageContent() {
                               </div>
                               <div className="text-xs text-dark-500">
                                 {new Date(item.created_at).toLocaleDateString('ko-KR')}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Investment Test History */}
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-white">🧬 투자 성향 테스트 기록</h3>
+                        {canTakeTest ? (
+                          <Link
+                            href="/investment-test"
+                            className="px-4 py-2 bg-purple-500/20 text-purple-400 rounded-lg text-sm hover:bg-purple-500/30 transition-colors"
+                          >
+                            + 새 테스트
+                          </Link>
+                        ) : nextTestAvailableAt && (
+                          <span className="text-sm text-gray-500">
+                            다음 테스트: {new Date(nextTestAvailableAt).toLocaleDateString('ko-KR')}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {investmentTestHistory.length === 0 ? (
+                        <div className="text-center py-8 bg-dark-800/30 rounded-xl">
+                          <p className="text-dark-500 mb-4">아직 테스트 기록이 없습니다.</p>
+                          <Link href="/investment-test" className="btn-primary text-sm">
+                            투자 DNA 테스트 하러가기
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {investmentTestHistory.map((record, idx) => (
+                            <div
+                              key={record.id}
+                              className={`p-4 rounded-xl border transition-colors ${
+                                idx === 0 
+                                  ? 'bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/30' 
+                                  : 'bg-dark-800/30 border-dark-700'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                                    <span className="text-2xl">{record.investor_type_emoji}</span>
+                                    <span className="font-bold text-white">{record.investor_type_name}</span>
+                                    <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded text-xs font-mono">
+                                      {record.investor_type_code}
+                                    </span>
+                                    {idx === 0 && (
+                                      <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">
+                                        최신
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-gray-400 mb-2">{record.investor_type_nickname}</p>
+                                  <p className="text-xs text-gray-500 line-clamp-2">{record.investor_type_description}</p>
+                                  
+                                  {/* 점수 요약 */}
+                                  <div className="flex flex-wrap gap-2 mt-3">
+                                    <span className={`text-xs px-2 py-1 rounded ${record.scores?.riskTolerance?.R > record.scores?.riskTolerance?.S ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                                      {record.scores?.riskTolerance?.R > record.scores?.riskTolerance?.S ? '위험추구' : '안전추구'}
+                                    </span>
+                                    <span className={`text-xs px-2 py-1 rounded ${record.scores?.analysisStyle?.A > record.scores?.analysisStyle?.I ? 'bg-purple-500/20 text-purple-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                      {record.scores?.analysisStyle?.A > record.scores?.analysisStyle?.I ? '분석형' : '직관형'}
+                                    </span>
+                                    <span className={`text-xs px-2 py-1 rounded ${record.scores?.investmentHorizon?.L > record.scores?.investmentHorizon?.S ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'}`}>
+                                      {record.scores?.investmentHorizon?.L > record.scores?.investmentHorizon?.S ? '장기투자' : '단기투자'}
+                                    </span>
+                                  </div>
+                                  
+                                  {/* 추천 ETF */}
+                                  {record.compatible_etfs && record.compatible_etfs.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-2">
+                                      {record.compatible_etfs.slice(0, 4).map(etf => (
+                                        <span key={etf} className="text-xs px-2 py-0.5 bg-dark-700 text-gray-400 rounded">
+                                          {etf}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <div className="text-xs text-gray-500">
+                                    {new Date(record.created_at).toLocaleDateString('ko-KR')}
+                                  </div>
+                                  <div className="text-xs text-gray-600">
+                                    {new Date(record.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           ))}

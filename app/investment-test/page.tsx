@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 // 캐릭터 이미지 경로
 const CHARACTER_IMAGES = {
@@ -90,6 +91,7 @@ const TYPE_DIMENSIONS = {
 };
 
 export default function InvestmentTestPage() {
+  const { user } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentStep, setCurrentStep] = useState<'intro' | 'test' | 'loading' | 'result'>('intro');
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -98,8 +100,14 @@ export default function InvestmentTestPage() {
   const [error, setError] = useState<string | null>(null);
   const [aiEnabled, setAiEnabled] = useState(true);
   const [selectedExpert, setSelectedExpert] = useState<string | null>(null);
+  
+  // 테스트 제한 관련 상태
+  const [canTakeTest, setCanTakeTest] = useState(true);
+  const [lastTestAt, setLastTestAt] = useState<string | null>(null);
+  const [nextAvailableAt, setNextAvailableAt] = useState<string | null>(null);
+  const [savedToHistory, setSavedToHistory] = useState(false);
 
-  // 질문 불러오기
+  // 질문 불러오기 + 테스트 가능 여부 확인
   useEffect(() => {
     fetch('/api/investment-test')
       .then(res => res.json())
@@ -110,7 +118,21 @@ export default function InvestmentTestPage() {
         }
       })
       .catch(() => setError('질문을 불러오는데 실패했습니다.'));
-  }, []);
+    
+    // 로그인한 사용자인 경우 테스트 가능 여부 확인
+    if (user) {
+      fetch(`/api/investment-test/history?userId=${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setCanTakeTest(data.data.canTakeTest);
+            setLastTestAt(data.data.lastTestAt);
+            setNextAvailableAt(data.data.nextAvailableAt);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [user]);
 
   // 답변 선택
   const handleAnswer = (option: QuestionOption) => {
@@ -136,6 +158,7 @@ export default function InvestmentTestPage() {
   const submitTest = async (finalAnswers: Answer[]) => {
     setCurrentStep('loading');
     setError(null);
+    setSavedToHistory(false);
 
     try {
       const response = await fetch('/api/investment-test', {
@@ -152,9 +175,46 @@ export default function InvestmentTestPage() {
 
       setResult(data.data);
       setCurrentStep('result');
+      
+      // 로그인한 사용자인 경우 결과 저장
+      if (user) {
+        saveTestResult(data.data);
+      }
     } catch (err: any) {
       setError(err.message || '분석에 실패했습니다.');
       setCurrentStep('test');
+    }
+  };
+  
+  // 테스트 결과 저장
+  const saveTestResult = async (testResult: AnalysisResult) => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch('/api/investment-test/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          investorType: testResult.investorType,
+          scores: testResult.scores,
+          expertAnalysis: testResult.expertAnalysis,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setSavedToHistory(true);
+        setCanTakeTest(false);
+        setLastTestAt(new Date().toISOString());
+        setNextAvailableAt(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString());
+      } else if (response.status === 429) {
+        // 일주일 제한
+        console.log('Test limit reached:', data);
+      }
+    } catch (err) {
+      console.error('Failed to save test result:', err);
     }
   };
 
@@ -291,15 +351,39 @@ export default function InvestmentTestPage() {
                 ))}
               </motion.div>
 
+              {/* 일주일 제한 안내 */}
+              {user && !canTakeTest && nextAvailableAt && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl"
+                >
+                  <div className="text-yellow-400 font-bold mb-1">⏰ 테스트 대기 중</div>
+                  <p className="text-gray-400 text-sm">
+                    마지막 테스트: {new Date(lastTestAt!).toLocaleDateString('ko-KR')}
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    다음 테스트 가능: <span className="text-yellow-400 font-medium">{new Date(nextAvailableAt).toLocaleDateString('ko-KR')}</span>
+                  </p>
+                  <Link 
+                    href="/mypage?tab=overview"
+                    className="inline-block mt-2 text-sm text-purple-400 hover:text-purple-300"
+                  >
+                    → 이전 테스트 결과 보기
+                  </Link>
+                </motion.div>
+              )}
+
               <motion.button
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
                 onClick={() => setCurrentStep('test')}
-                disabled={!aiEnabled || questions.length === 0}
+                disabled={!aiEnabled || questions.length === 0 || (user && !canTakeTest)}
                 className="px-8 py-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                {!aiEnabled ? 'AI 서비스 준비 중...' : questions.length === 0 ? '질문 로딩 중...' : '🧬 내 투자 DNA 찾기'}
+                {!aiEnabled ? 'AI 서비스 준비 중...' : questions.length === 0 ? '질문 로딩 중...' : (user && !canTakeTest) ? '🔒 일주일 후 다시 테스트' : '🧬 내 투자 DNA 찾기'}
               </motion.button>
 
               <p className="text-gray-500 text-sm mt-4">
