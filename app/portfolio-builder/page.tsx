@@ -133,6 +133,8 @@ function PortfolioBuilderContent() {
   const [error, setError] = useState<string | null>(null);
   const [aiEnabled, setAiEnabled] = useState(true);
   const [investorTestData, setInvestorTestData] = useState<any>(null);
+  const [loadingStep, setLoadingStep] = useState<string>('');
+  const [expandedHolding, setExpandedHolding] = useState<string | null>(null);
   
   // 투자자 프로필 상태
   const [profile, setProfile] = useState<InvestorProfile>({
@@ -183,30 +185,45 @@ function PortfolioBuilderContent() {
       .catch(() => {});
   }, []);
 
-  // 포트폴리오 생성
+  // 포트폴리오 생성 (진행 상황 표시)
   const handleGeneratePortfolio = async () => {
     setIsLoading(true);
     setError(null);
+    setLoadingStep('프로필 분석 중...');
     
     try {
+      // 1단계: 시작
+      await new Promise(r => setTimeout(r, 300));
+      setLoadingStep('ETF 가격 조회 중...');
+      
+      // 2단계: API 호출
+      await new Promise(r => setTimeout(r, 500));
+      setLoadingStep('AI가 포트폴리오 구성 중...');
+      
       const response = await fetch('/api/portfolio/build', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(profile),
       });
       
+      setLoadingStep('결과 분석 중...');
       const data = await response.json();
       
       if (!data.success) {
         throw new Error(data.error || 'Failed to generate portfolio');
       }
       
+      setLoadingStep('완료!');
+      await new Promise(r => setTimeout(r, 300));
+      
       setResult(data.data);
+      setExpandedHolding(null);
       setStep(4); // 결과 페이지로
     } catch (err: any) {
       setError(err.message || '포트폴리오 생성에 실패했습니다.');
     } finally {
       setIsLoading(false);
+      setLoadingStep('');
     }
   };
 
@@ -591,7 +608,7 @@ function PortfolioBuilderContent() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                         </svg>
-                        AI가 분석 중...
+                        {loadingStep || 'AI가 분석 중...'}
                       </>
                     ) : (
                       <>
@@ -662,47 +679,101 @@ function PortfolioBuilderContent() {
               {/* 포트폴리오 종목 */}
               <div className="bg-dark-800/50 rounded-2xl p-6 border border-dark-700">
                 <h3 className="text-lg font-bold text-white mb-4">💼 포트폴리오 구성</h3>
-                <div className="space-y-4">
+                <p className="text-gray-500 text-sm mb-4">📋 ETF를 클릭하면 상세 정보를 볼 수 있습니다</p>
+                <div className="space-y-3">
                   {result.holdings.map((holding, idx) => (
                     <motion.div
                       key={holding.ticker}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.1 }}
-                      className="bg-dark-700/50 rounded-xl p-4 hover:bg-dark-700 transition-colors"
+                      transition={{ delay: idx * 0.05 }}
+                      className="bg-dark-700/50 rounded-xl overflow-hidden"
                     >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-lg font-bold text-white">{holding.ticker}</span>
-                            <span className="text-gray-400">{holding.nameKo}</span>
-                            <span className="px-2 py-0.5 bg-dark-600 rounded text-xs text-gray-400">
-                              {holding.category}
+                      {/* 헤더 (항상 보임) */}
+                      <button
+                        onClick={() => setExpandedHolding(expandedHolding === holding.ticker ? null : holding.ticker)}
+                        className="w-full p-4 flex items-center justify-between gap-4 hover:bg-dark-700/80 transition-colors text-left"
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <span className="text-lg font-bold text-white">{holding.ticker}</span>
+                          <span className="text-gray-400 truncate">{holding.nameKo}</span>
+                          <span className="px-2 py-0.5 bg-dark-600 rounded text-xs text-gray-400 shrink-0">
+                            {holding.category}
+                          </span>
+                          {holding.source !== 'static' && (
+                            <span className="px-2 py-0.5 bg-green-500/20 rounded text-xs text-green-400 shrink-0">
+                              실시간
                             </span>
-                            {holding.source !== 'static' && (
-                              <span className="px-2 py-0.5 bg-green-500/20 rounded text-xs text-green-400">
-                                실시간
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-gray-400 text-sm mt-2">{holding.rationale}</p>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {holding.riskFactors.map((risk, i) => (
-                              <span key={i} className="px-2 py-0.5 bg-red-500/10 rounded text-xs text-red-400">
-                                ⚠️ {risk}
-                              </span>
-                            ))}
-                          </div>
+                          )}
                         </div>
-                        <div className="text-right shrink-0">
-                          <div className="text-xl font-bold text-white">{holding.weight.toFixed(1)}%</div>
-                          <div className="text-sm text-gray-400">{formatKRW(holding.amount)}</div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {holding.shares}주 × {holding.currency === 'USD' ? '$' : '₩'}{holding.currentPrice.toLocaleString()}
+                        <div className="flex items-center gap-4 shrink-0">
+                          <div className="text-right">
+                            <div className="text-xl font-bold text-white">{holding.weight.toFixed(1)}%</div>
+                            <div className="text-sm text-gray-400">{formatKRW(holding.amount)}</div>
                           </div>
-                          <div className="text-sm text-green-400 mt-1">{holding.expectedReturn}</div>
+                          <motion.div
+                            animate={{ rotate: expandedHolding === holding.ticker ? 180 : 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="text-gray-400"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </motion.div>
                         </div>
-                      </div>
+                      </button>
+                      
+                      {/* 상세 내용 (펼쳐졌을 때) */}
+                      <AnimatePresence>
+                        {expandedHolding === holding.ticker && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-4 pb-4 pt-0 border-t border-dark-600">
+                              <div className="pt-4 space-y-3">
+                                {/* 선정 이유 */}
+                                <div>
+                                  <div className="text-xs text-gray-500 mb-1">📝 선정 이유</div>
+                                  <p className="text-gray-300 text-sm">{holding.rationale}</p>
+                                </div>
+                                
+                                {/* 가격 정보 */}
+                                <div className="flex items-center justify-between bg-dark-800/50 rounded-lg p-3">
+                                  <div>
+                                    <div className="text-xs text-gray-500">현재가</div>
+                                    <div className="text-white font-semibold">
+                                      {holding.currency === 'USD' ? '$' : '₩'}{holding.currentPrice.toLocaleString()}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs text-gray-500">매수 수량</div>
+                                    <div className="text-white font-semibold">{holding.shares}주</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs text-gray-500">기대 수익률</div>
+                                    <div className="text-green-400 font-semibold">{holding.expectedReturn}</div>
+                                  </div>
+                                </div>
+                                
+                                {/* 리스크 요인 */}
+                                {holding.riskFactors.length > 0 && (
+                                  <div className="flex flex-wrap gap-2">
+                                    {holding.riskFactors.map((risk, i) => (
+                                      <span key={i} className="px-2 py-1 bg-red-500/10 rounded text-xs text-red-400">
+                                        ⚠️ {risk}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </motion.div>
                   ))}
 

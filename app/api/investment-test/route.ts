@@ -17,8 +17,9 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 // AI 캐릭터별 모델
+// 빠른 응답을 위해 경량 모델 사용
 const CHARACTER_MODELS = {
-  claude: 'anthropic/claude-sonnet-4',
+  claude: 'anthropic/claude-3-haiku',  // 빠른 모델로 변경
   gemini: 'google/gemini-2.0-flash-001',
   gpt: 'openai/gpt-4o-mini',
 };
