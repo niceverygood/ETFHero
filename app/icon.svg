@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6"/>
+      <stop offset="100%" style="stop-color:#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="chart" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#22D3EE"/>
+      <stop offset="100%" style="stop-color:#10B981"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  
+  <!-- E letter stylized as chart -->
+  <g transform="translate(96, 80)">
+    <!-- E shape -->
+    <rect x="0" y="0" width="60" height="352" rx="12" fill="white"/>
+    <rect x="0" y="0" width="260" height="56" rx="12" fill="white"/>
+    <rect x="0" y="148" width="200" height="56" rx="12" fill="white"/>
+    <rect x="0" y="296" width="260" height="56" rx="12" fill="white"/>
+  </g>
+  
+  <!-- Rising chart line -->
+  <path d="M280 340 L340 280 L380 300 L440 200" 
+        stroke="url(#chart)" 
+        stroke-width="24" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+        fill="none"/>
+  
+  <!-- Chart arrow tip -->
+  <polygon points="440,200 410,210 420,240" fill="#10B981"/>
+  
+  <!-- Sparkle/AI indicator -->
+  <circle cx="420" cy="120" r="24" fill="white" opacity="0.9"/>
+  <circle cx="420" cy="120" r="12" fill="#FBBF24"/>
+</svg>
+
