@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { findETFByTicker, US_ETFS } from '@/lib/data/etf-list';
+import { findETFByTicker, ALL_ETFS } from '@/lib/data/etf-list';
 
 interface PortfolioAsset {
   ticker: string;
@@ -44,8 +44,8 @@ interface Preset {
 export default function BacktestPage() {
   // 포트폴리오 입력 상태
   const [portfolio, setPortfolio] = useState<PortfolioAsset[]>([
-    { ticker: 'SPY', weight: 60, name: 'S&P 500' },
-    { ticker: 'QQQ', weight: 40, name: '나스닥 100' },
+    { ticker: '069500', weight: 60, name: 'KODEX 200' },
+    { ticker: '360750', weight: 40, name: 'TIGER 미국S&P500' },
   ]);
   const [startDate, setStartDate] = useState('2020-01-01');
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
@@ -54,7 +54,7 @@ export default function BacktestPage() {
   
   // 검색 상태
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<typeof US_ETFS>([]);
+  const [searchResults, setSearchResults] = useState<typeof ALL_ETFS>([]);
   const [showSearch, setShowSearch] = useState(false);
   
   // 결과 상태
@@ -82,7 +82,7 @@ export default function BacktestPage() {
     setSearchTerm(query);
     if (query.trim()) {
       const lowerQuery = query.toLowerCase();
-      const filtered = US_ETFS.filter(
+      const filtered = ALL_ETFS.filter(
         etf =>
           etf.ticker.toLowerCase().includes(lowerQuery) ||
           etf.name.toLowerCase().includes(lowerQuery) ||
@@ -288,7 +288,7 @@ export default function BacktestPage() {
                   type="text"
                   value={searchTerm}
                   onChange={e => handleSearch(e.target.value)}
-                  placeholder="ETF 티커 검색 (예: VOO, SCHD)"
+                  placeholder="ETF 티커 검색 (예: 069500, KODEX200)"
                   className="w-full px-4 py-3 rounded-xl bg-dark-800 border border-dark-700 focus:border-brand-500 focus:outline-none"
                 />
                 {showSearch && searchResults.length > 0 && (

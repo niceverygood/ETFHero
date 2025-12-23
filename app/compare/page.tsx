@@ -56,7 +56,7 @@ const COMPARE_FIELDS: CompareField[] = [
 ];
 
 export default function ComparePage() {
-  const [selectedTickers, setSelectedTickers] = useState<string[]>(['SPY', 'VOO', 'QQQ']);
+  const [selectedTickers, setSelectedTickers] = useState<string[]>(['069500', '102110', '360750']);
   const [compareData, setCompareData] = useState<CompareData[]>([]);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -381,11 +381,11 @@ export default function ComparePage() {
             <p className="text-sm text-dark-500 mb-4 text-center">빠른 비교 세트</p>
             <div className="flex flex-wrap justify-center gap-3">
               {[
-                { label: 'S&P 500 비교', tickers: ['SPY', 'VOO', 'IVV'] },
-                { label: '배당 ETF 비교', tickers: ['SCHD', 'VYM', 'DVY', 'VIG'] },
-                { label: '반도체 ETF 비교', tickers: ['SOXX', 'SMH', 'VGT'] },
-                { label: '채권 ETF 비교', tickers: ['BND', 'TLT', 'AGG'] },
-                { label: '신흥국 vs 선진국', tickers: ['VWO', 'VEA', 'EEM'] },
+                { label: 'KOSPI200 비교', tickers: ['069500', '102110', '278530'] },
+                { label: '배당 ETF 비교', tickers: ['161510', '211900', '441800'] },
+                { label: '반도체 ETF 비교', tickers: ['091160', '395160', '381970'] },
+                { label: '채권 ETF 비교', tickers: ['148070', '305080', '153130'] },
+                { label: '미국지수(원화)', tickers: ['360750', '133690', '379810'] },
               ].map((preset) => (
                 <button
                   key={preset.label}

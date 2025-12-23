@@ -13,7 +13,7 @@ export default function HomePage() {
 
   const handleViewDebate = () => {
     setConsultCharacter(null); // 모달 닫기
-    router.push('/battle/SPY'); // SPY ETF 토론 페이지로 이동
+    router.push('/battle/069500'); // KODEX 200 ETF 토론 페이지로 이동
   };
 
   return (
@@ -131,14 +131,14 @@ export default function HomePage() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
               {[
-                { id: 'us-large-cap', icon: '🇺🇸', name: '미국 대형주', count: '25+ ETFs', color: 'from-blue-500/20 to-blue-600/10' },
-                { id: 'tech-semi', icon: '💻', name: '기술/반도체', count: '15+ ETFs', color: 'from-purple-500/20 to-purple-600/10' },
-                { id: 'growth', icon: '📈', name: '성장주', count: '12+ ETFs', color: 'from-green-500/20 to-green-600/10' },
-                { id: 'dividend', icon: '💰', name: '배당', count: '18+ ETFs', color: 'from-amber-500/20 to-amber-600/10' },
-                { id: 'bond', icon: '📜', name: '채권', count: '20+ ETFs', color: 'from-slate-500/20 to-slate-600/10' },
-                { id: 'international', icon: '🌍', name: '해외/신흥국', count: '22+ ETFs', color: 'from-cyan-500/20 to-cyan-600/10' },
-                { id: 'real-estate', icon: '🏢', name: '부동산', count: '10+ ETFs', color: 'from-orange-500/20 to-orange-600/10' },
-                { id: 'thematic', icon: '🎯', name: '테마', count: '30+ ETFs', color: 'from-pink-500/20 to-pink-600/10' },
+                { id: 'kr-index', icon: '🇰🇷', name: '국내 지수', count: '15+ ETFs', color: 'from-blue-500/20 to-blue-600/10' },
+                { id: 'tech-semi', icon: '💻', name: '반도체/기술', count: '10+ ETFs', color: 'from-purple-500/20 to-purple-600/10' },
+                { id: 'battery', icon: '🔋', name: '2차전지', count: '8+ ETFs', color: 'from-green-500/20 to-green-600/10' },
+                { id: 'dividend', icon: '💰', name: '배당', count: '12+ ETFs', color: 'from-amber-500/20 to-amber-600/10' },
+                { id: 'bond', icon: '📜', name: '채권', count: '15+ ETFs', color: 'from-slate-500/20 to-slate-600/10' },
+                { id: 'us-index', icon: '🇺🇸', name: '미국지수(원화)', count: '10+ ETFs', color: 'from-cyan-500/20 to-cyan-600/10' },
+                { id: 'commodity', icon: '🥇', name: '금/원자재', count: '8+ ETFs', color: 'from-orange-500/20 to-orange-600/10' },
+                { id: 'thematic', icon: '🎯', name: 'AI/테마', count: '20+ ETFs', color: 'from-pink-500/20 to-pink-600/10' },
               ].map((category) => (
                 <button
                   key={category.id}

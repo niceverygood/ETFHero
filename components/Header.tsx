@@ -11,7 +11,7 @@ const NAV_LINKS = [
   { href: '/portfolio-builder', label: '포트폴리오', icon: '✨' },
   { href: '/verdict', label: 'Top5', icon: '' },
   { href: '/heroes', label: 'AI상담', icon: '' },
-  { href: '/battle/SPY', label: '토론', icon: '' },
+  { href: '/battle/069500', label: '토론', icon: '' },
   { href: '/compare', label: '비교', icon: '' },
   { href: '/backtest', label: '백테스트', icon: '' },
   { href: '/signals', label: '시그널', icon: '' },

@@ -143,61 +143,60 @@ export async function POST(request: NextRequest) {
 /**
  * GET /api/backtest/presets
  * 
- * 추천 포트폴리오 프리셋 목록
+ * 추천 포트폴리오 프리셋 목록 (국내 상장 ETF)
  */
 export async function GET() {
   const presets = [
     {
       id: 'balanced',
       name: '균형 포트폴리오',
-      description: '주식과 채권의 균형 잡힌 배분',
+      description: '국내외 주식과 채권의 균형 배분',
       portfolio: [
-        { ticker: 'SPY', weight: 40, name: 'S&P 500' },
-        { ticker: 'QQQ', weight: 20, name: '나스닥 100' },
-        { ticker: 'BND', weight: 30, name: '미국 채권' },
-        { ticker: 'GLD', weight: 10, name: '금' },
+        { ticker: '069500', weight: 30, name: 'KODEX 200' },
+        { ticker: '360750', weight: 30, name: 'TIGER 미국S&P500' },
+        { ticker: '148070', weight: 25, name: 'KOSEF 국고채10년' },
+        { ticker: '132030', weight: 15, name: 'KODEX 골드선물(H)' },
       ],
     },
     {
       id: 'aggressive',
       name: '공격적 성장',
-      description: '높은 성장을 추구하는 기술주 중심',
+      description: '반도체/2차전지 중심 성장 포트폴리오',
       portfolio: [
-        { ticker: 'QQQ', weight: 40, name: '나스닥 100' },
-        { ticker: 'SMH', weight: 25, name: '반도체' },
-        { ticker: 'ARKK', weight: 20, name: '혁신 기술' },
-        { ticker: 'SPY', weight: 15, name: 'S&P 500' },
+        { ticker: '133690', weight: 35, name: 'TIGER 미국나스닥100' },
+        { ticker: '091160', weight: 25, name: 'KODEX 반도체' },
+        { ticker: '305720', weight: 25, name: 'KODEX 2차전지산업' },
+        { ticker: '069500', weight: 15, name: 'KODEX 200' },
       ],
     },
     {
       id: 'dividend',
       name: '배당 수익',
-      description: '안정적인 배당 수익 추구',
+      description: '월배당/고배당 ETF 중심',
       portfolio: [
-        { ticker: 'SCHD', weight: 35, name: '미국 배당' },
-        { ticker: 'VYM', weight: 25, name: '뱅가드 고배당' },
-        { ticker: 'VIG', weight: 25, name: '배당 성장' },
-        { ticker: 'BND', weight: 15, name: '미국 채권' },
+        { ticker: '441800', weight: 35, name: 'TIGER 미국배당다우존스' },
+        { ticker: '161510', weight: 25, name: 'ARIRANG 고배당주' },
+        { ticker: '211900', weight: 25, name: 'KODEX 배당성장' },
+        { ticker: '148070', weight: 15, name: 'KOSEF 국고채10년' },
       ],
     },
     {
       id: 'allweather',
       name: '올웨더',
-      description: '레이 달리오의 올웨더 전략',
+      description: '레이 달리오 올웨더 전략 (국내 ETF)',
       portfolio: [
-        { ticker: 'SPY', weight: 30, name: 'S&P 500' },
-        { ticker: 'TLT', weight: 40, name: '장기 국채' },
-        { ticker: 'IEF', weight: 15, name: '중기 국채' },
-        { ticker: 'GLD', weight: 7.5, name: '금' },
-        { ticker: 'DBC', weight: 7.5, name: '원자재' },
+        { ticker: '069500', weight: 30, name: 'KODEX 200' },
+        { ticker: '148070', weight: 40, name: 'KOSEF 국고채10년' },
+        { ticker: '153130', weight: 15, name: 'KODEX 단기채권' },
+        { ticker: '132030', weight: 15, name: 'KODEX 골드선물(H)' },
       ],
     },
     {
-      id: 'sp500only',
-      name: 'S&P 500 단일',
-      description: '미국 대형주 시장 추종',
+      id: 'kospi200',
+      name: 'KOSPI200 단일',
+      description: '한국 대형주 시장 추종',
       portfolio: [
-        { ticker: 'SPY', weight: 100, name: 'S&P 500' },
+        { ticker: '069500', weight: 100, name: 'KODEX 200' },
       ],
     },
     {
@@ -205,10 +204,10 @@ export async function GET() {
       name: '테크 집중',
       description: 'AI/반도체 중심 기술주',
       portfolio: [
-        { ticker: 'QQQ', weight: 35, name: '나스닥 100' },
-        { ticker: 'SMH', weight: 30, name: '반도체' },
-        { ticker: 'XLK', weight: 20, name: '기술 섹터' },
-        { ticker: 'ARKK', weight: 15, name: '혁신 기술' },
+        { ticker: '133690', weight: 35, name: 'TIGER 미국나스닥100' },
+        { ticker: '091160', weight: 30, name: 'KODEX 반도체' },
+        { ticker: '395160', weight: 20, name: 'TIGER 미국필라반도체나스닥' },
+        { ticker: '381970', weight: 15, name: 'TIGER AI반도체핵심공정' },
       ],
     },
   ];

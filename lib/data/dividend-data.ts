@@ -1,8 +1,8 @@
 /**
- * ETF 배당 데이터
+ * 국내 ETF 배당 데이터
  * 
  * 실제 서비스에서는 외부 API나 DB에서 실시간으로 가져와야 합니다.
- * 현재는 대표적인 배당 ETF의 예상 데이터를 사용합니다.
+ * 현재는 대표적인 국내 배당 ETF의 예상 데이터를 사용합니다.
  */
 
 export type DividendFrequency = 'monthly' | 'quarterly' | 'semi-annual' | 'annual';
@@ -13,210 +13,187 @@ export interface ETFDividendInfo {
   nameKo: string;
   dividendYield: number; // 연 배당수익률 (%)
   frequency: DividendFrequency;
-  lastDividend: number; // 최근 배당금 (USD)
+  lastDividend: number; // 최근 배당금 (원)
   exDividendMonths: number[]; // 배당락월 (1-12)
-  paymentDelay: number; // 배당락일 후 지급까지 일수 (보통 2-5일)
-  region: 'US' | 'KR';
+  paymentDelay: number; // 배당락일 후 지급까지 일수
+  region: 'KR';
   category: string;
 }
 
-// 주요 배당 ETF 데이터
+// 주요 국내 배당 ETF 데이터
 export const DIVIDEND_ETFS: ETFDividendInfo[] = [
-  // 미국 배당 ETF - 분기 배당
-  {
-    ticker: 'SCHD',
-    name: 'Schwab U.S. Dividend Equity',
-    nameKo: 'Schwab 미국 배당주',
-    dividendYield: 3.5,
-    frequency: 'quarterly',
-    lastDividend: 0.75,
-    exDividendMonths: [3, 6, 9, 12],
-    paymentDelay: 3,
-    region: 'US',
-    category: 'Dividend',
-  },
-  {
-    ticker: 'VYM',
-    name: 'Vanguard High Dividend Yield',
-    nameKo: '뱅가드 고배당',
-    dividendYield: 2.9,
-    frequency: 'quarterly',
-    lastDividend: 0.85,
-    exDividendMonths: [3, 6, 9, 12],
-    paymentDelay: 3,
-    region: 'US',
-    category: 'Dividend',
-  },
-  {
-    ticker: 'VIG',
-    name: 'Vanguard Dividend Appreciation',
-    nameKo: '뱅가드 배당성장',
-    dividendYield: 1.8,
-    frequency: 'quarterly',
-    lastDividend: 0.72,
-    exDividendMonths: [3, 6, 9, 12],
-    paymentDelay: 3,
-    region: 'US',
-    category: 'Dividend Growth',
-  },
-  {
-    ticker: 'HDV',
-    name: 'iShares Core High Dividend',
-    nameKo: 'iShares 고배당',
-    dividendYield: 3.8,
-    frequency: 'quarterly',
-    lastDividend: 1.05,
-    exDividendMonths: [3, 6, 9, 12],
-    paymentDelay: 5,
-    region: 'US',
-    category: 'Dividend',
-  },
-  {
-    ticker: 'DGRO',
-    name: 'iShares Core Dividend Growth',
-    nameKo: 'iShares 배당성장',
-    dividendYield: 2.3,
-    frequency: 'quarterly',
-    lastDividend: 0.58,
-    exDividendMonths: [3, 6, 9, 12],
-    paymentDelay: 5,
-    region: 'US',
-    category: 'Dividend Growth',
-  },
   // 월배당 ETF
   {
-    ticker: 'JEPI',
-    name: 'JPMorgan Equity Premium Income',
-    nameKo: 'JPM 프리미엄 인컴',
-    dividendYield: 7.5,
+    ticker: '441800',
+    name: 'TIGER 미국배당다우존스',
+    nameKo: 'TIGER 미국배당다우존스',
+    dividendYield: 3.8,
     frequency: 'monthly',
-    lastDividend: 0.38,
-    exDividendMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-    paymentDelay: 3,
-    region: 'US',
-    category: 'Covered Call',
-  },
-  {
-    ticker: 'JEPQ',
-    name: 'JPMorgan Nasdaq Equity Premium',
-    nameKo: 'JPM 나스닥 프리미엄',
-    dividendYield: 9.2,
-    frequency: 'monthly',
-    lastDividend: 0.45,
-    exDividendMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-    paymentDelay: 3,
-    region: 'US',
-    category: 'Covered Call',
-  },
-  {
-    ticker: 'QYLD',
-    name: 'Global X NASDAQ 100 Covered Call',
-    nameKo: 'Global X 나스닥 커버드콜',
-    dividendYield: 11.5,
-    frequency: 'monthly',
-    lastDividend: 0.18,
+    lastDividend: 35,
     exDividendMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
     paymentDelay: 5,
-    region: 'US',
-    category: 'Covered Call',
+    region: 'KR',
+    category: 'Monthly Dividend',
   },
   {
-    ticker: 'XYLD',
-    name: 'Global X S&P 500 Covered Call',
-    nameKo: 'Global X S&P500 커버드콜',
-    dividendYield: 10.2,
+    ticker: '458730',
+    name: 'KODEX 미국배당프리미엄액티브',
+    nameKo: 'KODEX 미국배당프리미엄액티브',
+    dividendYield: 8.5,
     frequency: 'monthly',
-    lastDividend: 0.35,
+    lastDividend: 72,
     exDividendMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
     paymentDelay: 5,
-    region: 'US',
+    region: 'KR',
     category: 'Covered Call',
   },
-  // S&P 500 / 나스닥 (분기 배당)
   {
-    ticker: 'SPY',
-    name: 'SPDR S&P 500',
-    nameKo: 'SPDR S&P 500',
-    dividendYield: 1.3,
+    ticker: '446720',
+    name: 'SOL 미국배당다우존스',
+    nameKo: 'SOL 미국배당다우존스',
+    dividendYield: 3.9,
+    frequency: 'monthly',
+    lastDividend: 38,
+    exDividendMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    paymentDelay: 5,
+    region: 'KR',
+    category: 'Monthly Dividend',
+  },
+  // 분기 배당 ETF
+  {
+    ticker: '161510',
+    name: 'ARIRANG 고배당주',
+    nameKo: 'ARIRANG 고배당주',
+    dividendYield: 5.2,
     frequency: 'quarterly',
-    lastDividend: 1.85,
+    lastDividend: 280,
     exDividendMonths: [3, 6, 9, 12],
     paymentDelay: 5,
-    region: 'US',
+    region: 'KR',
+    category: 'High Dividend',
+  },
+  {
+    ticker: '211900',
+    name: 'KODEX 배당성장',
+    nameKo: 'KODEX 배당성장',
+    dividendYield: 2.8,
+    frequency: 'quarterly',
+    lastDividend: 150,
+    exDividendMonths: [3, 6, 9, 12],
+    paymentDelay: 5,
+    region: 'KR',
+    category: 'Dividend Growth',
+  },
+  {
+    ticker: '278530',
+    name: 'KODEX 200TR',
+    nameKo: 'KODEX 200TR',
+    dividendYield: 2.0,
+    frequency: 'quarterly',
+    lastDividend: 180,
+    exDividendMonths: [3, 6, 9, 12],
+    paymentDelay: 5,
+    region: 'KR',
+    category: 'Total Return',
+  },
+  // 국내 지수 ETF (분기 배당)
+  {
+    ticker: '069500',
+    name: 'KODEX 200',
+    nameKo: 'KODEX 200',
+    dividendYield: 1.8,
+    frequency: 'quarterly',
+    lastDividend: 520,
+    exDividendMonths: [3, 6, 9, 12],
+    paymentDelay: 5,
+    region: 'KR',
     category: 'Large Cap',
   },
   {
-    ticker: 'VOO',
-    name: 'Vanguard S&P 500',
-    nameKo: '뱅가드 S&P 500',
-    dividendYield: 1.4,
+    ticker: '102110',
+    name: 'TIGER 200',
+    nameKo: 'TIGER 200',
+    dividendYield: 1.7,
     frequency: 'quarterly',
-    lastDividend: 1.65,
+    lastDividend: 480,
     exDividendMonths: [3, 6, 9, 12],
-    paymentDelay: 3,
-    region: 'US',
+    paymentDelay: 5,
+    region: 'KR',
     category: 'Large Cap',
   },
+  // 미국 지수 추종 (원화)
   {
-    ticker: 'QQQ',
-    name: 'Invesco QQQ',
-    nameKo: 'Invesco 나스닥 100',
+    ticker: '360750',
+    name: 'TIGER 미국S&P500',
+    nameKo: 'TIGER 미국S&P500',
+    dividendYield: 1.2,
+    frequency: 'quarterly',
+    lastDividend: 45,
+    exDividendMonths: [3, 6, 9, 12],
+    paymentDelay: 5,
+    region: 'KR',
+    category: 'US Index',
+  },
+  {
+    ticker: '133690',
+    name: 'TIGER 미국나스닥100',
+    nameKo: 'TIGER 미국나스닥100',
     dividendYield: 0.5,
     frequency: 'quarterly',
-    lastDividend: 0.62,
+    lastDividend: 35,
     exDividendMonths: [3, 6, 9, 12],
     paymentDelay: 5,
-    region: 'US',
-    category: 'Tech',
+    region: 'KR',
+    category: 'US Tech',
   },
-  // 채권 ETF
+  // 채권 ETF (월배당)
   {
-    ticker: 'BND',
-    name: 'Vanguard Total Bond Market',
-    nameKo: '뱅가드 총채권시장',
-    dividendYield: 3.8,
-    frequency: 'monthly',
-    lastDividend: 0.22,
-    exDividendMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-    paymentDelay: 3,
-    region: 'US',
-    category: 'Bond',
-  },
-  {
-    ticker: 'TLT',
-    name: 'iShares 20+ Year Treasury',
-    nameKo: 'iShares 장기국채',
+    ticker: '148070',
+    name: 'KOSEF 국고채10년',
+    nameKo: 'KOSEF 국고채10년',
     dividendYield: 3.5,
     frequency: 'monthly',
-    lastDividend: 0.28,
+    lastDividend: 95,
     exDividendMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-    paymentDelay: 5,
-    region: 'US',
+    paymentDelay: 3,
+    region: 'KR',
     category: 'Bond',
   },
-  // 리츠
   {
-    ticker: 'VNQ',
-    name: 'Vanguard Real Estate',
-    nameKo: '뱅가드 리츠',
-    dividendYield: 4.2,
+    ticker: '305080',
+    name: 'TIGER 미국채10년선물',
+    nameKo: 'TIGER 미국채10년선물',
+    dividendYield: 3.2,
     frequency: 'quarterly',
-    lastDividend: 0.95,
+    lastDividend: 85,
     exDividendMonths: [3, 6, 9, 12],
-    paymentDelay: 3,
-    region: 'US',
-    category: 'REIT',
+    paymentDelay: 5,
+    region: 'KR',
+    category: 'Bond',
   },
   {
-    ticker: 'SCHH',
-    name: 'Schwab U.S. REIT',
-    nameKo: 'Schwab 미국 리츠',
-    dividendYield: 3.8,
-    frequency: 'quarterly',
-    lastDividend: 0.42,
-    exDividendMonths: [3, 6, 9, 12],
+    ticker: '153130',
+    name: 'KODEX 단기채권',
+    nameKo: 'KODEX 단기채권',
+    dividendYield: 3.0,
+    frequency: 'monthly',
+    lastDividend: 28,
+    exDividendMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
     paymentDelay: 3,
-    region: 'US',
+    region: 'KR',
+    category: 'Bond',
+  },
+  // 리츠 ETF
+  {
+    ticker: '329200',
+    name: 'TIGER 리츠부동산인프라',
+    nameKo: 'TIGER 리츠부동산인프라',
+    dividendYield: 4.5,
+    frequency: 'quarterly',
+    lastDividend: 120,
+    exDividendMonths: [3, 6, 9, 12],
+    paymentDelay: 5,
+    region: 'KR',
     category: 'REIT',
   },
 ];
@@ -318,16 +295,16 @@ export function calculateAnnualDividend(
     byETF.push({
       ticker: etfInfo.ticker,
       name: etfInfo.nameKo,
-      annualDividend: Number(annualDividend.toFixed(2)),
+      annualDividend: Number(annualDividend.toFixed(0)),
       yield: etfInfo.dividendYield,
     });
   }
 
   return {
-    totalAnnualDividend: Number(totalAnnualDividend.toFixed(2)),
+    totalAnnualDividend: Number(totalAnnualDividend.toFixed(0)),
     monthlyBreakdown: monthlyBreakdown.map(m => ({
       month: m.month,
-      amount: Number(m.amount.toFixed(2)),
+      amount: Number(m.amount.toFixed(0)),
     })),
     byETF,
   };
@@ -337,7 +314,7 @@ export function calculateAnnualDividend(
  * ETF 배당 정보 조회
  */
 export function getDividendETFInfo(ticker: string): ETFDividendInfo | undefined {
-  return DIVIDEND_ETFS.find(e => e.ticker.toUpperCase() === ticker.toUpperCase());
+  return DIVIDEND_ETFS.find(e => e.ticker === ticker);
 }
 
 /**
@@ -366,5 +343,3 @@ export function getDividendETFsByCategory(category: string): ETFDividendInfo[] {
 export function getDividendETFsByFrequency(frequency: DividendFrequency): ETFDividendInfo[] {
   return DIVIDEND_ETFS.filter(e => e.frequency === frequency);
 }
-
-
