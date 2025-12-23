@@ -75,7 +75,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['침착한 위기 대응', '장기 복리 효과 극대화', '시장 타이밍 스트레스 없음'],
     weaknesses: ['과도한 위험 노출 가능', '단기 손실에 무감각', '기회비용 간과'],
     advice: '레버리지 ETF나 변동성 높은 섹터 ETF는 비중을 20% 이하로 제한하세요.',
-    compatibleETFs: ['QQQ', 'SOXX', 'ARKK', 'TQQQ'],
+    compatibleETFs: ['133690', '381170', '305720', '122630'],  // 나스닥100, 필라반도체, 2차전지, 레버리지
     famousPerson: '캐시 우드 (ARK Invest)',
     famousPersonBio: 'ARK Invest 창업자. 2020년 테슬라와 혁신 기술주에 대한 과감한 베팅으로 +150% 수익률을 기록하며 월가의 주목을 받았습니다.',
     famousPersonQuote: '"혁신이 세상을 바꾼다. 우리는 변화의 올바른 편에 서야 한다."',
@@ -89,7 +89,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['트렌드 포착 능력', '높은 수익 잠재력', '적극적 리밸런싱'],
     weaknesses: ['과잉 거래 위험', '감정적 매매 유혹', '비용 증가'],
     advice: '핵심 보유 70% + 전술적 배분 30% 전략을 추천합니다.',
-    compatibleETFs: ['SMH', 'XLK', 'KWEB', 'ARKG'],
+    compatibleETFs: ['381170', '453850', '192090', '371460'],  // 반도체, 테크TOP10, 차이나CSI300, 차이나전기차
     famousPerson: '피터 린치',
     famousPersonBio: '피델리티 마젤란펀드를 13년간 운용하며 연평균 29.2% 수익률을 달성한 전설적인 펀드매니저입니다.',
     famousPersonQuote: '"일상에서 투자 아이디어를 찾아라. 당신이 아는 것에 투자하라."',
@@ -103,7 +103,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['빠른 수익 실현', '시장 변동성 활용', '유연한 대응'],
     weaknesses: ['스트레스 높음', '세금 비효율', '장기 복리 포기'],
     advice: '전체 자산의 30% 이하로 단기 매매를 제한하세요.',
-    compatibleETFs: ['SOXL', 'UPRO', 'SPXS', 'VXX'],
+    compatibleETFs: ['122630', '278530', '252670', '261220'],  // 레버리지, 코스닥레버리지, 인버스2X, WTI원유
     famousPerson: '폴 튜더 존스',
     famousPersonBio: '튜더 인베스트먼트 창업자. 1987년 블랙먼데이를 예측해 200% 수익을 거둔 매크로 트레이딩의 전설입니다.',
     famousPersonQuote: '"손실을 빨리 인정하라. 그것이 가장 중요한 원칙이다."',
@@ -117,7 +117,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['빠른 의사결정', '기회 포착력', '손절 능력'],
     weaknesses: ['번아웃 위험', '높은 거래비용', '감정 소모'],
     advice: '꼭 손절 라인을 정하고, 하루 손실 한도를 설정하세요.',
-    compatibleETFs: ['TQQQ', 'SQQQ', 'UVXY', 'LABU'],
+    compatibleETFs: ['122630', '252670', '278530', '236350'],  // 레버리지, 인버스2X, 코스닥레버리지, 인도레버리지
     famousPerson: '제시 리버모어',
     famousPersonBio: '20세기 초 가장 위대한 투기꾼. 1929년 대공황을 예측해 1억 달러(현재 가치 약 15억 달러)를 벌었습니다.',
     famousPersonQuote: '"시장은 절대 틀리지 않는다. 의견은 종종 틀린다."',
@@ -131,7 +131,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['거시적 시야', '인내심', '혁신 기업 발굴'],
     weaknesses: ['밸류에이션 무시', '확증편향', '손실 인정 지연'],
     advice: '직관을 신뢰하되, 기본적 분석으로 검증하는 습관을 들이세요.',
-    compatibleETFs: ['ARKK', 'BOTZ', 'ICLN', 'LIT'],
+    compatibleETFs: ['305720', '277630', '466920', '489250'],  // 2차전지, 친환경에너지, AI반도체, AI전력밸류체인
     famousPerson: '손정의 (소프트뱅크)',
     famousPersonBio: '소프트뱅크 그룹 회장. 알리바바 초기 투자로 2,000배 수익을 거두며 세계 최대 벤처 투자자가 되었습니다.',
     famousPersonQuote: '"30년 후를 내다보고 투자하라. 미래는 이미 시작되었다."',
@@ -145,7 +145,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['선제적 투자', '높은 확신', '대세 선도'],
     weaknesses: ['고집', '분산 부족', '타이밍 리스크'],
     advice: '확신이 있어도 한 종목에 20% 이상 투자하지 마세요.',
-    compatibleETFs: ['ARKQ', 'DRIV', 'MOON', 'BLOK'],
+    compatibleETFs: ['465330', '466920', '381180', '371460'],  // AI전력인프라, AI반도체, 2차전지테마, 차이나전기차
     famousPerson: '일론 머스크',
     famousPersonBio: '테슬라, 스페이스X 창업자. 전기차와 우주 산업의 판도를 바꾸며 세계 최고 부자가 되었습니다.',
     famousPersonQuote: '"가장 큰 리스크는 리스크를 감수하지 않는 것이다."',
@@ -159,7 +159,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['타이밍 감각', '트렌드 서핑', '빠른 수익'],
     weaknesses: ['FOMO 취약', '일관성 부족', '과잉 확신'],
     advice: '모멘텀 지표(RSI, MACD)를 활용해 직관을 보완하세요.',
-    compatibleETFs: ['MTUM', 'FFTY', 'PDP', 'DWAS'],
+    compatibleETFs: ['133690', '229200', '091160', '453850'],  // 나스닥100, 코스닥150, 반도체, 테크TOP10
     famousPerson: '빌 오닐',
     famousPersonBio: 'Investor\'s Business Daily 창업자. CAN SLIM 투자법을 개발해 수많은 개인 투자자에게 영향을 끼쳤습니다.',
     famousPersonQuote: '"시장의 방향을 거스르지 마라. 트렌드를 따라가라."',
@@ -173,7 +173,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['순발력', '기회 포착', '결단력'],
     weaknesses: ['충동 매매', '복수 매매', '감정 기복'],
     advice: '매매 일지를 작성하고 패턴을 분석하세요. 감정 매매를 줄일 수 있습니다.',
-    compatibleETFs: ['SOXS', 'SPXU', 'TMV', 'ERX'],
+    compatibleETFs: ['252670', '122630', '114800', '261220'],  // 인버스2X, 레버리지, 인버스, WTI원유
     famousPerson: '조지 소로스 (젊은 시절)',
     famousPersonBio: '퀀텀펀드 창업자. 1992년 영국 파운드 공매도로 하루 만에 10억 달러를 벌며 "영란은행을 무너뜨린 남자"라는 별명을 얻었습니다.',
     famousPersonQuote: '"먼저 투자하고, 나중에 조사하라." (젊은 시절 스타일)',
@@ -187,7 +187,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['안정적 성장', '낮은 스트레스', '비용 효율'],
     weaknesses: ['기회 손실', '보수적 성향', '성장 한계'],
     advice: '코어-새틀라이트 전략으로 안정성과 성장성을 동시에 추구하세요.',
-    compatibleETFs: ['VOO', 'VTI', 'SCHD', 'VIG'],
+    compatibleETFs: ['360750', '069500', '441800', '211900'],  // S&P500, KODEX200, 미국배당다우존스, 배당성장
     famousPerson: '워렌 버핏',
     famousPersonBio: '버크셔 해서웨이 회장. 60년간 연평균 20% 수익률을 기록하며 "오마하의 현인"으로 불리는 가치투자의 전설입니다.',
     famousPersonQuote: '"남들이 탐욕스러울 때 두려워하고, 남들이 두려워할 때 탐욕스러워라."',
@@ -201,7 +201,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['펀더멘털 분석', '안전마진 확보', '장기 아웃퍼폼'],
     weaknesses: ['인내심 필요', '밸류 트랩 위험', '성장주 놓침'],
     advice: '분기별 리밸런싱으로 승자와 패자를 구분하세요.',
-    compatibleETFs: ['QUAL', 'MOAT', 'DGRW', 'PKW'],
+    compatibleETFs: ['102110', '360750', '441800', '161510'],  // TIGER200, S&P500, 미국배당다우존스, 고배당주
     famousPerson: '찰리 멍거',
     famousPersonBio: '버크셔 해서웨이 부회장. 워렌 버핏의 50년 파트너로, 가치투자에 퀄리티 요소를 더했습니다.',
     famousPersonQuote: '"좋은 기업을 적정 가격에 사는 것이, 평범한 기업을 싸게 사는 것보다 낫다."',
@@ -215,7 +215,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['원금 보존', '안정적 인컴', '낮은 변동성'],
     weaknesses: ['인플레이션 리스크', '낮은 수익률', '기회비용'],
     advice: '채권 ETF와 배당 ETF를 활용해 안정적 현금흐름을 만드세요.',
-    compatibleETFs: ['BND', 'AGG', 'JEPI', 'QYLD'],
+    compatibleETFs: ['148070', '305080', '446720', '458730'],  // 국고채10년, 미국채10년, 미국배당프리미엄, 배당액티브
     famousPerson: '레이 달리오 (현재)',
     famousPersonBio: '브릿지워터 어소시에이츠 창업자. 세계 최대 헤지펀드를 운용하며 "올웨더 포트폴리오" 전략을 개발했습니다.',
     famousPersonQuote: '"분산투자가 투자에서 유일한 공짜 점심이다."',
@@ -229,7 +229,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['유동성 확보', '기회 대기', '손실 회피'],
     weaknesses: ['현금 마찰', '타이밍 스트레스', '인플레이션 손실'],
     advice: '현금 비중이 30%를 넘지 않도록 하고, MMF나 초단기 채권 ETF를 활용하세요.',
-    compatibleETFs: ['SHV', 'BIL', 'SGOV', 'USFR'],
+    compatibleETFs: ['459590', '182490', '148070', '132030'],  // CD금리액티브, 단기채권, 국고채10년, 골드선물
     famousPerson: '하워드 막스',
     famousPersonBio: '오크트리 캐피탈 공동 창업자. "가치 사이클"과 리스크 관리에 관한 통찰력 있는 메모로 유명합니다.',
     famousPersonQuote: '"가장 중요한 것은 손실을 피하는 것이다. 수익은 그 다음이다."',
@@ -243,7 +243,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['심리적 안정', '브랜드 충성도', '장기 보유력'],
     weaknesses: ['객관성 부족', '과잉 애착', '매도 어려움'],
     advice: '좋아하는 기업도 비중 10% 이하로 제한하고, 정기 점검하세요.',
-    compatibleETFs: ['VIG', 'NOBL', 'SDY', 'DGRO'],
+    compatibleETFs: ['441800', '211900', '161510', '360750'],  // 미국배당다우존스, 배당성장, 고배당주, S&P500
     famousPerson: '피터 린치 (은퇴 후)',
     famousPersonBio: '은퇴 후 가족과 자선 활동에 집중하며 여유로운 삶을 살고 있습니다. 스트레스 없는 장기 투자를 강조합니다.',
     famousPersonQuote: '"투자에 너무 많은 시간을 쓰지 마라. 인생을 즐겨라."',
@@ -257,7 +257,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['가치 지향', '장기 비전', '사회적 영향'],
     weaknesses: ['수익률 제한', '주관적 기준', '그린워싱 리스크'],
     advice: 'ESG 평가 기준을 명확히 하고, 다양한 ESG ETF를 비교하세요.',
-    compatibleETFs: ['ESGU', 'SUSA', 'ICLN', 'KRMA'],
+    compatibleETFs: ['289040', '277630', '401470', '305720'],  // ESG리더스, 친환경에너지, 탄소배출권, 2차전지
     famousPerson: '래리 핑크 (블랙록)',
     famousPersonBio: '블랙록 CEO. 세계 최대 자산운용사를 이끌며 ESG 투자의 주류화를 주도하고 있습니다.',
     famousPersonQuote: '"기업의 목적은 이해관계자 모두에게 장기적 가치를 창출하는 것이다."',
@@ -271,7 +271,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['정신 건강', '일관성', '감정 통제'],
     weaknesses: ['너무 보수적', '기회 놓침', '성장 제한'],
     advice: '자동 투자 시스템을 구축하고, 시장을 자주 확인하지 마세요.',
-    compatibleETFs: ['SPLV', 'USMV', 'EFAV', 'ACWV'],
+    compatibleETFs: ['069500', '102110', '182490', '459590'],  // KODEX200, TIGER200, 단기채권, CD금리
     famousPerson: '존 보글',
     famousPersonBio: '뱅가드 창업자. 개인 투자자를 위한 저비용 인덱스 펀드를 개발하여 투자 민주화에 기여했습니다.',
     famousPersonQuote: '"시장을 이기려 하지 마라. 시장을 소유하라."',
@@ -285,7 +285,7 @@ const INVESTOR_TYPES: Record<string, {
     strengths: ['하방 보호', '빠른 철수', '리스크 관리'],
     weaknesses: ['수익 제한', '과잉 방어', '기회비용'],
     advice: '헤지 ETF나 인버스 ETF는 단기 헤지 용도로만 사용하세요.',
-    compatibleETFs: ['TAIL', 'BTAL', 'PSQ', 'SH'],
+    compatibleETFs: ['114800', '252670', '132030', '459590'],  // 인버스, 인버스2X, 골드선물, CD금리
     famousPerson: '나심 탈렙',
     famousPersonBio: '《블랙 스완》 저자. 극단적 리스크(테일 리스크)를 연구하고 안티프래질 투자 철학을 개발했습니다.',
     famousPersonQuote: '"희귀하지만 치명적인 리스크에 대비하라. 그것이 투자의 핵심이다."',

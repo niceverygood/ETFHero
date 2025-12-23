@@ -100,37 +100,89 @@ export const US_ETFS: ETFProduct[] = [
   { ticker: 'UPRO', name: 'ProShares UltraPro S&P 500', nameKo: 'UPRO 3배 레버리지', issuer: 'ProShares', category: 'Leveraged', assetClass: 'Equity', region: 'US', expenseRatio: 0.91, aum: 30, description: 'S&P 500 3배 레버리지' },
 ];
 
-// 한국 ETF 목록
+// 한국 ETF 목록 (확장판)
 export const KR_ETFS: ETFProduct[] = [
-  // 국내 지수
+  // ========== 국내 지수 ==========
   { ticker: '069500', name: 'KODEX 200', nameKo: 'KODEX 200', issuer: '삼성자산운용', category: 'KR Index', assetClass: 'Equity', region: 'KR', expenseRatio: 0.15, aum: 80, description: 'KOSPI 200 지수 추적' },
   { ticker: '102110', name: 'TIGER 200', nameKo: 'TIGER 200', issuer: '미래에셋자산운용', category: 'KR Index', assetClass: 'Equity', region: 'KR', expenseRatio: 0.05, aum: 60, description: 'KOSPI 200 저비용 추적' },
   { ticker: '229200', name: 'KODEX 코스닥150', nameKo: 'KODEX 코스닥150', issuer: '삼성자산운용', category: 'KR Index', assetClass: 'Equity', region: 'KR', expenseRatio: 0.25, aum: 15, description: '코스닥 150 지수 추적' },
+  { ticker: '252670', name: 'KODEX 200선물인버스2X', nameKo: 'KODEX 200선물인버스2X', issuer: '삼성자산운용', category: 'KR Index', assetClass: 'Equity', region: 'KR', expenseRatio: 0.64, aum: 40, description: 'KOSPI 200 2배 인버스' },
+  { ticker: '122630', name: 'KODEX 레버리지', nameKo: 'KODEX 레버리지', issuer: '삼성자산운용', category: 'KR Index', assetClass: 'Equity', region: 'KR', expenseRatio: 0.64, aum: 35, description: 'KOSPI 200 2배 레버리지' },
+  { ticker: '114800', name: 'KODEX 인버스', nameKo: 'KODEX 인버스', issuer: '삼성자산운용', category: 'KR Index', assetClass: 'Equity', region: 'KR', expenseRatio: 0.64, aum: 20, description: 'KOSPI 200 인버스' },
+  { ticker: '278530', name: 'KODEX 코스닥150레버리지', nameKo: 'KODEX 코스닥150레버리지', issuer: '삼성자산운용', category: 'KR Index', assetClass: 'Equity', region: 'KR', expenseRatio: 0.64, aum: 10, description: '코스닥150 2배 레버리지' },
   
-  // 미국 지수 추종
-  { ticker: '360750', name: 'TIGER 미국S&P500', nameKo: 'TIGER 미국S&P500', issuer: '미래에셋자산운용', category: 'US Large Cap', assetClass: 'Equity', region: 'US', expenseRatio: 0.07, aum: 100, description: 'S&P 500 원화 투자' },
-  { ticker: '379800', name: 'KODEX 미국S&P500TR', nameKo: 'KODEX 미국S&P500TR', issuer: '삼성자산운용', category: 'US Large Cap', assetClass: 'Equity', region: 'US', expenseRatio: 0.07, aum: 80, description: 'S&P 500 토탈리턴' },
-  { ticker: '133690', name: 'TIGER 미국나스닥100', nameKo: 'TIGER 미국나스닥100', issuer: '미래에셋자산운용', category: 'Technology', assetClass: 'Equity', region: 'US', expenseRatio: 0.07, aum: 90, description: '나스닥 100 원화 투자' },
-  { ticker: '379810', name: 'KODEX 미국나스닥100TR', nameKo: 'KODEX 미국나스닥100TR', issuer: '삼성자산운용', category: 'Technology', assetClass: 'Equity', region: 'US', expenseRatio: 0.07, aum: 70, description: '나스닥 100 토탈리턴' },
+  // ========== 미국 지수 추종 (국내상장) ==========
+  { ticker: '360750', name: 'TIGER 미국S&P500', nameKo: 'TIGER 미국S&P500', issuer: '미래에셋자산운용', category: 'US Index', assetClass: 'Equity', region: 'US', expenseRatio: 0.07, aum: 100, description: 'S&P 500 원화 투자' },
+  { ticker: '379800', name: 'KODEX 미국S&P500TR', nameKo: 'KODEX 미국S&P500TR', issuer: '삼성자산운용', category: 'US Index', assetClass: 'Equity', region: 'US', expenseRatio: 0.07, aum: 80, description: 'S&P 500 토탈리턴' },
+  { ticker: '133690', name: 'TIGER 미국나스닥100', nameKo: 'TIGER 미국나스닥100', issuer: '미래에셋자산운용', category: 'US Index', assetClass: 'Equity', region: 'US', expenseRatio: 0.07, aum: 90, description: '나스닥 100 원화 투자' },
+  { ticker: '379810', name: 'KODEX 미국나스닥100TR', nameKo: 'KODEX 미국나스닥100TR', issuer: '삼성자산운용', category: 'US Index', assetClass: 'Equity', region: 'US', expenseRatio: 0.07, aum: 70, description: '나스닥 100 토탈리턴' },
+  { ticker: '381170', name: 'TIGER 미국필라델피아반도체나스닥', nameKo: 'TIGER 미국필라델피아반도체', issuer: '미래에셋자산운용', category: 'Technology', assetClass: 'Equity', region: 'US', expenseRatio: 0.49, aum: 50, description: '미국 반도체 지수' },
+  { ticker: '409820', name: 'KODEX 미국반도체MV', nameKo: 'KODEX 미국반도체MV', issuer: '삼성자산운용', category: 'Technology', assetClass: 'Equity', region: 'US', expenseRatio: 0.45, aum: 30, description: '미국 반도체 MV 지수' },
+  { ticker: '453850', name: 'TIGER 미국테크TOP10INDXX', nameKo: 'TIGER 미국테크TOP10', issuer: '미래에셋자산운용', category: 'Technology', assetClass: 'Equity', region: 'US', expenseRatio: 0.49, aum: 25, description: '미국 빅테크 10종목' },
   
-  // 반도체/2차전지
+  // ========== 반도체 ==========
   { ticker: '091160', name: 'KODEX 반도체', nameKo: 'KODEX 반도체', issuer: '삼성자산운용', category: 'Technology', assetClass: 'Equity', region: 'KR', expenseRatio: 0.45, aum: 20, description: '국내 반도체 기업' },
-  { ticker: '091170', name: 'KODEX 2차전지', nameKo: 'KODEX 2차전지', issuer: '삼성자산운용', category: 'Thematic', assetClass: 'Equity', region: 'KR', expenseRatio: 0.45, aum: 25, description: '국내 2차전지 기업' },
-  { ticker: '305720', name: 'KODEX 2차전지산업', nameKo: 'KODEX 2차전지산업', issuer: '삼성자산운용', category: 'Thematic', assetClass: 'Equity', region: 'KR', expenseRatio: 0.45, aum: 30, description: '2차전지 밸류체인' },
-  { ticker: '381180', name: 'TIGER 2차전지테마', nameKo: 'TIGER 2차전지테마', issuer: '미래에셋자산운용', category: 'Thematic', assetClass: 'Equity', region: 'KR', expenseRatio: 0.50, aum: 15, description: '2차전지 테마' },
+  { ticker: '091180', name: 'KODEX 자동차', nameKo: 'KODEX 자동차', issuer: '삼성자산운용', category: 'Industrials', assetClass: 'Equity', region: 'KR', expenseRatio: 0.45, aum: 8, description: '국내 자동차 기업' },
+  { ticker: '140710', name: 'KODEX 운송', nameKo: 'KODEX 운송', issuer: '삼성자산운용', category: 'Industrials', assetClass: 'Equity', region: 'KR', expenseRatio: 0.45, aum: 3, description: '국내 운송 기업' },
   
-  // 배당
+  // ========== 2차전지/배터리 ==========
+  { ticker: '305720', name: 'KODEX 2차전지산업', nameKo: 'KODEX 2차전지산업', issuer: '삼성자산운용', category: 'Thematic', assetClass: 'Equity', region: 'KR', expenseRatio: 0.45, aum: 30, description: '2차전지 밸류체인 전체' },
+  { ticker: '381180', name: 'TIGER 2차전지테마', nameKo: 'TIGER 2차전지테마', issuer: '미래에셋자산운용', category: 'Thematic', assetClass: 'Equity', region: 'KR', expenseRatio: 0.50, aum: 15, description: '2차전지 관련 종목' },
+  { ticker: '455850', name: 'KODEX K-배터리액티브', nameKo: 'KODEX K-배터리액티브', issuer: '삼성자산운용', category: 'Thematic', assetClass: 'Equity', region: 'KR', expenseRatio: 0.60, aum: 10, description: 'K-배터리 액티브 운용' },
+  { ticker: '473460', name: 'TIGER 2차전지TOP10', nameKo: 'TIGER 2차전지TOP10', issuer: '미래에셋자산운용', category: 'Thematic', assetClass: 'Equity', region: 'KR', expenseRatio: 0.45, aum: 8, description: '2차전지 상위 10종목' },
+  
+  // ========== 배당/인컴 ==========
   { ticker: '161510', name: 'ARIRANG 고배당주', nameKo: 'ARIRANG 고배당주', issuer: '한화자산운용', category: 'Dividend', assetClass: 'Equity', region: 'KR', expenseRatio: 0.23, aum: 10, description: '국내 고배당주' },
   { ticker: '211900', name: 'KODEX 배당성장', nameKo: 'KODEX 배당성장', issuer: '삼성자산운용', category: 'Dividend', assetClass: 'Equity', region: 'KR', expenseRatio: 0.30, aum: 8, description: '배당 성장 기업' },
-  { ticker: '441800', name: 'TIGER 미국배당다우존스', nameKo: 'TIGER 미국배당다우존스', issuer: '미래에셋자산운용', category: 'Dividend', assetClass: 'Equity', region: 'US', expenseRatio: 0.15, aum: 30, description: '미국 배당 다우존스' },
+  { ticker: '441800', name: 'TIGER 미국배당다우존스', nameKo: 'TIGER 미국배당다우존스', issuer: '미래에셋자산운용', category: 'Dividend', assetClass: 'Equity', region: 'US', expenseRatio: 0.15, aum: 30, description: '미국 배당 다우존스(SCHD형)' },
+  { ticker: '458730', name: 'KODEX 미국배당프리미엄액티브', nameKo: 'KODEX 미국배당프리미엄액티브', issuer: '삼성자산운용', category: 'Dividend', assetClass: 'Equity', region: 'US', expenseRatio: 0.45, aum: 20, description: '미국 배당+커버드콜' },
+  { ticker: '446720', name: 'TIGER 미국배당+7%프리미엄다우존스', nameKo: 'TIGER 미국배당+7%프리미엄', issuer: '미래에셋자산운용', category: 'Dividend', assetClass: 'Equity', region: 'US', expenseRatio: 0.39, aum: 25, description: '미국 배당+월배당' },
+  { ticker: '329750', name: 'TIGER 미국MSCI리츠(합성 H)', nameKo: 'TIGER 미국MSCI리츠', issuer: '미래에셋자산운용', category: 'Real Estate', assetClass: 'Real Estate', region: 'US', expenseRatio: 0.24, aum: 15, description: '미국 리츠(환헤지)' },
   
-  // 채권
-  { ticker: '148070', name: 'KOSEF 국고채10년', nameKo: 'KOSEF 국고채10년', issuer: '키움투자자산운용', category: 'Bond', assetClass: 'Fixed Income', region: 'KR', expenseRatio: 0.07, aum: 5, description: '국고채 10년 투자' },
+  // ========== 채권 ==========
+  { ticker: '148070', name: 'KOSEF 국고채10년', nameKo: 'KOSEF 국고채10년', issuer: '키움투자자산운용', category: 'Bond', assetClass: 'Fixed Income', region: 'KR', expenseRatio: 0.07, aum: 5, description: '국고채 10년' },
+  { ticker: '152380', name: 'KODEX 국채선물10년', nameKo: 'KODEX 국채선물10년', issuer: '삼성자산운용', category: 'Bond', assetClass: 'Fixed Income', region: 'KR', expenseRatio: 0.07, aum: 8, description: '국채 10년 선물' },
   { ticker: '305080', name: 'TIGER 미국채10년선물', nameKo: 'TIGER 미국채10년선물', issuer: '미래에셋자산운용', category: 'Bond', assetClass: 'Fixed Income', region: 'US', expenseRatio: 0.30, aum: 10, description: '미국 10년 국채 선물' },
+  { ticker: '453080', name: 'KODEX 미국30년국채+12%프리미엄', nameKo: 'KODEX 미국30년국채+12%프리미엄', issuer: '삼성자산운용', category: 'Bond', assetClass: 'Fixed Income', region: 'US', expenseRatio: 0.45, aum: 20, description: '미국 장기채+커버드콜' },
+  { ticker: '451530', name: 'TIGER 미국채30년스트립액티브', nameKo: 'TIGER 미국채30년스트립액티브', issuer: '미래에셋자산운용', category: 'Bond', assetClass: 'Fixed Income', region: 'US', expenseRatio: 0.39, aum: 15, description: '미국 초장기 국채' },
+  { ticker: '182490', name: 'TIGER 단기채권액티브', nameKo: 'TIGER 단기채권액티브', issuer: '미래에셋자산운용', category: 'Bond', assetClass: 'Fixed Income', region: 'KR', expenseRatio: 0.05, aum: 30, description: '단기채권(현금 대용)' },
+  { ticker: '459590', name: 'KODEX CD금리액티브', nameKo: 'KODEX CD금리액티브', issuer: '삼성자산운용', category: 'Bond', assetClass: 'Fixed Income', region: 'KR', expenseRatio: 0.03, aum: 50, description: 'CD금리 추종(예금 대용)' },
   
-  // 금/원자재
-  { ticker: '132030', name: 'KODEX 골드선물(H)', nameKo: 'KODEX 골드선물', issuer: '삼성자산운용', category: 'Commodity', assetClass: 'Commodity', region: 'Global', expenseRatio: 0.68, aum: 8, description: '금 선물 투자 (환헤지)' },
-  { ticker: '319640', name: 'TIGER 골드선물(H)', nameKo: 'TIGER 골드선물', issuer: '미래에셋자산운용', category: 'Commodity', assetClass: 'Commodity', region: 'Global', expenseRatio: 0.39, aum: 5, description: '금 선물 저비용' },
+  // ========== 금/원자재 ==========
+  { ticker: '132030', name: 'KODEX 골드선물(H)', nameKo: 'KODEX 골드선물(H)', issuer: '삼성자산운용', category: 'Commodity', assetClass: 'Commodity', region: 'Global', expenseRatio: 0.68, aum: 8, description: '금 선물 (환헤지)' },
+  { ticker: '319640', name: 'TIGER 골드선물(H)', nameKo: 'TIGER 골드선물(H)', issuer: '미래에셋자산운용', category: 'Commodity', assetClass: 'Commodity', region: 'Global', expenseRatio: 0.39, aum: 5, description: '금 선물 저비용' },
+  { ticker: '411060', name: 'KODEX 은선물(H)', nameKo: 'KODEX 은선물(H)', issuer: '삼성자산운용', category: 'Commodity', assetClass: 'Commodity', region: 'Global', expenseRatio: 0.68, aum: 3, description: '은 선물 (환헤지)' },
+  { ticker: '261220', name: 'KODEX WTI원유선물(H)', nameKo: 'KODEX WTI원유선물(H)', issuer: '삼성자산운용', category: 'Commodity', assetClass: 'Commodity', region: 'Global', expenseRatio: 0.68, aum: 5, description: '원유 선물' },
+  
+  // ========== AI/빅테크 테마 ==========
+  { ticker: '418660', name: 'KODEX 미국빅테크10(H)', nameKo: 'KODEX 미국빅테크10', issuer: '삼성자산운용', category: 'Technology', assetClass: 'Equity', region: 'US', expenseRatio: 0.45, aum: 20, description: '미국 빅테크 10종목(환헤지)' },
+  { ticker: '465330', name: 'KODEX 미국AI전력핵심인프라', nameKo: 'KODEX 미국AI전력인프라', issuer: '삼성자산운용', category: 'Thematic', assetClass: 'Equity', region: 'US', expenseRatio: 0.45, aum: 15, description: 'AI 전력 인프라' },
+  { ticker: '466920', name: 'TIGER AI반도체핵심공정', nameKo: 'TIGER AI반도체핵심공정', issuer: '미래에셋자산운용', category: 'Technology', assetClass: 'Equity', region: 'Global', expenseRatio: 0.49, aum: 12, description: 'AI 반도체 핵심 공정' },
+  { ticker: '489250', name: 'KODEX AI전력핵심인프라밸류체인', nameKo: 'KODEX AI전력밸류체인', issuer: '삼성자산운용', category: 'Thematic', assetClass: 'Equity', region: 'Global', expenseRatio: 0.45, aum: 10, description: 'AI 전력 밸류체인' },
+  
+  // ========== 헬스케어/바이오 ==========
+  { ticker: '143860', name: 'KODEX 헬스케어', nameKo: 'KODEX 헬스케어', issuer: '삼성자산운용', category: 'Healthcare', assetClass: 'Equity', region: 'KR', expenseRatio: 0.45, aum: 5, description: '국내 헬스케어' },
+  { ticker: '227540', name: 'TIGER 헬스케어', nameKo: 'TIGER 헬스케어', issuer: '미래에셋자산운용', category: 'Healthcare', assetClass: 'Equity', region: 'KR', expenseRatio: 0.45, aum: 4, description: '국내 헬스케어' },
+  { ticker: '244580', name: 'KODEX 바이오', nameKo: 'KODEX 바이오', issuer: '삼성자산운용', category: 'Healthcare', assetClass: 'Equity', region: 'KR', expenseRatio: 0.45, aum: 3, description: '국내 바이오 기업' },
+  
+  // ========== 친환경/ESG ==========
+  { ticker: '277630', name: 'TIGER 친환경에너지테크', nameKo: 'TIGER 친환경에너지테크', issuer: '미래에셋자산운용', category: 'Thematic', assetClass: 'Equity', region: 'KR', expenseRatio: 0.50, aum: 5, description: '친환경 에너지 기술' },
+  { ticker: '289040', name: 'KODEX MSCI Korea ESG리더스', nameKo: 'KODEX ESG리더스', issuer: '삼성자산운용', category: 'ESG', assetClass: 'Equity', region: 'KR', expenseRatio: 0.30, aum: 3, description: 'ESG 우수 기업' },
+  { ticker: '401470', name: 'KODEX 탄소배출권선물ICE', nameKo: 'KODEX 탄소배출권', issuer: '삼성자산운용', category: 'Commodity', assetClass: 'Commodity', region: 'Global', expenseRatio: 0.55, aum: 2, description: '탄소배출권 선물' },
+  
+  // ========== 금융/은행 ==========
+  { ticker: '091220', name: 'KODEX 은행', nameKo: 'KODEX 은행', issuer: '삼성자산운용', category: 'Financial', assetClass: 'Equity', region: 'KR', expenseRatio: 0.45, aum: 5, description: '국내 은행주' },
+  { ticker: '140700', name: 'KODEX 보험', nameKo: 'KODEX 보험', issuer: '삼성자산운용', category: 'Financial', assetClass: 'Equity', region: 'KR', expenseRatio: 0.45, aum: 2, description: '국내 보험주' },
+  { ticker: '102780', name: 'KODEX 삼성그룹', nameKo: 'KODEX 삼성그룹', issuer: '삼성자산운용', category: 'KR Index', assetClass: 'Equity', region: 'KR', expenseRatio: 0.25, aum: 15, description: '삼성그룹주' },
+  
+  // ========== 글로벌/신흥국 ==========
+  { ticker: '195930', name: 'TIGER 유로스탁스50(합성 H)', nameKo: 'TIGER 유로스탁스50', issuer: '미래에셋자산운용', category: 'International', assetClass: 'Equity', region: 'EU', expenseRatio: 0.24, aum: 8, description: '유럽 대형주 50' },
+  { ticker: '192090', name: 'TIGER 차이나CSI300', nameKo: 'TIGER 차이나CSI300', issuer: '미래에셋자산운용', category: 'Emerging Markets', assetClass: 'Equity', region: 'CN', expenseRatio: 0.70, aum: 10, description: '중국 CSI300 지수' },
+  { ticker: '371460', name: 'TIGER 차이나전기차SOLACTIVE', nameKo: 'TIGER 차이나전기차', issuer: '미래에셋자산운용', category: 'Thematic', assetClass: 'Equity', region: 'CN', expenseRatio: 0.70, aum: 5, description: '중국 전기차' },
+  { ticker: '236350', name: 'TIGER 인도레버리지(합성)', nameKo: 'TIGER 인도레버리지', issuer: '미래에셋자산운용', category: 'Emerging Markets', assetClass: 'Equity', region: 'IN', expenseRatio: 0.70, aum: 15, description: '인도 Nifty50 2배' },
+  { ticker: '453850', name: 'TIGER 인도빌리언컨슈머', nameKo: 'TIGER 인도빌리언컨슈머', issuer: '미래에셋자산운용', category: 'Emerging Markets', assetClass: 'Equity', region: 'IN', expenseRatio: 0.70, aum: 8, description: '인도 소비재' },
+  { ticker: '200250', name: 'KODEX 베트남VN30(합성)', nameKo: 'KODEX 베트남VN30', issuer: '삼성자산운용', category: 'Emerging Markets', assetClass: 'Equity', region: 'VN', expenseRatio: 0.70, aum: 10, description: '베트남 VN30 지수' },
+  { ticker: '261110', name: 'KODEX 일본(합성 H)', nameKo: 'KODEX 일본', issuer: '삼성자산운용', category: 'International', assetClass: 'Equity', region: 'JP', expenseRatio: 0.24, aum: 6, description: '일본 니케이225' },
 ];
 
 // 전체 ETF 목록
@@ -174,21 +226,47 @@ export function getETFsSortedByExpenseRatio(ascending: boolean = true): ETFProdu
   );
 }
 
-// 인기 ETF 목록 (기본 추천용)
+// 인기 ETF 목록 (국내상장 ETF 중심)
 export const POPULAR_ETFS = [
-  'SPY', 'VOO', 'QQQ', 'VTI', 'SCHD',
-  'VYM', 'BND', 'VEA', 'VWO', 'GLD',
-  'SOXX', 'ARKK', 'TLT', 'VNQ', 'XLF',
+  '069500', '102110', '360750', '133690', '305720',  // KODEX200, TIGER200, S&P500, 나스닥100, 2차전지
+  '441800', '381170', '091160', '132030', '148070',  // 미국배당, 반도체, 골드, 국채
+  '229200', '453850', '446720', '305080', '418660',  // 코스닥150, 테크TOP10, 배당프리미엄, 미국채, 빅테크
 ];
 
-// 초보자 추천 ETF
+// 초보자 추천 ETF (국내상장)
 export const BEGINNER_ETFS = [
-  'VOO', 'VTI', 'SCHD', 'BND', 'VEA',
+  '069500',  // KODEX 200
+  '360750',  // TIGER 미국S&P500
+  '441800',  // TIGER 미국배당다우존스
+  '148070',  // KOSEF 국고채10년
+  '459590',  // KODEX CD금리액티브
 ];
 
-// 고배당 ETF
+// 고배당 ETF (국내상장)
 export const HIGH_DIVIDEND_ETFS = [
-  'SCHD', 'VYM', 'DVY', 'VIG', 'NOBL',
+  '441800',  // TIGER 미국배당다우존스
+  '446720',  // TIGER 미국배당+7%프리미엄
+  '458730',  // KODEX 미국배당프리미엄액티브
+  '161510',  // ARIRANG 고배당주
+  '211900',  // KODEX 배당성장
+];
+
+// 성장형 ETF (국내상장)
+export const GROWTH_ETFS = [
+  '133690',  // TIGER 미국나스닥100
+  '381170',  // TIGER 미국필라델피아반도체
+  '453850',  // TIGER 미국테크TOP10
+  '305720',  // KODEX 2차전지산업
+  '418660',  // KODEX 미국빅테크10
+];
+
+// 안정형 ETF (국내상장)
+export const CONSERVATIVE_ETFS = [
+  '459590',  // KODEX CD금리액티브
+  '182490',  // TIGER 단기채권액티브
+  '148070',  // KOSEF 국고채10년
+  '305080',  // TIGER 미국채10년선물
+  '132030',  // KODEX 골드선물
 ];
 
 

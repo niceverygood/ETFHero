@@ -380,10 +380,10 @@ export default function InvestmentTestPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
                 onClick={() => setCurrentStep('test')}
-                disabled={!aiEnabled || questions.length === 0 || (user && !canTakeTest)}
+                disabled={!aiEnabled || questions.length === 0 || (!!user && !canTakeTest)}
                 className="px-8 py-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                {!aiEnabled ? 'AI 서비스 준비 중...' : questions.length === 0 ? '질문 로딩 중...' : (user && !canTakeTest) ? '🔒 일주일 후 다시 테스트' : '🧬 내 투자 DNA 찾기'}
+                {!aiEnabled ? 'AI 서비스 준비 중...' : questions.length === 0 ? '질문 로딩 중...' : (!!user && !canTakeTest) ? '🔒 일주일 후 다시 테스트' : '🧬 내 투자 DNA 찾기'}
               </motion.button>
 
               <p className="text-gray-500 text-sm mt-4">
