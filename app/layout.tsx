@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
-import { DisclaimerBar, Header } from '@/components';
+import { DisclaimerBar, Header, FloatingChatButton } from '@/components';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -33,6 +33,7 @@ export default function RootLayout({
           <main className="pt-24">
             {children}
           </main>
+          <FloatingChatButton />
         </Providers>
       </body>
     </html>
