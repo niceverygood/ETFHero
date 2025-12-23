@@ -160,12 +160,28 @@ export function Calendar({ onDateSelect }: CalendarProps) {
         
         {verdict && (
           <div className="space-y-0 sm:space-y-0.5 overflow-hidden">
-            {verdict.top5.slice(0, 3).map((item, i) => (
-              <div key={i} className="flex items-center gap-0.5 sm:gap-1 text-2xs sm:text-xs">
-                <span className="text-dark-600 shrink-0">{i + 1}</span>
-                <span className="text-dark-400 truncate font-mono">{item.etfTicker}</span>
-              </div>
-            ))}
+            {verdict.top5.slice(0, 3).map((item, i) => {
+              // ETF 이름에서 브랜드명 추출 (KODEX, TIGER, ARIRANG 등)
+              const brandMatch = item.etfName?.match(/^(KODEX|TIGER|ARIRANG|KOSEF|KBSTAR|HANARO|SOL)/i);
+              const brand = brandMatch ? brandMatch[1] : '';
+              const shortName = item.etfName?.replace(/^(KODEX|TIGER|ARIRANG|KOSEF|KBSTAR|HANARO|SOL)\s*/i, '').split(' ')[0] || '';
+              
+              return (
+                <div key={i} className="flex items-center gap-0.5 sm:gap-1 text-2xs sm:text-xs">
+                  <span className="text-dark-600 shrink-0">{i + 1}</span>
+                  <span className="text-dark-400 truncate">
+                    {brand ? (
+                      <>
+                        <span className="text-dark-500">{brand}</span>
+                        <span className="hidden sm:inline ml-0.5">{shortName}</span>
+                      </>
+                    ) : (
+                      <span className="font-mono">{item.etfTicker}</span>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
             {verdict.top5.length > 3 && (
               <div className="text-2xs sm:text-xs text-dark-600 truncate">+{verdict.top5.length - 3} more</div>
             )}
@@ -577,13 +593,16 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
               
               {/* ETF Info */}
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-xs sm:text-sm md:text-base text-dark-200 group-hover:text-dark-100 transition-colors truncate font-mono">
-                  {item.etfTicker}
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-xs sm:text-sm md:text-base text-dark-200 group-hover:text-dark-100 transition-colors truncate">
+                    {item.etfName || item.etfTicker}
+                  </span>
+                  <span className="text-2xs sm:text-xs text-dark-500 font-mono shrink-0">
+                    {item.etfTicker}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-1.5 text-2xs sm:text-xs text-dark-500 mt-0.5">
-                  <span className="truncate">{item.etfName}</span>
-                  <span className="hidden sm:inline text-dark-600 shrink-0">|</span>
-                  <span className="hidden sm:inline shrink-0">{item.category}</span>
+                  <span className="shrink-0">{item.category}</span>
                 </div>
               </div>
               
