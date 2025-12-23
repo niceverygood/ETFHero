@@ -35,17 +35,33 @@ export async function GET(request: NextRequest) {
 
     // 2. DB에서 토론 히스토리 조회 시도
     let dbHistory = null;
+    let dbMessages: any[] = [];
     try {
-      const { data, error } = await getSupabaseClient()
+      const supabase = getSupabaseClient();
+      
+      // 세션 조회 (etf_ticker 컬럼 사용)
+      const { data: sessionData, error: sessionError } = await supabase
         .from('debate_sessions')
         .select('*')
-        .eq('symbol', symbol)
+        .eq('etf_ticker', symbol)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
-      if (!error && data) {
-        dbHistory = data;
+      if (!sessionError && sessionData) {
+        dbHistory = sessionData;
+        
+        // 해당 세션의 메시지 조회
+        const { data: messagesData, error: messagesError } = await supabase
+          .from('debate_messages')
+          .select('*')
+          .eq('session_id', sessionData.id)
+          .order('round', { ascending: true })
+          .order('created_at', { ascending: true });
+        
+        if (!messagesError && messagesData) {
+          dbMessages = messagesData;
+        }
       }
     } catch (e) {
       console.log('No DB history found for symbol:', symbol);
@@ -76,7 +92,19 @@ export async function GET(request: NextRequest) {
     }
 
     // 4. DB에 히스토리가 있으면 반환
-    if (dbHistory && dbHistory.messages) {
+    if (dbHistory && dbMessages.length > 0) {
+      // 메시지 형식 변환
+      const formattedMessages = dbMessages.map(msg => ({
+        id: msg.id,
+        character: msg.character,
+        content: msg.content,
+        score: msg.score || 3,
+        targetReturn: msg.target_return,
+        timeHorizon: msg.time_horizon,
+        risks: msg.risks || [],
+        round: msg.round,
+      }));
+
       return NextResponse.json({
         success: true,
         isFromDB: true,
@@ -84,8 +112,8 @@ export async function GET(request: NextRequest) {
           sessionId: dbHistory.id,
           symbol,
           symbolName: etfInfo.nameKo || etfInfo.name,
-          date: dbHistory.created_at?.split('T')[0] || date,
-          messages: dbHistory.messages,
+          date: dbHistory.date || dbHistory.created_at?.split('T')[0] || date,
+          messages: formattedMessages,
           consensusTarget: dbHistory.consensus_target,
           currentPrice,
           changePercent,

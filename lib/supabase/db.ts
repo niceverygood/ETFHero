@@ -32,14 +32,14 @@ export async function getSymbolByCode(code: string) {
 
 // Debate Sessions
 export async function createDebateSession(
-  symbolCode: string,
-  symbolName: string
+  etfTicker: string,
+  etfName: string
 ) {
   const { data, error } = await supabaseAdmin
     .from('debate_sessions')
     .insert({
-      symbol_code: symbolCode,
-      symbol_name: symbolName,
+      etf_ticker: etfTicker,
+      etf_name: etfName,
       status: 'running',
       current_round: 0,
     })
@@ -84,19 +84,30 @@ export async function createDebateMessage(
   score: number,
   risks: string[],
   sources: string[],
-  round: number
+  round: number,
+  targetReturn?: number,
+  timeHorizon?: string
 ) {
+  const insertData: any = {
+    session_id: sessionId,
+    character,
+    content,
+    score,
+    risks,
+    sources,
+    round,
+  };
+  
+  if (targetReturn !== undefined) {
+    insertData.target_return = targetReturn;
+  }
+  if (timeHorizon) {
+    insertData.time_horizon = timeHorizon;
+  }
+  
   const { data, error } = await supabaseAdmin
     .from('debate_messages')
-    .insert({
-      session_id: sessionId,
-      character,
-      content,
-      score,
-      risks,
-      sources,
-      round,
-    })
+    .insert(insertData)
     .select()
     .single();
   

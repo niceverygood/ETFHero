@@ -498,9 +498,18 @@ export function VerdictDetail({ date, verdict, onGenerateClick, isGenerating }: 
             <div className="text-center py-8">
               <div className="text-4xl mb-3">📝</div>
               <p className="text-dark-500">저장된 토론 내용이 없습니다.</p>
-              <p className="text-sm text-dark-600 mt-1">
-                새 토론을 시작하려면 Battle 페이지를 방문하세요.
+              <p className="text-sm text-dark-600 mt-1 mb-4">
+                이 ETF에 대한 AI 토론을 시작해보세요.
               </p>
+              <a 
+                href={`/battle/${selectedETF.etfTicker}`}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-brand-500/20 hover:bg-brand-500/30 text-brand-400 rounded-lg transition-colors text-sm"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                AI 토론 시작하기
+              </a>
             </div>
           )}
         </div>
