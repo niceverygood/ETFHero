@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
 
 interface ChatMessage {
   id: string;
@@ -133,13 +132,18 @@ export function FloatingChatButton() {
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 flex items-center gap-3">
                 <div className="relative">
                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
-                  <Image
+                  <img
                     src="/images/koma-avatar.png"
                     alt="코마"
                     width={48}
                     height={48}
                     className="object-cover rounded-full"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
                   />
+                  <span className="hidden text-2xl">🧑‍💼</span>
                 </div>
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-blue-600" />
               </div>
@@ -166,13 +170,18 @@ export function FloatingChatButton() {
                 >
                   {msg.role === 'assistant' && (
                     <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2 shrink-0 overflow-hidden">
-                      <Image
+                      <img
                         src="/images/koma-avatar.png"
                         alt="코마"
                         width={32}
                         height={32}
                         className="object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
                       />
+                      <span className="hidden text-sm">🧑‍💼</span>
                     </div>
                   )}
                   <div
@@ -190,13 +199,18 @@ export function FloatingChatButton() {
               {isLoading && (
                 <div className="flex justify-start">
                   <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2 shrink-0 overflow-hidden">
-                    <Image
+                    <img
                       src="/images/koma-avatar.png"
                       alt="코마"
                       width={32}
                       height={32}
                       className="object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
                     />
+                    <span className="hidden text-sm">🧑‍💼</span>
                   </div>
                   <div className="bg-dark-700 px-4 py-3 rounded-2xl rounded-bl-md">
                     <div className="flex gap-1">
@@ -272,14 +286,19 @@ export function FloatingChatButton() {
               className="relative bg-white text-gray-800 px-4 py-2 rounded-xl shadow-lg text-sm font-medium max-w-[220px]"
             >
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full overflow-hidden shrink-0">
-                  <Image
+                <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 bg-blue-500 flex items-center justify-center">
+                  <img
                     src="/images/koma-avatar.png"
                     alt="코마"
                     width={24}
                     height={24}
                     className="object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
                   />
+                  <span className="hidden text-xs">🧑‍💼</span>
                 </div>
                 <span>KODEX 전문가에게 물어보세요!</span>
               </div>
@@ -308,13 +327,18 @@ export function FloatingChatButton() {
             </svg>
           ) : (
             <>
-              <Image
+              <img
                 src="/images/koma-avatar.png"
                 alt="코마"
                 width={64}
                 height={64}
                 className="object-cover rounded-full"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
               />
+              <span className="hidden text-3xl">🧑‍💼</span>
               
               {/* 펄스 애니메이션 */}
               <span className="absolute inset-0 rounded-full bg-blue-400 animate-ping opacity-20" />
